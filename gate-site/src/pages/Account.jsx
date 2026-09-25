@@ -40,7 +40,7 @@ export default function Account() {
   }
 
   const siteExeUrl =
-    config.download?.url || "https://oxide-gate-site.vercel.app/downloads/Oxide.exe";
+    config.download?.url || "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
 
   /** Prefer site EXE; never send buyers to a GitHub repo / source tree. */
   function resolveDownloadUrl(raw) {

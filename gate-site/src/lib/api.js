@@ -35,7 +35,7 @@ export async function redeemKey(raw) {
     const expiresAt = data.expires ? new Date(data.expires).getTime() : null;
     const prev = loadSession() || {};
     const siteExe =
-      config.download?.url || "https://oxide-gate-site.vercel.app/downloads/Oxide.exe";
+      config.download?.url || "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
     let downloadUrl = String(data.downloadUrl || siteExe || "").trim() || siteExe;
     // Never persist a GitHub repo / source-tree link for buyers.
     try {

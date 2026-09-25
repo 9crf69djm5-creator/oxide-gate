@@ -10,7 +10,7 @@ const roblox = require("./lib/roblox");
 
 const PORT = Number(process.env.PORT) || 8787;
 const ADMIN_SECRET = process.env.ADMIN_SECRET || "change-me-to-a-long-random-string";
-const SITE_EXE_URL = "https://oxide-gate-site.vercel.app/downloads/Oxide.exe";
+const SITE_EXE_URL = "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
 const DOWNLOAD_URL = safeDownloadUrl(process.env.DOWNLOAD_URL) || SITE_EXE_URL;
 const DISCORD_INVITE = process.env.DISCORD_INVITE || "https://discord.gg/3PXJ8r56T";
 
@@ -197,6 +197,30 @@ app.post("/api/webhooks/sellapp", (req, res) => {
       "SellApp webhook stub. Wire this to verify the webhook signature, map product → plan/days, then call createKeys and email/deliver the key.",
   });
 });
+
+/** Direct Oxide.exe download — never point buyers at the GitHub source repo. */
+const downloadsDir = path.join(__dirname, "public", "downloads");
+app.get(["/downloads/Oxide.exe", "/download/Oxide.exe", "/Oxide.exe"], (req, res) => {
+  const file = path.join(downloadsDir, "Oxide.exe");
+  res.download(file, "Oxide.exe", (err) => {
+    if (err && !res.headersSent) {
+      console.error("[download]", err.message);
+      res.status(404).json({ ok: false, error: "missing_exe", message: "Oxide.exe is not on this server yet." });
+    }
+  });
+});
+app.use(
+  "/downloads",
+  express.static(downloadsDir, {
+    fallthrough: true,
+    setHeaders(res, filePath) {
+      if (/\.exe$/i.test(filePath)) {
+        res.setHeader("Content-Type", "application/octet-stream");
+        res.setHeader("Content-Disposition", 'attachment; filename="Oxide.exe"');
+      }
+    },
+  })
+);
 
 app.use((req, res) => {
   res.status(404).json({ ok: false, error: "not_found", message: `No route ${req.method} ${req.path}` });

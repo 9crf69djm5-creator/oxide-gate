@@ -19,7 +19,7 @@ services:
       - key: ADMIN_SECRET
         generateValue: true
       - key: DOWNLOAD_URL
-        value: https://oxide-gate-site.vercel.app/downloads/Oxide.exe
+        value: https://oxide-gate-api.onrender.com/downloads/Oxide.exe
       - key: CORS_ORIGINS
         value: https://oxide-gate-site.vercel.app,http://localhost:5173,http://127.0.0.1:5173,null
       - key: DISCORD_INVITE

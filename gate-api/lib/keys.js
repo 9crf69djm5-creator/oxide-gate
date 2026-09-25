@@ -26,7 +26,7 @@ function planLabel(plan) {
 
 /** Buyers get Oxide.exe only — never a GitHub source repo. */
 function downloadUrl() {
-  const SITE_EXE = "https://oxide-gate-site.vercel.app/downloads/Oxide.exe";
+  const SITE_EXE = "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
   const raw = String(process.env.DOWNLOAD_URL || "").trim();
   if (!raw || /^file:/i.test(raw)) return SITE_EXE;
   try {

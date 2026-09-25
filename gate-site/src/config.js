@@ -27,8 +27,8 @@ export const config = {
   },
 
   download: {
-    /** Direct EXE only — never the GitHub source repo. */
-    url: "https://oxide-gate-site.vercel.app/downloads/Oxide.exe",
+    /** Direct EXE only — never the GitHub source repo. Served by gate-api. */
+    url: "https://oxide-gate-api.onrender.com/downloads/Oxide.exe",
     filename: "Oxide.exe",
     note: "Download Oxide.exe, then enter your license key in the app.",
   },
