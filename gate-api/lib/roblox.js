@@ -19,7 +19,7 @@ const PLAN_META = {
     days: 7,
     price: 5,
     unit: "USD",
-    blurb: "7-day key. Universal only (Aim / ESP / Chams / Fly) — no Games pack.",
+    blurb: "7-day key. Universal only (Aim / ESP / Chams / Fly) - no Games pack.",
     productKind: "GamePass",
     envKeys: [
       { key: "ROBLOX_GAMEPASS_WEEK", kind: "GamePass" },
@@ -47,7 +47,7 @@ const PLAN_META = {
     days: null,
     price: 40,
     unit: "USD",
-    blurb: "Forever. Full OXIDE — all games + priority.",
+    blurb: "Forever. Full OXIDE - all games + priority.",
     productKind: "GamePass",
     envKeys: [
       { key: "ROBLOX_GAMEPASS_LIFETIME", kind: "GamePass" },
