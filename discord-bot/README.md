@@ -42,10 +42,12 @@ The root [`render.yaml`](../render.yaml) already defines worker **`oxide-discord
 
 Render **free** web services sleep after ~15 minutes with no HTTP traffic. While asleep the Discord gateway disconnects and **every** slash command returns **"The application did not respond"**.
 
-This repo includes [`.github/workflows/keep-alive.yml`](../.github/workflows/keep-alive.yml) which pings the bot + API every 10 minutes. After push, confirm Actions are enabled for the repo. Alternatively use [UptimeRobot](https://uptimerobot.com/) (or similar) HTTP monitor every 5–10 min on:
+Set up a free HTTP monitor (e.g. [UptimeRobot](https://uptimerobot.com/) or [cron-job.org](https://cron-job.org/)) every **5–10 minutes** on:
 
 - `https://oxide-discord-bot-fra.onrender.com/`
 - `https://oxide-gate-api.onrender.com/api/health`
+
+Optional: add a GitHub Action that curls those URLs on a schedule (needs `workflow` scope to push `.github/workflows/`). A sample file may exist locally as `.github/workflows/keep-alive.yml`.
 
 That’s the **only** secret you must paste once (`ADMIN_SECRET` must stay in sync with gate-api). After that the bot runs in the cloud (with keep-alive so it doesn’t sleep).
 
