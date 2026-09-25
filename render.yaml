@@ -44,16 +44,16 @@ services:
       mountPath: /data
       sizeGB: 1
 
-  # Discord bot — free Web Service (binds PORT for health; bot runs 24/7 in cloud).
+  # Discord bot — Frankfurt (oxide-discord-bot-fra). Binds PORT for health.
   # One-time: paste DISCORD_TOKEN, CLIENT_ID, GUILD_ID in Render Environment.
-  # Prefer type:worker on paid; free plan uses web + tiny / health listener.
   - type: web
-    name: oxide-discord-bot
+    name: oxide-discord-bot-fra
     runtime: node
     rootDir: discord-bot
     plan: free
+    region: frankfurt
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node --dns-result-order=ipv4first src/index.js
     healthCheckPath: /
     envVars:
       - key: NODE_VERSION

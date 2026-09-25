@@ -5,11 +5,18 @@ const {
   PermissionFlagsBits,
   MessageFlags,
   EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } = require("discord.js");
 const { setupGuild, findRole, STAFF_PLUS } = require("./setup");
 const { syncRobloxVersion, fetchRobloxWindowsVersion, buildEmbed, readLocalClientVersion } = require("./roblox");
-const { fetchHealth, createKeys } = require("./gate");
+const { fetchHealth, createKeys, redeemKey } = require("./gate");
+const { getLicense, setLicense } = require("./licenses");
 const { config } = require("./config");
+
+const DEFAULT_DOWNLOAD =
+  "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
 
 /**
  * @param {import('discord.js').GuildMember} member
@@ -23,6 +30,111 @@ function isStaffPlus(member) {
   });
 }
 
+/**
+ * @param {import('discord.js').GuildMember|null} member
+ */
+function hasCustomerAccess(member) {
+  if (!member) return false;
+  if (member.permissions.has(PermissionFlagsBits.Administrator)) return true;
+  if (isStaffPlus(member)) return true;
+  const customer = findRole(member.guild, "Customer");
+  return Boolean(customer && member.roles.cache.has(customer.id));
+}
+
+function downloadUrl(preferred) {
+  const url = String(preferred || "").trim();
+  if (url && /^https?:\/\//i.test(url)) return url;
+  return `${config.apiBaseUrl}/downloads/Oxide.exe` || DEFAULT_DOWNLOAD;
+}
+
+function formatExpiry(expires) {
+  if (!expires) return "Lifetime / none";
+  const t = Date.parse(expires);
+  if (!Number.isFinite(t)) return String(expires);
+  return `<t:${Math.floor(t / 1000)}:F> (<t:${Math.floor(t / 1000)}:R>)`;
+}
+
+/**
+ * Success embed after redeem / for linked license.
+ * @param {object} opts
+ */
+function buildRedeemEmbed(opts) {
+  const {
+    key,
+    plan,
+    expires,
+    alreadyActive,
+    title = "OXIDE license ready",
+  } = opts;
+  const dl = downloadUrl(opts.downloadUrl);
+  return new EmbedBuilder()
+    .setTitle(title)
+    .setColor(0xe6852e)
+    .setDescription(
+      "**Paste this key into Oxide.exe when it asks.**\n" +
+        "Download the EXE, launch it, and enter the key below."
+    )
+    .addFields(
+      { name: "Key", value: `\`${key}\``, inline: false },
+      { name: "Plan", value: plan || "—", inline: true },
+      { name: "Expires", value: formatExpiry(expires), inline: true },
+      {
+        name: "Status",
+        value: alreadyActive ? "Already active (re-linked)" : "Activated",
+        inline: true,
+      },
+      { name: "Download", value: `[Oxide.exe](${dl})`, inline: false }
+    )
+    .setFooter({ text: "Keep this key private — do not share it publicly." });
+}
+
+function downloadRow(url) {
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setLabel("Download Oxide.exe")
+      .setStyle(ButtonStyle.Link)
+      .setURL(downloadUrl(url))
+  );
+}
+
+/**
+ * Try DM first; fall back to ephemeral reply content.
+ * @param {import('discord.js').ChatInputCommandInteraction} interaction
+ * @param {object} payload
+ */
+async function dmOrEphemeralFollowUp(interaction, payload) {
+  try {
+    await interaction.user.send(payload);
+    return { delivered: "dm" };
+  } catch {
+    return { delivered: "ephemeral" };
+  }
+}
+
+/**
+ * Assign Customer role if present (best-effort).
+ * @param {import('discord.js').ChatInputCommandInteraction} interaction
+ */
+async function assignCustomerRole(interaction) {
+  if (!interaction.guild || !interaction.member) {
+    return { ok: false, reason: "not_in_guild" };
+  }
+  const role = findRole(interaction.guild, "Customer");
+  if (!role) return { ok: false, reason: "missing_role" };
+  const member =
+    interaction.member.roles?.cache != null
+      ? interaction.member
+      : await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+  if (!member) return { ok: false, reason: "no_member" };
+  if (member.roles.cache.has(role.id)) return { ok: true, already: true };
+  try {
+    await member.roles.add(role, "OXIDE /redeem");
+    return { ok: true, already: false };
+  } catch (err) {
+    return { ok: false, reason: err.message };
+  }
+}
+
 const commandData = [
   new SlashCommandBuilder()
     .setName("setup")
@@ -34,6 +146,21 @@ const commandData = [
   new SlashCommandBuilder()
     .setName("status")
     .setDescription("Ping OXIDE gate API health"),
+  new SlashCommandBuilder()
+    .setName("redeem")
+    .setDescription("Redeem an OXIDE license key and get download instructions")
+    .addStringOption((o) =>
+      o.setName("key").setDescription("Your OXIDE-… license key").setRequired(true)
+    ),
+  new SlashCommandBuilder()
+    .setName("mykey")
+    .setDescription("Show your linked OXIDE license (after /redeem)"),
+  new SlashCommandBuilder()
+    .setName("license")
+    .setDescription("Show your linked OXIDE license (alias of /mykey)"),
+  new SlashCommandBuilder()
+    .setName("download")
+    .setDescription("Get the Oxide.exe download link (Customer+ or after /redeem)"),
   new SlashCommandBuilder()
     .setName("key-create")
     .setDescription("Create license keys via gate API (Staff+ · needs ADMIN_SECRET)")
@@ -105,6 +232,9 @@ async function handleCommand(interaction, client) {
           "`/setup` — Admin: roles + channel layout",
           "`/roblox-version` — Latest Windows client version",
           "`/status` — Gate API health",
+          "`/redeem` — Redeem a license key → DM + Customer role",
+          "`/mykey` · `/license` — Show your linked key",
+          "`/download` — Oxide.exe download link",
           "`/key-create` — Staff+: create license keys",
           "`/role` — Staff+: add/remove Member, Customer, Reseller, Staff, Admin",
           "`/help` — This list",
@@ -159,6 +289,147 @@ async function handleCommand(interaction, client) {
         content: `Gate unreachable: \`${err.message}\`\n\`${config.apiBaseUrl}/api/health\``,
       });
     }
+  }
+
+  if (name === "redeem") {
+    const rawKey = interaction.options.getString("key", true).trim();
+    if (!rawKey) {
+      return interaction.reply({
+        content: "Provide a license key.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    let result;
+    try {
+      result = await redeemKey({
+        apiBaseUrl: config.apiBaseUrl,
+        key: rawKey,
+      });
+    } catch (err) {
+      return interaction.editReply({
+        content: `Gate unreachable: \`${err.message}\``,
+      });
+    }
+
+    if (!result.ok) {
+      const msg =
+        result.body?.message ||
+        result.body?.error ||
+        `Redeem failed (HTTP ${result.status})`;
+      return interaction.editReply({ content: `❌ ${msg}` });
+    }
+
+    const body = result.body;
+    const key = body.key || rawKey;
+    const dl = downloadUrl(body.downloadUrl);
+
+    setLicense(interaction.user.id, {
+      key,
+      plan: body.plan,
+      planId: body.planId,
+      expires: body.expires ?? null,
+      downloadUrl: dl,
+      redeemedAt: new Date().toISOString(),
+    });
+
+    const roleResult = await assignCustomerRole(interaction);
+    const embed = buildRedeemEmbed({
+      key,
+      plan: body.plan,
+      expires: body.expires,
+      downloadUrl: dl,
+      alreadyActive: Boolean(body.alreadyActive),
+    });
+    const row = downloadRow(dl);
+
+    const dmPayload = { embeds: [embed], components: [row] };
+    const { delivered } = await dmOrEphemeralFollowUp(interaction, dmPayload);
+
+    const roleNote =
+      roleResult.ok
+        ? roleResult.already
+          ? "Customer role already assigned."
+          : "Customer role assigned."
+        : roleResult.reason === "missing_role"
+          ? "Customer role missing — run `/setup`."
+          : roleResult.reason === "not_in_guild"
+            ? "Redeemed (DM only — join the server for Customer role)."
+            : `Could not assign Customer: ${roleResult.reason}`;
+
+    if (delivered === "dm") {
+      return interaction.editReply({
+        content:
+          "✅ Key redeemed. Check your **DMs** for the key, plan, and download button.\n" +
+          `${roleNote}\n` +
+          "Paste the key into **Oxide.exe** when it asks.",
+      });
+    }
+
+    return interaction.editReply({
+      content:
+        "✅ Key redeemed (could not DM you — enable DMs from server members, or use this reply).\n" +
+        `${roleNote}`,
+      embeds: [embed],
+      components: [row],
+    });
+  }
+
+  if (name === "mykey" || name === "license") {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const linked = getLicense(interaction.user.id);
+    if (!linked?.key) {
+      return interaction.editReply({
+        content:
+          "No license linked to your Discord yet.\n" +
+          "Use `/redeem key:OXIDE-…` after you buy or receive a key.",
+      });
+    }
+    const embed = buildRedeemEmbed({
+      title: "Your OXIDE license",
+      key: linked.key,
+      plan: linked.plan,
+      expires: linked.expires,
+      downloadUrl: linked.downloadUrl,
+      alreadyActive: true,
+    });
+    return interaction.editReply({
+      embeds: [embed],
+      components: [downloadRow(linked.downloadUrl)],
+    });
+  }
+
+  if (name === "download") {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const linked = getLicense(interaction.user.id);
+    const allowed =
+      Boolean(linked?.key) || hasCustomerAccess(interaction.member);
+
+    if (!allowed) {
+      return interaction.editReply({
+        content:
+          "Download is for **Customer** (or Staff+) after redeem.\n" +
+          "Run `/redeem key:OXIDE-…` first, then try `/download` again.",
+      });
+    }
+
+    const dl = downloadUrl(linked?.downloadUrl);
+    const embed = new EmbedBuilder()
+      .setTitle("Download Oxide.exe")
+      .setColor(0xe6852e)
+      .setDescription(
+        "**Paste your key into Oxide.exe when it asks.**\n" +
+          (linked?.key
+            ? `Linked key: \`${linked.key}\``
+            : "Use `/mykey` if you redeemed earlier, or `/redeem` with your key.")
+      )
+      .addFields({ name: "Direct link", value: `[Oxide.exe](${dl})` });
+
+    return interaction.editReply({
+      embeds: [embed],
+      components: [downloadRow(dl)],
+    });
   }
 
   if (name === "roblox-version") {
@@ -303,7 +574,9 @@ async function handleCommand(interaction, client) {
         /* ignore log failures */
       }
       return interaction.editReply({
-        content: `Created **${keys.length}** key(s) · plan \`${plan}\`${days ? ` · ${days}d` : ""}\n${list}`,
+        content:
+          `Created **${keys.length}** key(s) · plan \`${plan}\`${days ? ` · ${days}d` : ""}\n${list}\n\n` +
+          "DM buyers the key, or have them run `/redeem key:…` in the server.",
       });
     } catch (err) {
       return interaction.editReply({ content: `Failed: \`${err.message}\`` });

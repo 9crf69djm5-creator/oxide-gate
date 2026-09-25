@@ -49,4 +49,30 @@ async function createKeys(opts) {
   return { ok: res.ok, status: res.status, body };
 }
 
-module.exports = { fetchHealth, createKeys };
+/**
+ * Redeem / activate a license key (HWID optional — EXE binds later).
+ * @param {object} opts
+ * @param {string} opts.apiBaseUrl
+ * @param {string} opts.key
+ * @param {string} [opts.hwid]
+ */
+async function redeemKey(opts) {
+  const url = `${opts.apiBaseUrl.replace(/\/$/, "")}/api/redeem`;
+  const payload = { key: String(opts.key || "").trim() };
+  if (opts.hwid) payload.hwid = opts.hwid;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "User-Agent": "OXIDE-DiscordBot/1.0",
+    },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(15000),
+  });
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok && body.ok !== false, status: res.status, body };
+}
+
+module.exports = { fetchHealth, createKeys, redeemKey };

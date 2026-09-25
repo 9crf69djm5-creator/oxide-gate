@@ -1,14 +1,14 @@
 {
   "name": "oxide-discord-bot",
   "version": "1.0.0",
-  "description": "OXIDE Discord bot — server setup, Roblox version intel, gate status, key creation",
+  "description": "OXIDE Discord bot — redeem keys, server setup, Roblox intel, gate status",
   "main": "src/index.js",
   "type": "commonjs",
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node --dns-result-order=ipv4first src/index.js",
     "register": "node src/register.js",
     "dev": "node --watch src/index.js"
   },

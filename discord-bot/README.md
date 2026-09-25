@@ -82,9 +82,19 @@ On join: auto **Member** role (+ optional welcome in `#announcements`).
 | `/setup` | Admin | Roles + channels |
 | `/roblox-version` | Anyone | Refresh `#roblox-versions` |
 | `/status` | Anyone | Gate API health |
-| `/key-create` | Staff+ | Create license keys |
+| `/redeem` | Anyone | Redeem `OXIDE-…` key → DM + Customer role + download |
+| `/mykey` · `/license` | Anyone | Show linked license (after `/redeem`) |
+| `/download` | Customer+ / after redeem | Oxide.exe download link |
+| `/key-create` | Staff+ | Create license keys (DM buyers or have them `/redeem`) |
 | `/role` | Staff+ | Add/remove Member, Customer, Reseller, Staff, Admin |
 | `/help` | Anyone | Command list |
+
+### Owner / buyer redeem flow
+
+1. Get a key (`/key-create` as Staff, SellApp, or Roblox claim on the site).
+2. In Discord: `/redeem key:OXIDE-XXXX-…`
+3. Bot DMs (or ephemeral) plan, expiry, key, and **Download Oxide.exe** button.
+4. Launch Oxide.exe → paste the same key when asked (HWID binds on first EXE launch).
 
 ### Roblox update alerts
 
