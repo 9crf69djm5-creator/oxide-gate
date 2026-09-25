@@ -1,13 +1,15 @@
-const { db } = require("./db");
+const dbModule = require("./db");
 const keys = require("./keys");
 const roblox = require("./roblox");
+
+function getDb() { return dbModule.db; }
 
 function nowIso() {
   return new Date().toISOString();
 }
 
 function getClaim(robloxUserId, assetId) {
-  return db
+  return getDb()
     .prepare(
       "SELECT * FROM roblox_claims WHERE roblox_user_id = ? AND asset_id = ?"
     )
@@ -15,7 +17,7 @@ function getClaim(robloxUserId, assetId) {
 }
 
 function insertClaim(row) {
-  db.prepare(
+  getDb().prepare(
     `
     INSERT INTO roblox_claims
       (roblox_user_id, roblox_username, asset_id, asset_type, plan, key, claimed_at)

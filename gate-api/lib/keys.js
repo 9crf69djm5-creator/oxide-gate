@@ -1,5 +1,7 @@
 const crypto = require("crypto");
-const { db } = require("./db");
+const dbModule = require("./db");
+
+function getDb() { return dbModule.db; }
 
 const PLAN_LABELS = {
   week: "Week",
@@ -84,14 +86,14 @@ function createKeys({ plan, count, days }) {
     dayCount = Number(days);
   }
 
-  const insert = db.prepare(`
+  const insert = getDb().prepare(`
     INSERT INTO keys (key, plan, status, hwid, created_at, activated_at, expires_at, token, duration_days)
     VALUES (@key, @plan, 'unused', NULL, @created_at, NULL, NULL, NULL, @duration_days)
   `);
 
   const created = [];
   const createdAt = nowIso();
-  const tx = db.transaction(() => {
+  const tx = getDb().transaction(() => {
     for (let i = 0; i < n; i++) {
       let key;
       for (let attempt = 0; attempt < 20; attempt++) {
@@ -146,7 +148,7 @@ function resolveDurationDays(row, daysOverride) {
 /** Clear bogus ~30-day expiry that older redeem logic applied to lifetime keys. */
 function repairLifetimeKeys() {
   try {
-    const info = db
+    const info = getDb()
       .prepare(
         `
       UPDATE keys
@@ -170,7 +172,7 @@ function repairLifetimeKeys() {
 }
 
 function getKey(key) {
-  return db.prepare("SELECT * FROM keys WHERE key = ?").get(key);
+  return getDb().prepare("SELECT * FROM keys WHERE key = ?").get(key);
 }
 
 function redeem({ key: rawKey, hwid, daysOverride }) {
@@ -184,7 +186,7 @@ function redeem({ key: rawKey, hwid, daysOverride }) {
 
   if (row.status === "active") {
     if (isExpired(row)) {
-      db.prepare("UPDATE keys SET status = 'expired' WHERE key = ?").run(key);
+      getDb().prepare("UPDATE keys SET status = 'expired' WHERE key = ?").run(key);
       return { ok: false, error: "expired", message: "This key has expired." };
     }
     if (row.hwid && hwid && row.hwid !== hwid) {
@@ -198,10 +200,10 @@ function redeem({ key: rawKey, hwid, daysOverride }) {
     let token = row.token;
     if (!token) {
       token = makeToken();
-      db.prepare("UPDATE keys SET token = ? WHERE key = ?").run(token, key);
+      getDb().prepare("UPDATE keys SET token = ? WHERE key = ?").run(token, key);
     }
     if (hwid && !row.hwid) {
-      db.prepare("UPDATE keys SET hwid = ? WHERE key = ?").run(hwid, key);
+      getDb().prepare("UPDATE keys SET hwid = ? WHERE key = ?").run(hwid, key);
     }
     return {
       ok: true,
@@ -225,7 +227,7 @@ function redeem({ key: rawKey, hwid, daysOverride }) {
   const expires = computeExpires(days);
   const token = makeToken();
 
-  db.prepare(
+  getDb().prepare(
     `
     UPDATE keys SET
       status = 'active',
@@ -268,7 +270,7 @@ function validate({ key: rawKey, hwid, token }) {
     return { ok: false, error: "invalid_status", message: `Key status: ${row.status}` };
 
   if (isExpired(row)) {
-    db.prepare("UPDATE keys SET status = 'expired' WHERE key = ?").run(key);
+    getDb().prepare("UPDATE keys SET status = 'expired' WHERE key = ?").run(key);
     return { ok: false, error: "expired", message: "This key has expired." };
   }
 
@@ -282,17 +284,17 @@ function validate({ key: rawKey, hwid, token }) {
 
   // First EXE launch can bind HWID if redeem was website-only
   if (!row.hwid) {
-    db.prepare("UPDATE keys SET hwid = ? WHERE key = ?").run(hwid, key);
+    getDb().prepare("UPDATE keys SET hwid = ? WHERE key = ?").run(hwid, key);
   }
 
   let outToken = row.token;
   if (token && row.token && token !== row.token) {
     // Soft: allow key+hwid without matching token; refresh token
     outToken = makeToken();
-    db.prepare("UPDATE keys SET token = ? WHERE key = ?").run(outToken, key);
+    getDb().prepare("UPDATE keys SET token = ? WHERE key = ?").run(outToken, key);
   } else if (!outToken) {
     outToken = makeToken();
-    db.prepare("UPDATE keys SET token = ? WHERE key = ?").run(outToken, key);
+    getDb().prepare("UPDATE keys SET token = ? WHERE key = ?").run(outToken, key);
   }
 
   return {
@@ -321,7 +323,7 @@ function seedDemoKeys() {
     { key: "OXIDE-DEMO-LIFE", plan: "lifetime" },
     { key: "OXIDE-DEMO-MONTH", plan: "month" },
   ];
-  const insert = db.prepare(`
+  const insert = getDb().prepare(`
     INSERT OR IGNORE INTO keys (key, plan, status, hwid, created_at, activated_at, expires_at, token, duration_days)
     VALUES (@key, @plan, 'unused', NULL, @created_at, NULL, NULL, NULL, @duration_days)
   `);
