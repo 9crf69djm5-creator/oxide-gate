@@ -18,6 +18,12 @@ Open the Vite URL (usually `http://localhost:5173`). Redeem hits `http://127.0.0
 
 Demo keys: `OXIDE-DEMO-WEEK`, `OXIDE-DEMO-MONTH`, `OXIDE-DEMO-LIFE`.
 
+## Roblox payments
+
+Buy a Shirt / T-Shirt / Gamepass on Roblox → claim on the Buy page → get an OXIDE key.
+
+See **[gate-api/README.md](./gate-api/README.md#roblox-payments-shirt--gamepass--key)** for Asset ID setup and Render env vars.
+
 ## Free hosting
 
 See **[DEPLOY.md](./DEPLOY.md)** — Vercel (frontend) + Render (API). Your PC does not need to stay on.

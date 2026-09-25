@@ -41,11 +41,17 @@ Push to a new GitHub repo (GitHub → New repository → follow their push instr
 | `CORS_ORIGINS` | leave placeholder for now; update after Vercel URL exists |
 | `DISCORD_INVITE` | `https://discord.gg/3PXJ8r56T` |
 | `DB_PATH` | `/data/keys.db` (already in blueprint) |
+| `ROBLOX_ASSET_WEEK` | Classic shirt asset ID (Week) |
+| `ROBLOX_ASSET_MONTH` | Classic shirt asset ID (Month) |
+| `ROBLOX_GAMEPASS_LIFETIME` | Gamepass ID (Lifetime) |
+| `ROBLOX_COOKIE` | Optional `.ROBLOSECURITY` if ownership checks need auth |
+| `DEMO_ROBLOX` | `0` in production; `1` only for testing without purchases |
 
 5. Confirm a **persistent disk** is mounted at `/data` (blueprint includes this).
 6. Deploy → wait until status is **Live**.
 7. Copy the service URL, e.g. `https://oxide-gate-api.onrender.com`.
 8. Test: open `https://YOUR-API.onrender.com/api/health` — should return `{ "ok": true, ... }`.
+9. Test products: `https://YOUR-API.onrender.com/api/products`.
 
 ### Option B — Manual Web Service
 
@@ -160,6 +166,9 @@ Legacy static HTML still lives in `gate/` (Discord updated). Prefer `gate-site/`
 - `CORS_ORIGINS` — comma-separated frontend origins
 - `DB_PATH` — `/data/keys.db` with disk
 - `DISCORD_INVITE` — `https://discord.gg/3PXJ8r56T`
+- `ROBLOX_ASSET_WEEK` / `ROBLOX_ASSET_MONTH` / `ROBLOX_GAMEPASS_LIFETIME` — Roblox product IDs
+- `ROBLOX_COOKIE` — optional ownership auth
+- `DEMO_ROBLOX` — `0` for real sales
 
 **gate-site (Vercel)**
 
@@ -170,6 +179,13 @@ Legacy static HTML still lives in `gate/` (Discord updated). Prefer `gate-site/`
 
 - `oxide_auth.ini` → `api=https://…`
 
+---
+
+## Roblox buy → claim (production)
+
+1. Create shirts / gamepass on Roblox; copy Asset IDs.
+2. Set Render env vars (table above), set `DEMO_ROBLOX=0`, redeploy API.
+3. On https://oxide-gate-site.vercel.app/buy → **Pay with Roblox** → buy → claim with username → redeem key.
 ---
 
 ## Alternatives (also free-ish)

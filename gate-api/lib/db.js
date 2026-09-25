@@ -35,4 +35,20 @@ try {
   /* already exists */
 }
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS roblox_claims (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    roblox_user_id TEXT NOT NULL,
+    roblox_username TEXT,
+    asset_id TEXT NOT NULL,
+    asset_type TEXT NOT NULL,
+    plan TEXT NOT NULL,
+    key TEXT NOT NULL,
+    claimed_at TEXT NOT NULL,
+    UNIQUE(roblox_user_id, asset_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_roblox_claims_user ON roblox_claims(roblox_user_id);
+  CREATE INDEX IF NOT EXISTS idx_roblox_claims_key ON roblox_claims(key);
+`);
+
 module.exports = { db, dbPath };

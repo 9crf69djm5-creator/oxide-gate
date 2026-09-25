@@ -5,10 +5,13 @@ const express = require("express");
 const cors = require("cors");
 const { dbPath } = require("./lib/db");
 const keys = require("./lib/keys");
+const claims = require("./lib/claims");
+const roblox = require("./lib/roblox");
 
 const PORT = Number(process.env.PORT) || 8787;
 const ADMIN_SECRET = process.env.ADMIN_SECRET || "change-me-to-a-long-random-string";
 const DOWNLOAD_URL = process.env.DOWNLOAD_URL || "";
+const DISCORD_INVITE = process.env.DISCORD_INVITE || "https://discord.gg/3PXJ8r56T";
 
 const corsOrigins = (process.env.CORS_ORIGINS || "")
   .split(",")
@@ -41,7 +44,55 @@ app.get("/api/health", (_req, res) => {
     service: "oxide-gate-api",
     db: dbPath,
     downloadConfigured: Boolean(DOWNLOAD_URL),
+    robloxDemo: roblox.isDemoMode(),
+    robloxProductsConfigured: claims.listProducts().filter((p) => p.configured).length,
   });
+});
+
+/**
+ * List purchasable plans with Roblox catalog / gamepass buy links.
+ */
+app.get("/api/products", (_req, res) => {
+  try {
+    const products = claims.listProducts();
+    return res.json({
+      ok: true,
+      demo: roblox.isDemoMode(),
+      discordInvite: DISCORD_INVITE,
+      products,
+    });
+  } catch (err) {
+    console.error("[products]", err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
+});
+
+/**
+ * After buying a Shirt / T-Shirt / Gamepass on Roblox, claim an OXIDE key.
+ * Body: { username, plan }
+ * Verifies ownership (unless DEMO_ROBLOX=1) and stores robloxUserId+assetId so
+ * one purchase cannot mint infinite keys.
+ */
+app.post("/api/roblox/claim", async (req, res) => {
+  try {
+    const { username, plan } = req.body || {};
+    const result = await claims.claimKey({ username, plan });
+    if (!result.ok) {
+      const status =
+        result.error === "not_owned"
+          ? 403
+          : result.error === "user_not_found" || result.error === "missing_username" || result.error === "missing_plan"
+            ? 400
+            : result.error === "product_not_configured"
+              ? 503
+              : 400;
+      return res.status(status).json(result);
+    }
+    return res.json(result);
+  } catch (err) {
+    console.error("[roblox/claim]", err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
 });
 
 /**
@@ -141,5 +192,13 @@ app.listen(PORT, () => {
   console.log(`  DB: ${dbPath}`);
   console.log(`  DOWNLOAD_URL: ${DOWNLOAD_URL || "(not set)"}`);
   console.log(`  Demo keys ready: ${seeded.join(", ")}`);
+  console.log(`  Roblox demo mode: ${roblox.isDemoMode() ? "ON" : "off"}`);
+  console.log(
+    `  Roblox products: ${claims
+      .listProducts()
+      .filter((p) => p.configured)
+      .map((p) => `${p.plan}=${p.assetId}`)
+      .join(", ") || "(none configured)"}`
+  );
   console.log(`  Admin: POST /api/admin/create-keys with X-Admin-Secret`);
 });

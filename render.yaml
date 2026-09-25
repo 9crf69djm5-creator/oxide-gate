@@ -24,6 +24,16 @@ services:
         sync: false
       - key: DISCORD_INVITE
         value: https://discord.gg/3PXJ8r56T
+      - key: ROBLOX_ASSET_WEEK
+        sync: false
+      - key: ROBLOX_ASSET_MONTH
+        sync: false
+      - key: ROBLOX_GAMEPASS_LIFETIME
+        sync: false
+      - key: ROBLOX_COOKIE
+        sync: false
+      - key: DEMO_ROBLOX
+        value: "0"
     disk:
       name: oxide-data
       mountPath: /data

@@ -22,7 +22,7 @@ export const config = {
     robloxPassUrl: "",
     currencyLabel: "USD",
     note:
-      "Checkout opens SellApp (or your link). After payment you receive a license key — redeem it on Get a key.",
+      "Checkout opens SellApp (or your link), or pay with Roblox below. After payment, redeem your license key on Get a key.",
   },
 
   download: {

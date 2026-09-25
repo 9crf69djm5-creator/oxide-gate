@@ -192,6 +192,15 @@ input {
   box-shadow: 0 0 18px rgba(230, 133, 46, 0.55);
 }
 
+.brand-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(230, 133, 46, 0.35);
+}
+
 .nav-actions {
   display: flex;
   align-items: center;
@@ -265,6 +274,16 @@ input {
   line-height: 0.9;
   letter-spacing: -0.04em;
   color: var(--text-bright);
+}
+
+.hero-brand-logo {
+  display: block;
+  width: min(100%, 34rem);
+  height: auto;
+  max-height: clamp(4.5rem, 18vw, 9rem);
+  object-fit: contain;
+  object-position: left center;
+  filter: drop-shadow(0 12px 40px rgba(184, 115, 51, 0.22));
 }
 
 .hero h1 {
@@ -701,6 +720,149 @@ input {
 .plan p {
   margin: 0 0 0.85rem;
   font-size: 0.85rem;
+}
+
+/* —— Pay with Roblox —— */
+.roblox-pay {
+  margin-top: 2.75rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.roblox-pay-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3.5vw, 1.85rem);
+  color: var(--text-bright);
+  letter-spacing: -0.02em;
+}
+
+.roblox-pay-head p {
+  margin: 0.5rem 0 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  max-width: 36rem;
+}
+
+.roblox-cards {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.35rem;
+}
+
+@media (min-width: 640px) {
+  .roblox-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.roblox-card {
+  padding: 1.15rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: linear-gradient(165deg, rgba(230, 133, 46, 0.07), transparent 55%),
+    var(--bg-elevated);
+  cursor: pointer;
+  transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+
+.roblox-card:hover {
+  border-color: rgba(230, 133, 46, 0.35);
+}
+
+.roblox-card.is-selected {
+  border-color: rgba(230, 133, 46, 0.65);
+  box-shadow: 0 0 0 1px rgba(230, 133, 46, 0.25), 0 12px 36px rgba(0, 0, 0, 0.35);
+}
+
+.roblox-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.roblox-card h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  color: var(--text-bright);
+  font-size: 1.05rem;
+}
+
+.roblox-kind {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.roblox-card p {
+  margin: 0 0 0.95rem;
+  font-size: 0.85rem;
+  min-height: 2.6em;
+}
+
+.roblox-claim {
+  margin-top: 1.75rem;
+  padding: 1.35rem 1.25rem 1.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.roblox-claim h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  color: var(--text-bright);
+  font-size: 1.15rem;
+}
+
+.roblox-claim strong {
+  color: var(--text-bright);
+  font-weight: 600;
+}
+
+.roblox-key-reveal {
+  margin-top: 1.15rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.roblox-key-reveal label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.roblox-key-value {
+  display: block;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(230, 133, 46, 0.35);
+  background: var(--control);
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--accent-hot);
+  word-break: break-all;
+}
+
+.roblox-key-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+
+.roblox-key-actions .btn {
+  height: 42px;
+  padding: 0 1.15rem;
+  text-decoration: none;
 }
 
 .account-panel {
