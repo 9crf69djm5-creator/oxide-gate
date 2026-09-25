@@ -25,19 +25,29 @@ API: https://oxide-gate-api.onrender.com
 The root [`render.yaml`](../render.yaml) already defines worker **`oxide-discord-bot`**.
 
 1. Push this repo (or sync Blueprint) so Render creates **oxide-discord-bot**.
-2. Render dashboard → **oxide-discord-bot** → **Environment** → paste:
+2. Render dashboard → **oxide-discord-bot-fra** → **Environment** → paste:
 
 | Variable | Value |
 |----------|--------|
 | `DISCORD_TOKEN` | Bot token (step 1) |
 | `CLIENT_ID` | Application ID |
 | `GUILD_ID` | Server ID |
-| `ADMIN_SECRET` | Same as gate-api (for `/key-create`) |
+| `ADMIN_SECRET` | **Same value** as **oxide-gate-api** → `ADMIN_SECRET` (required for `/key-create`) |
+| `API_BASE_URL` | `https://oxide-gate-api.onrender.com` (default in Blueprint) |
 
-3. **Manual Deploy** → wait until logs show `Logged in as …`.
+3. **Manual Deploy** → wait until logs show `Logged in as …` and `ADMIN_SECRET=set`.
 4. In Discord run **`/setup`** once (Admin).
 
-That’s the **only** secret you must paste once. After that the bot runs in the cloud forever (free worker may sleep on inactivity on some hosts — Render free workers stay as long as the process is running; redeploy if it stops).
+### Keep the free bot awake (important)
+
+Render **free** web services sleep after ~15 minutes with no HTTP traffic. While asleep the Discord gateway disconnects and **every** slash command returns **"The application did not respond"**.
+
+This repo includes [`.github/workflows/keep-alive.yml`](../.github/workflows/keep-alive.yml) which pings the bot + API every 10 minutes. After push, confirm Actions are enabled for the repo. Alternatively use [UptimeRobot](https://uptimerobot.com/) (or similar) HTTP monitor every 5–10 min on:
+
+- `https://oxide-discord-bot-fra.onrender.com/`
+- `https://oxide-gate-api.onrender.com/api/health`
+
+That’s the **only** secret you must paste once (`ADMIN_SECRET` must stay in sync with gate-api). After that the bot runs in the cloud (with keep-alive so it doesn’t sleep).
 
 ### 3. Server icon (branding)
 
@@ -110,11 +120,20 @@ On join: auto **Member** role (+ optional welcome in `#announcements`).
 | `DISCORD_TOKEN` | yes | Bot token |
 | `CLIENT_ID` | yes | Application ID |
 | `GUILD_ID` | yes | Server ID |
-| `API_BASE_URL` | no | Default cloud API |
+| `API_BASE_URL` | no | Default `https://oxide-gate-api.onrender.com` |
 | `SITE_URL` | no | Default Vercel site |
-| `ADMIN_SECRET` | for `/key-create` | Match gate-api |
+| `ADMIN_SECRET` | for `/key-create` | **Must match** gate-api production secret (not local `oxide-dev-admin-secret`) |
 | `WELCOME_MESSAGE` | no | `true`/`false` |
 | `AUTO_SETUP` | no | Auto layout if empty |
 | `ROBLOX_POLL_MINUTES` | no | 15–30 |
 
 **Do not commit `.env` or tokens.**
+
+### `/key-create` troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|--------|-----|
+| "The application did not respond" | Bot asleep / offline (free Render) | Ping health URL or wait for keep-alive; check Render logs for `Logged in as` |
+| Ephemeral error about `ADMIN_SECRET` | Missing on bot | Set on **oxide-discord-bot-fra** |
+| HTTP 401/403 from API | Secret mismatch | Copy gate-api `ADMIN_SECRET` → bot env, redeploy bot |
+| Timeout talking to API | gate-api cold start | Retry once; keep-alive pings API too |

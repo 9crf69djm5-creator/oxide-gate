@@ -8,7 +8,8 @@ async function fetchHealth(apiBaseUrl) {
   const started = Date.now();
   const res = await fetch(url, {
     headers: { Accept: "application/json", "User-Agent": "OXIDE-DiscordBot/1.0" },
-    signal: AbortSignal.timeout(10000),
+    // Free Render cold starts often exceed 10s; interaction is already deferred.
+    signal: AbortSignal.timeout(45000),
   });
   const ms = Date.now() - started;
   let body = null;
@@ -43,7 +44,7 @@ async function createKeys(opts) {
       count: opts.count ?? 1,
       days: opts.days,
     }),
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(45000),
   });
   const body = await res.json().catch(() => ({}));
   return { ok: res.ok, status: res.status, body };
@@ -69,7 +70,7 @@ async function redeemKey(opts) {
       "User-Agent": "OXIDE-DiscordBot/1.0",
     },
     body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(45000),
   });
   const body = await res.json().catch(() => ({}));
   return { ok: res.ok && body.ok !== false, status: res.status, body };

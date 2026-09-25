@@ -23,10 +23,18 @@ const DEFAULT_DOWNLOAD =
  */
 function isStaffPlus(member) {
   if (!member) return false;
-  if (member.permissions.has(PermissionFlagsBits.Administrator)) return true;
+  try {
+    if (member.permissions?.has?.(PermissionFlagsBits.Administrator)) return true;
+  } catch {
+    /* permissions bitfield may be missing on partials */
+  }
+  const guild = member.guild;
+  if (!guild) return false;
+  const cache = member.roles?.cache;
+  if (!cache) return false;
   return STAFF_PLUS.some((name) => {
-    const role = findRole(member.guild, name);
-    return role && member.roles.cache.has(role.id);
+    const role = findRole(guild, name);
+    return role && cache.has(role.id);
   });
 }
 
@@ -522,19 +530,20 @@ async function handleCommand(interaction, client) {
   }
 
   if (name === "key-create") {
+    // ACK immediately — free Render + cold gate-api easily exceed Discord's ~3s window.
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
     if (!isStaffPlus(interaction.member)) {
-      return interaction.reply({
-        content: "Staff+ only.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return interaction.editReply({ content: "Staff+ only." });
     }
     if (!config.adminSecret) {
-      return interaction.reply({
-        content: "`ADMIN_SECRET` is not set in the bot environment.",
-        flags: MessageFlags.Ephemeral,
+      return interaction.editReply({
+        content:
+          "`ADMIN_SECRET` is not set on this bot (Render → **oxide-discord-bot-fra** → Environment). " +
+          "It must match gate-api `ADMIN_SECRET`.",
       });
     }
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
     const plan = interaction.options.getString("plan") || "premium";
     const count = interaction.options.getInteger("count") || 1;
     const days = interaction.options.getInteger("days") ?? undefined;
@@ -547,8 +556,18 @@ async function handleCommand(interaction, client) {
         days,
       });
       if (!result.ok) {
+        const detail =
+          result.body?.message ||
+          result.body?.error ||
+          JSON.stringify(result.body ?? {});
+        const hint =
+          result.status === 401 || result.status === 403
+            ? "\n\nLikely **ADMIN_SECRET mismatch** — copy the secret from Render **oxide-gate-api** → Environment into **oxide-discord-bot-fra**."
+            : result.status === 0 || /abort|timeout|fetch/i.test(String(detail))
+              ? `\n\nGate API may be cold/unreachable: \`${config.apiBaseUrl}\``
+              : "";
         return interaction.editReply({
-          content: `API error (${result.status}): \`${JSON.stringify(result.body)}\``,
+          content: `API error (HTTP ${result.status}): \`${String(detail).slice(0, 500)}\`${hint}`,
         });
       }
       const keys = result.body.keys || [];
@@ -579,7 +598,11 @@ async function handleCommand(interaction, client) {
           "DM buyers the key, or have them run `/redeem key:…` in the server.",
       });
     } catch (err) {
-      return interaction.editReply({ content: `Failed: \`${err.message}\`` });
+      return interaction.editReply({
+        content:
+          `Failed: \`${err.message}\`\n` +
+          `API: \`${config.apiBaseUrl}\` — if this is a timeout, wait for gate-api wake and retry.`,
+      });
     }
   }
 }
