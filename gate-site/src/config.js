@@ -13,8 +13,8 @@ export const config = {
   tagline: "Roblox, read from the outside.",
   discordInvite: envDiscord || "https://discord.gg/3PXJ8r56T",
 
-  /** License API — localhost for dev; replace after free host deploy */
-  API_BASE_URL: (envApi || "http://127.0.0.1:8787").replace(/\/$/, ""),
+  /** License API — production Render fallback so local misconfig still hits cloud */
+  API_BASE_URL: (envApi || "https://oxide-gate-api.onrender.com").replace(/\/$/, ""),
 
   payment: {
     provider: "roblox",

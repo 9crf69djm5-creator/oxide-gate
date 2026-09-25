@@ -327,19 +327,31 @@ async function checkOwnership({ userId, assetId, productKind }) {
     }
   }
 
-  // GamePass alternate: legacy ownership endpoint
+  // GamePass alternate endpoints (inventory shape varies by privacy / API version)
   if (kind === "GamePass") {
-    try {
-      const url = `https://inventory.roblox.com/v1/users/${uid}/items/GamePass/${aid}`;
-      const res = await robloxFetch(url);
-      if (res.ok) {
+    const gpCandidates = [
+      `https://inventory.roblox.com/v1/users/${uid}/items/GamePass/${aid}`,
+      `https://apis.roblox.com/game-passes/v1/users/${uid}/game-passes?count=100&exclusiveStartId=`,
+    ];
+    for (const url of gpCandidates) {
+      try {
+        const res = await robloxFetch(url);
+        if (!res.ok) continue;
         const data = await res.json();
         if (Array.isArray(data?.data)) {
-          return { ok: true, owned: data.data.length > 0, demo: false };
+          if (url.includes("/items/GamePass/")) {
+            return { ok: true, owned: data.data.length > 0, demo: false };
+          }
+          // List endpoint: scan for matching gamePassId
+          const owned = data.data.some(
+            (item) =>
+              String(item.gamePassId || item.id || item.gamePass?.id || "") === String(assetId)
+          );
+          return { ok: true, owned, demo: false };
         }
+      } catch (_) {
+        /* try next */
       }
-    } catch (_) {
-      /* fall through */
     }
   }
 

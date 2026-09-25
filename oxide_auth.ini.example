@@ -1,6 +1,6 @@
 # Place this file next to Oxide.exe
-# Points auth at your hosted gate-api (Render URL after deploy).
-# Local default if this file is missing: http://127.0.0.1:8787
+# Points auth at your hosted gate-api (Render).
+# Default if this file is missing: https://oxide-gate-api.onrender.com
 
 api=https://oxide-gate-api.onrender.com
 

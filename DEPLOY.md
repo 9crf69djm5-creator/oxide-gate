@@ -54,6 +54,26 @@ Push to a new GitHub repo (GitHub → New repository → follow their push instr
 7. Copy the service URL, e.g. `https://oxide-gate-api.onrender.com`.
 8. Test: open `https://YOUR-API.onrender.com/api/health` — should return `{ "ok": true, ... }`.
 9. Test products: `https://YOUR-API.onrender.com/api/products`.
+10. **Must-pass persistence check:** health must show either:
+   - `"db":"/data/keys.db"` + `"dbEphemeral":false` (paid disk mounted at `/data`), **or**
+   - `"dbBackend":"postgres-blob"` + `"dbEphemeral":false` (free Postgres BYTEA backup — path may be `/tmp/oxide-keys.db`).
+   If health shows `"db":"./data/keys.db"` with no `dbBackend` / with `"dbEphemeral":true`, keys live on the ephemeral filesystem and **will wipe on redeploy**.
+
+### Fix live API if health shows `./data/keys.db` (dashboard or API)
+
+Blueprint sets `DB_PATH=/data/keys.db` + free Postgres (`DATABASE_URL`). Code auto-picks `/data` when a disk is mounted; otherwise `/tmp` + Postgres blob.
+
+**Dashboard clicks (if API cannot attach a disk on free tier):**
+
+1. Render → **oxide-gate-api** → **Environment**
+2. Set `DB_PATH` = `/data/keys.db`
+3. Confirm `DATABASE_URL` is linked to **oxide-keys-db** (or paste the Internal Database URL)
+4. Set `DEMO_ROBLOX` = `0`
+5. Confirm gamepass IDs: `ROBLOX_GAMEPASS_WEEK` / `_MONTH` / `_LIFETIME`
+6. **Disks** (Settings → Disks): add disk name `oxide-data`, mount `/data`, ≥1 GB — **requires a paid instance** on most accounts. Skip if staying on free + Postgres blob.
+7. **Manual Deploy** → wait **Live**
+8. Re-check `GET /api/health` until `dbEphemeral` is `false` (and `db` is `/data/keys.db` if disk attached).
+9. Re-mint keys after persistence is confirmed — old ephemeral keys are **not** copied automatically.
 
 ### Option B — Manual Web Service
 

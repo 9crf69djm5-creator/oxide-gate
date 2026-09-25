@@ -28,7 +28,22 @@ const days =
           : 30
     : Number(daysRaw);
 
-require("./lib/db");
-const { createKeys } = require("./lib/keys");
-const result = createKeys({ plan, count, days });
-console.log(JSON.stringify({ ok: true, plan, days: result.days, keys: result.keys.map((k) => k.key) }, null, 2));
+(async () => {
+  const dbModule = require("./lib/db");
+  await dbModule.initDb();
+  const { createKeys } = require("./lib/keys");
+  const result = createKeys({ plan, count, days });
+  if (typeof dbModule.flushToPostgres === "function") {
+    await dbModule.flushToPostgres().catch(() => {});
+  }
+  console.log(
+    JSON.stringify(
+      { ok: true, plan, days: result.days, keys: result.keys.map((k) => k.key) },
+      null,
+      2
+    )
+  );
+})().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

@@ -8,6 +8,14 @@ const PLAN_LABELS = {
   lifetime: "Lifetime",
 };
 
+/** Plan → default duration days (null = lifetime / never expires) */
+const PLAN_DAYS = {
+  week: 7,
+  month: 30,
+  premium: 30,
+  lifetime: null,
+};
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -64,10 +72,17 @@ function isExpired(row) {
 function createKeys({ plan, count, days }) {
   const planId = String(plan || "premium").toLowerCase();
   const n = Math.min(Math.max(parseInt(count, 10) || 1, 1), 500);
-  const dayCount =
-    days === null || days === undefined || days === "" || Number(days) <= 0
-      ? null
-      : Number(days);
+  let dayCount;
+  if (days === null || days === undefined || days === "") {
+    // Omit days → plan default (lifetime stays null; week/month get 7/30)
+    dayCount = Object.prototype.hasOwnProperty.call(PLAN_DAYS, planId)
+      ? PLAN_DAYS[planId]
+      : null;
+  } else if (Number(days) <= 0) {
+    dayCount = null;
+  } else {
+    dayCount = Number(days);
+  }
 
   const insert = db.prepare(`
     INSERT INTO keys (key, plan, status, hwid, created_at, activated_at, expires_at, token, duration_days)
@@ -108,13 +123,51 @@ function createKeys({ plan, count, days }) {
   return { keys: created, days: dayCount };
 }
 
-/** Plan → default duration days (null = lifetime) */
-const PLAN_DAYS = {
-  week: 7,
-  month: 30,
-  premium: 30,
-  lifetime: null,
-};
+/**
+ * Resolve validity days for a key.
+ * IMPORTANT: do not use `null ?? 30` — lifetime plans intentionally use null.
+ */
+function resolveDurationDays(row, daysOverride) {
+  if (daysOverride != null && daysOverride !== "") {
+    const n = Number(daysOverride);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+  if (row && row.duration_days != null) {
+    const n = Number(row.duration_days);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+  const planId = String(row?.plan || "").toLowerCase();
+  if (Object.prototype.hasOwnProperty.call(PLAN_DAYS, planId)) {
+    return PLAN_DAYS[planId];
+  }
+  return 30;
+}
+
+/** Clear bogus ~30-day expiry that older redeem logic applied to lifetime keys. */
+function repairLifetimeKeys() {
+  try {
+    const info = db
+      .prepare(
+        `
+      UPDATE keys
+      SET expires_at = NULL,
+          duration_days = NULL,
+          status = CASE WHEN status = 'expired' THEN 'active' ELSE status END
+      WHERE lower(plan) = 'lifetime'
+        AND (
+          expires_at IS NOT NULL
+          OR duration_days IS NOT NULL
+        )
+    `
+      )
+      .run();
+    if (info.changes > 0) {
+      console.log(`[keys] Repaired ${info.changes} lifetime key(s) (cleared false expiry)`);
+    }
+  } catch (err) {
+    console.warn("[keys] lifetime repair skipped:", err.message);
+  }
+}
 
 function getKey(key) {
   return db.prepare("SELECT * FROM keys WHERE key = ?").get(key);
@@ -166,12 +219,7 @@ function redeem({ key: rawKey, hwid, daysOverride }) {
     return { ok: false, error: "invalid_status", message: `Key status: ${row.status}` };
   }
 
-  const days =
-    daysOverride != null
-      ? daysOverride
-      : row.duration_days != null
-        ? row.duration_days
-        : PLAN_DAYS[String(row.plan).toLowerCase()] ?? 30;
+  const days = resolveDurationDays(row, daysOverride);
 
   const activated = nowIso();
   const expires = computeExpires(days);
@@ -280,10 +328,13 @@ function seedDemoKeys() {
   const createdAt = nowIso();
   const planDays = { week: 7, month: 30, lifetime: null };
   for (const d of demos) {
+    // Use planDays[d.plan] as-is — null means lifetime (do NOT coalesce to 30)
     insert.run({
       ...d,
       created_at: createdAt,
-      duration_days: planDays[d.plan] ?? 30,
+      duration_days: Object.prototype.hasOwnProperty.call(planDays, d.plan)
+        ? planDays[d.plan]
+        : 30,
     });
   }
   return demos.map((d) => d.key);
@@ -296,6 +347,8 @@ module.exports = {
   validate,
   validateOrActivate,
   seedDemoKeys,
+  repairLifetimeKeys,
+  resolveDurationDays,
   planLabel,
   PLAN_DAYS,
   getKey,

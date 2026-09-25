@@ -3,7 +3,7 @@ require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const express = require("express");
 const cors = require("cors");
-const { dbPath } = require("./lib/db");
+const dbModule = require("./lib/db");
 const keys = require("./lib/keys");
 const claims = require("./lib/claims");
 const roblox = require("./lib/roblox");
@@ -59,7 +59,9 @@ app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
     service: "oxide-gate-api",
-    db: dbPath,
+    db: dbModule.dbPath,
+    dbBackend: dbModule.dbBackend,
+    dbEphemeral: dbModule.dbEphemeral,
     downloadConfigured: Boolean(DOWNLOAD_URL),
     robloxDemo: roblox.isDemoMode(),
     robloxProductsConfigured: claims.listProducts().filter((p) => p.configured).length,
@@ -105,6 +107,7 @@ app.post("/api/roblox/claim", async (req, res) => {
               : 400;
       return res.status(status).json(result);
     }
+    await dbModule.flushToPostgres().catch(() => {});
     return res.json(result);
   } catch (err) {
     console.error("[roblox/claim]", err);
@@ -116,7 +119,7 @@ app.post("/api/roblox/claim", async (req, res) => {
  * Website redeem — activates unused key, returns download + token.
  * Body: { key, hwid? }
  */
-app.post("/api/redeem", (req, res) => {
+app.post("/api/redeem", async (req, res) => {
   try {
     const { key, hwid } = req.body || {};
     const result = keys.redeem({ key, hwid: hwid || null });
@@ -125,6 +128,7 @@ app.post("/api/redeem", (req, res) => {
     }
     if (!result.downloadUrl) result.downloadUrl = DOWNLOAD_URL;
     else result.downloadUrl = safeDownloadUrl(result.downloadUrl) || DOWNLOAD_URL;
+    await dbModule.flushToPostgres().catch(() => {});
     return res.json(result);
   } catch (err) {
     console.error("[redeem]", err);
@@ -137,7 +141,7 @@ app.post("/api/redeem", (req, res) => {
  * Body: { key, hwid, token? }
  * Unused keys are activated + bound on first successful EXE call (same machine redeem).
  */
-app.post("/api/validate", (req, res) => {
+app.post("/api/validate", async (req, res) => {
   try {
     const { key, hwid, token } = req.body || {};
     const result = keys.validateOrActivate({ key, hwid, token });
@@ -145,6 +149,7 @@ app.post("/api/validate", (req, res) => {
       const status = result.error === "hwid_mismatch" || result.error === "banned" ? 403 : 400;
       return res.status(status).json(result);
     }
+    await dbModule.flushToPostgres().catch(() => {});
     return res.json(result);
   } catch (err) {
     console.error("[validate]", err);
@@ -157,7 +162,7 @@ app.post("/api/validate", (req, res) => {
  * Header: X-Admin-Secret or Authorization: Bearer <secret>
  * Body: { plan, count, days }
  */
-app.post("/api/admin/create-keys", (req, res) => {
+app.post("/api/admin/create-keys", async (req, res) => {
   const secret =
     req.get("X-Admin-Secret") ||
     (req.get("Authorization") || "").replace(/^Bearer\s+/i, "") ||
@@ -170,6 +175,7 @@ app.post("/api/admin/create-keys", (req, res) => {
   try {
     const { plan, count, days } = req.body || {};
     const result = keys.createKeys({ plan, count, days });
+    await dbModule.flushToPostgres().catch(() => {});
     return res.json({
       ok: true,
       count: result.keys.length,
@@ -226,21 +232,69 @@ app.use((req, res) => {
   res.status(404).json({ ok: false, error: "not_found", message: `No route ${req.method} ${req.path}` });
 });
 
-// Seed demo keys on every boot (INSERT OR IGNORE)
-const seeded = keys.seedDemoKeys();
+function startKeepAlivePings() {
+  const peers = [
+    process.env.KEEP_ALIVE_URL,
+    process.env.DISCORD_BOT_HEALTH_URL,
+    "https://oxide-discord-bot-fra.onrender.com/",
+  ]
+    .map((u) => String(u || "").trim())
+    .filter(Boolean)
+    .filter((u, i, arr) => arr.indexOf(u) === i);
+  if (!peers.length) return;
+  const ping = async () => {
+    for (const url of peers) {
+      try {
+        const ac = new AbortController();
+        const t = setTimeout(() => ac.abort(), 25000);
+        await fetch(url, {
+          method: "GET",
+          headers: { "User-Agent": "OXIDE-KeepAlive/1.0" },
+          signal: ac.signal,
+        });
+        clearTimeout(t);
+      } catch (err) {
+        console.warn(`[keep-alive] ${url}: ${err.message}`);
+      }
+    }
+  };
+  // Stagger first ping so boot is not delayed; then every ~8 minutes.
+  setTimeout(ping, 45000);
+  const timer = setInterval(ping, 8 * 60 * 1000);
+  if (timer.unref) timer.unref();
+  console.log(`  Keep-alive peers: ${peers.join(", ")}`);
+}
 
-app.listen(PORT, () => {
-  console.log(`OXIDE gate-api listening on http://127.0.0.1:${PORT}`);
-  console.log(`  DB: ${dbPath}`);
-  console.log(`  DOWNLOAD_URL: ${DOWNLOAD_URL || "(not set)"}`);
-  console.log(`  Demo keys ready: ${seeded.join(", ")}`);
-  console.log(`  Roblox demo mode: ${roblox.isDemoMode() ? "ON" : "off"}`);
-  console.log(
-    `  Roblox products: ${claims
-      .listProducts()
-      .filter((p) => p.configured)
-      .map((p) => `${p.plan}=${p.assetId}`)
-      .join(", ") || "(none configured)"}`
-  );
-  console.log(`  Admin: POST /api/admin/create-keys with X-Admin-Secret`);
+async function main() {
+  await dbModule.initDb();
+  if (typeof keys.repairLifetimeKeys === "function") {
+    keys.repairLifetimeKeys();
+  }
+  const seeded = keys.seedDemoKeys();
+  // Ensure demo seed (and any boot writes) hit Postgres blob before traffic.
+  if (typeof dbModule.flushToPostgres === "function") {
+    await dbModule.flushToPostgres().catch(() => {});
+  }
+
+  app.listen(PORT, () => {
+    console.log(`OXIDE gate-api listening on http://127.0.0.1:${PORT}`);
+    console.log(`  DB: ${dbModule.dbPath} (${dbModule.dbBackend}, ephemeral=${dbModule.dbEphemeral})`);
+    console.log(`  DOWNLOAD_URL: ${DOWNLOAD_URL || "(not set)"}`);
+    console.log(`  Demo keys ready: ${seeded.join(", ")}`);
+    console.log(`  Roblox demo mode: ${roblox.isDemoMode() ? "ON" : "off"}`);
+    console.log(
+      `  Roblox products: ${claims
+        .listProducts()
+        .filter((p) => p.configured)
+        .map((p) => `${p.plan}=${p.assetId}`)
+        .join(", ") || "(none configured)"}`
+    );
+    console.log(`  Admin: POST /api/admin/create-keys with X-Admin-Secret`);
+    startKeepAlivePings();
+  });
+}
+
+main().catch((err) => {
+  console.error("[boot] failed:", err);
+  process.exit(1);
 });

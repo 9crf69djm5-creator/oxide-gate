@@ -14,7 +14,7 @@ window.OXIDE_CONFIG = Object.assign(
     siteUrl: "/",
 
     /** License API (gate-api). Change when deploying (e.g. https://oxide-gate-api.onrender.com). */
-    API_BASE_URL: "http://127.0.0.1:8787",
+    API_BASE_URL: "https://oxide-gate-api.onrender.com",
 
     payment: {
       provider: "roblox",
@@ -32,9 +32,9 @@ window.OXIDE_CONFIG = Object.assign(
 
     download: {
       // Fallback if API redeem does not return downloadUrl
-      url: "http://127.0.0.1:8787",
+      url: "https://oxide-gate-api.onrender.com/downloads/Oxide.exe",
       filename: "Oxide.exe",
-      note: "After redeem, enter the same key in Oxide.exe. API must be running for EXE auth.",
+      note: "After redeem, enter the same key in Oxide.exe.",
     },
 
     plans: [

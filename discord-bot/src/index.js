@@ -127,8 +127,8 @@ client.login(config.token).catch((err) => {
 });
 
 // Optional HTTP bind so Render free Web Service stays healthy (PORT set by host).
-// Free web services still sleep after ~15m with no inbound HTTP — use the
-// GitHub Action keep-alive (or UptimeRobot) to ping this URL every ~10m.
+// Free web services still sleep after ~15m with no inbound HTTP — mutual keep-alive
+// with gate-api + GitHub Action / external ping keep both awake.
 const port = Number(process.env.PORT);
 if (Number.isFinite(port) && port > 0) {
   const http = require("http");
@@ -146,6 +146,37 @@ if (Number.isFinite(port) && port > 0) {
       );
     })
     .listen(port, () => console.log(`Health HTTP on :${port}`));
+
+  const peers = [
+    process.env.KEEP_ALIVE_URL,
+    process.env.GATE_API_HEALTH_URL,
+    `${String(config.apiBaseUrl || "").replace(/\/$/, "")}/api/health`,
+    "https://oxide-gate-api.onrender.com/api/health",
+  ]
+    .map((u) => String(u || "").trim())
+    .filter(Boolean)
+    .filter((u, i, arr) => arr.indexOf(u) === i);
+
+  const pingPeers = async () => {
+    for (const url of peers) {
+      try {
+        const ac = new AbortController();
+        const t = setTimeout(() => ac.abort(), 25000);
+        await fetch(url, {
+          method: "GET",
+          headers: { "User-Agent": "OXIDE-KeepAlive/1.0" },
+          signal: ac.signal,
+        });
+        clearTimeout(t);
+      } catch (err) {
+        console.warn(`[keep-alive] ${url}: ${err.message}`);
+      }
+    }
+  };
+  setTimeout(pingPeers, 60000);
+  const keepTimer = setInterval(pingPeers, 8 * 60 * 1000);
+  if (keepTimer.unref) keepTimer.unref();
+  console.log(`Keep-alive peers: ${peers.join(", ")}`);
 }
 
 process.on("SIGINT", () => {
