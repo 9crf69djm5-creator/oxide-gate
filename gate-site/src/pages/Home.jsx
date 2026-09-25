@@ -3,6 +3,14 @@ import { motion } from "framer-motion";
 import { config } from "../config";
 import { Nav, Footer, PageMotion, Reveal } from "../components/Layout";
 import { Topography } from "../components/Topography";
+import { HeroShowcase } from "../components/HeroShowcase";
+
+const trust = [
+  { k: "0", label: "Injected code" },
+  { k: "External", label: "Memory + input" },
+  { k: "Same-day", label: "Offset healing" },
+  { k: "Cloud", label: "Shared configs" },
+];
 
 export default function Home() {
   const { tour, why, games } = config.features;
@@ -14,50 +22,80 @@ export default function Home() {
         <Nav onHero />
         <Topography className="hero-topo" />
         <div className="hero-inner">
-          <motion.p
-            className="hero-brand"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <img
-              className="hero-brand-logo"
-              src="/oxide-banner.png"
-              alt="OXIDE"
-              decoding="async"
-            />
-          </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 28 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {config.tagline}
-          </motion.h1>
-          <motion.p
-            className="hero-lead"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.22 }}
-          >
-            OXIDE never loads code into the game. It reads memory and drives real
-            input from its own process — nothing inside the client to find.
-          </motion.p>
-          <motion.div
-            className="hero-ctas"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.34 }}
-          >
-            <Link className="btn btn-light" to="/key">
-              Get a key
-            </Link>
-            <a className="btn btn-ghost" href="#tour">
-              See the menu
-            </a>
-          </motion.div>
+          <div className="hero-copy">
+            <motion.p
+              className="hero-brand"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <img
+                className="hero-brand-logo"
+                src="/oxide-banner.png"
+                alt="OXIDE"
+                decoding="async"
+              />
+            </motion.p>
+            <motion.h1
+              initial={{ opacity: 0, y: 28 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {config.tagline}
+            </motion.h1>
+            <motion.p
+              className="hero-lead"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.22 }}
+            >
+              OXIDE never loads code into the game. It reads memory and drives real
+              input from its own process — nothing inside the client to find.
+            </motion.p>
+            <motion.div
+              className="hero-ctas"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.34 }}
+            >
+              <Link className="btn btn-light" to="/key">
+                Get a key
+              </Link>
+              <a className="btn btn-ghost" href="#tour">
+                See the menu
+              </a>
+            </motion.div>
+          </div>
+
+          <HeroShowcase />
         </div>
+
+        <motion.div
+          className="hero-trust"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.5 }}
+        >
+          {trust.map((t) => (
+            <div key={t.label} className="hero-trust-item">
+              <strong>{t.k}</strong>
+              <span>{t.label}</span>
+            </div>
+          ))}
+        </motion.div>
       </header>
+
+      <section className="section section-strip" id="signals">
+        <div className="wrap strip-row">
+          {["Aimbot", "Silent aim", "Triggerbot", "ESP", "Chams", "Config cloud"].map(
+            (label, i) => (
+              <Reveal key={label} delay={0.04 * i}>
+                <span className="strip-chip">{label}</span>
+              </Reveal>
+            )
+          )}
+        </div>
+      </section>
 
       <section className="section section-dark" id="tour">
         <div className="wrap">
