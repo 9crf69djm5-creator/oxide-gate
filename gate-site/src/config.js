@@ -17,12 +17,12 @@ export const config = {
   API_BASE_URL: (envApi || "http://127.0.0.1:8787").replace(/\/$/, ""),
 
   payment: {
-    provider: "sellapp",
-    checkoutUrl: "#checkout-placeholder",
-    robloxPassUrl: "",
+    provider: "roblox",
+    checkoutUrl: "",
+    robloxPassUrl: "https://www.roblox.com/game-pass/1999478401",
     currencyLabel: "USD",
     note:
-      "Checkout opens SellApp (or your link), or pay with Roblox below. After payment, redeem your license key on Get a key.",
+      "Buy the OXIDE Access gamepass on Roblox, then claim your license key below. Redeem the same key in Oxide.exe.",
   },
 
   download: {

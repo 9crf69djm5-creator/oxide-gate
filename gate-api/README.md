@@ -29,38 +29,44 @@ Demo keys are seeded automatically on boot:
 | `CORS_ORIGINS` | Comma-separated allowed origins for the gate site |
 | `DB_PATH` | Optional SQLite path (default `./data/keys.db`; on Render use `/data/keys.db`) |
 | `DISCORD_INVITE` | `https://discord.gg/3PXJ8r56T` |
-| `ROBLOX_ASSET_WEEK` | Classic Shirt / T-Shirt asset ID for Week plan |
-| `ROBLOX_ASSET_MONTH` | Classic Shirt / T-Shirt asset ID for Month plan |
+| `ROBLOX_GAMEPASS_WEEK` | Gamepass ID for Week plan (preferred) |
+| `ROBLOX_GAMEPASS_MONTH` | Gamepass ID for Month plan (optional) |
 | `ROBLOX_GAMEPASS_LIFETIME` | Gamepass ID for Lifetime plan |
+| `ROBLOX_ASSET_WEEK` | Classic Shirt / T-Shirt asset ID for Week (fallback) |
+| `ROBLOX_ASSET_MONTH` | Classic Shirt / T-Shirt asset ID for Month (fallback) |
 | `ROBLOX_PRODUCT_MAP` | Optional JSON map overriding the above |
 | `ROBLOX_COOKIE` | Optional `.ROBLOSECURITY` if public inventory checks fail |
 | `DEMO_ROBLOX` | `1` to skip ownership checks (testing only) |
 
 Free host setup: see root **[DEPLOY.md](../DEPLOY.md)** (Render + Vercel).
 
-## Roblox payments (Shirt / Gamepass → key)
+## Roblox payments (Gamepass / Shirt → key)
 
-Customers buy your clothing or gamepass on Roblox, then claim an OXIDE key on the Buy page.
+Customers buy your gamepass (or clothing) on Roblox, then claim an OXIDE key on the Buy page.
 
 ### Create products on Roblox
 
-1. Open [Roblox Create](https://create.roblox.com) → **Creations** → **Development Items** (or Avatar → Clothing).
-2. Upload a **Classic Shirt** or **T-Shirt** for Week and Month (set a Robux price).
-3. For Lifetime, create a **Game Pass** on your experience and set a price.
-4. Copy each **Asset ID** / **Game Pass ID** from the URL (`/catalog/ASSETID` or `/game-pass/ID`).
-5. Put them in `gate-api/.env` (and Render Environment):
+1. Open your experience on [Roblox Create](https://create.roblox.com) → **Monetization** → **Passes**.
+2. Create **OXIDE Week** (suggested **499–799 Robux**) and copy the Game Pass ID.
+3. Create **OXIDE Lifetime** (or reuse existing) and copy its ID.
+4. Optional: **OXIDE Month** → `ROBLOX_GAMEPASS_MONTH`.
+5. Put IDs in `gate-api/.env` (and Render Environment):
 
 ```env
-ROBLOX_ASSET_WEEK=1234567890
-ROBLOX_ASSET_MONTH=1234567891
-ROBLOX_GAMEPASS_LIFETIME=1234567892
+ROBLOX_GAMEPASS_WEEK=1111111111
+ROBLOX_GAMEPASS_LIFETIME=1999478401
+# ROBLOX_GAMEPASS_MONTH=
 DEMO_ROBLOX=0
 # Only if inventory checks return 401/403:
 # ROBLOX_COOKIE=.ROBLOSECURITY=...
 ```
 
+Shirt fallbacks: `ROBLOX_ASSET_WEEK` / `ROBLOX_ASSET_MONTH` if you are not using gamepasses for those plans.
+
 6. Redeploy the API on Render so env vars apply.
-7. Test: Buy page → **Buy Shirt on Roblox** → purchase → enter username → **Claim OXIDE key**.
+7. Test: Buy page → **Buy Gamepass on Roblox** → purchase → enter username → **Claim OXIDE key**.
+
+When a `ROBLOX_GAMEPASS_*` var is set, `buyUrl` is `https://www.roblox.com/game-pass/ID`. Shirt asset IDs still produce catalog URLs.
 
 Ownership is checked via public inventory endpoints such as:
 

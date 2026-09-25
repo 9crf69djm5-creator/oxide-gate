@@ -41,7 +41,7 @@ async function claimKey({ username, plan }) {
       ok: false,
       error: "product_not_configured",
       message:
-        "This Roblox product is not configured yet. Set ROBLOX_ASSET_WEEK / ROBLOX_ASSET_MONTH / ROBLOX_GAMEPASS_LIFETIME on the API.",
+        "This Roblox product is not configured yet. Set ROBLOX_GAMEPASS_WEEK / ROBLOX_GAMEPASS_MONTH / ROBLOX_GAMEPASS_LIFETIME (or shirt ROBLOX_ASSET_*) on the API.",
     };
   }
 

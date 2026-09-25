@@ -17,13 +17,12 @@ window.OXIDE_CONFIG = Object.assign(
     API_BASE_URL: "http://127.0.0.1:8787",
 
     payment: {
-      provider: "sellapp",
-      // Primary CTA on /buy — replace with your SellApp product URL
-      checkoutUrl: "#checkout-placeholder",
-      robloxPassUrl: "",
+      provider: "roblox",
+      checkoutUrl: "",
+      robloxPassUrl: "https://www.roblox.com/game-pass/1999478401",
       currencyLabel: "USD",
       note:
-        "Checkout opens SellApp (or your link). After payment you receive a license key — redeem it on Get a key.",
+        "Buy the OXIDE Access gamepass on Roblox, then claim your license key. Redeem the same key in Oxide.exe.",
     },
 
     discord: {

@@ -8,6 +8,10 @@
  * DEMO_ROBLOX=1 skips ownership verification (local / staging only).
  */
 
+/**
+ * envKeys: prefer GamePass vars when set; shirt/asset IDs remain as fallback.
+ * Each entry is a string env name or { key, kind: "GamePass"|"Asset" }.
+ */
 const PLAN_META = {
   week: {
     id: "week",
@@ -15,9 +19,13 @@ const PLAN_META = {
     days: 7,
     price: 5,
     unit: "USD",
-    blurb: "Seven days. Buy the Week shirt on Roblox, then claim your key.",
-    productKind: "Asset",
-    envKeys: ["ROBLOX_ASSET_WEEK", "ROBLOX_SHIRT_WEEK"],
+    blurb: "Seven days. Buy the Week gamepass on Roblox, then claim your key.",
+    productKind: "GamePass",
+    envKeys: [
+      { key: "ROBLOX_GAMEPASS_WEEK", kind: "GamePass" },
+      { key: "ROBLOX_ASSET_WEEK", kind: "Asset" },
+      { key: "ROBLOX_SHIRT_WEEK", kind: "Asset" },
+    ],
   },
   month: {
     id: "month",
@@ -25,9 +33,13 @@ const PLAN_META = {
     days: 30,
     price: 12,
     unit: "USD",
-    blurb: "Thirty days. Buy the Month shirt on Roblox, then claim your key.",
-    productKind: "Asset",
-    envKeys: ["ROBLOX_ASSET_MONTH", "ROBLOX_SHIRT_MONTH"],
+    blurb: "Thirty days. Buy the Month gamepass on Roblox, then claim your key.",
+    productKind: "GamePass",
+    envKeys: [
+      { key: "ROBLOX_GAMEPASS_MONTH", kind: "GamePass" },
+      { key: "ROBLOX_ASSET_MONTH", kind: "Asset" },
+      { key: "ROBLOX_SHIRT_MONTH", kind: "Asset" },
+    ],
   },
   lifetime: {
     id: "lifetime",
@@ -37,7 +49,10 @@ const PLAN_META = {
     unit: "USD",
     blurb: "No renewals. Buy the Lifetime gamepass on Roblox, then claim your key.",
     productKind: "GamePass",
-    envKeys: ["ROBLOX_GAMEPASS_LIFETIME", "ROBLOX_ASSET_LIFETIME"],
+    envKeys: [
+      { key: "ROBLOX_GAMEPASS_LIFETIME", kind: "GamePass" },
+      { key: "ROBLOX_ASSET_LIFETIME", kind: "Asset" },
+    ],
   },
   premium: {
     id: "premium",
@@ -47,7 +62,10 @@ const PLAN_META = {
     unit: "USD",
     blurb: "Premium access via Roblox purchase.",
     productKind: "Asset",
-    envKeys: ["ROBLOX_ASSET_PREMIUM", "ROBLOX_SHIRT_PREMIUM"],
+    envKeys: [
+      { key: "ROBLOX_ASSET_PREMIUM", kind: "Asset" },
+      { key: "ROBLOX_SHIRT_PREMIUM", kind: "Asset" },
+    ],
   },
 };
 
@@ -94,10 +112,14 @@ function resolveProduct(planId) {
   }
 
   if (!assetId) {
-    for (const envKey of meta.envKeys) {
+    for (const entry of meta.envKeys) {
+      const envKey = typeof entry === "string" ? entry : entry.key;
+      const entryKind = typeof entry === "string" ? null : entry.kind;
       const v = process.env[envKey];
       if (v && String(v).trim()) {
         assetId = String(v).trim();
+        if (entryKind) productKind = entryKind;
+        else if (/GAMEPASS/i.test(envKey)) productKind = "GamePass";
         break;
       }
     }
@@ -108,13 +130,19 @@ function resolveProduct(planId) {
   const kindNorm =
     String(productKind).toLowerCase() === "gamepass" ? "GamePass" : "Asset";
 
+  // Prefer gamepass-oriented blurb when buy URL is a game pass
+  let blurb = meta.blurb;
+  if (kindNorm === "Asset" && /gamepass/i.test(blurb)) {
+    blurb = blurb.replace(/gamepass/gi, "shirt");
+  }
+
   return {
     plan: id,
     name: meta.name,
     days: meta.days,
     price: Number(process.env[`ROBLOX_PRICE_${id.toUpperCase()}`]) || meta.price,
     unit: meta.unit,
-    blurb: meta.blurb,
+    blurb,
     assetId: String(assetId),
     productKind: kindNorm,
     buyUrl: catalogUrl(assetId, kindNorm),

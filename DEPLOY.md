@@ -41,9 +41,11 @@ Push to a new GitHub repo (GitHub → New repository → follow their push instr
 | `CORS_ORIGINS` | leave placeholder for now; update after Vercel URL exists |
 | `DISCORD_INVITE` | `https://discord.gg/3PXJ8r56T` |
 | `DB_PATH` | `/data/keys.db` (already in blueprint) |
-| `ROBLOX_ASSET_WEEK` | Classic shirt asset ID (Week) |
-| `ROBLOX_ASSET_MONTH` | Classic shirt asset ID (Month) |
+| `ROBLOX_GAMEPASS_WEEK` | Gamepass ID (Week) — preferred |
+| `ROBLOX_GAMEPASS_MONTH` | Gamepass ID (Month) — optional |
 | `ROBLOX_GAMEPASS_LIFETIME` | Gamepass ID (Lifetime) |
+| `ROBLOX_ASSET_WEEK` | Classic shirt asset ID (Week) — fallback if no gamepass |
+| `ROBLOX_ASSET_MONTH` | Classic shirt asset ID (Month) — fallback |
 | `ROBLOX_COOKIE` | Optional `.ROBLOSECURITY` if ownership checks need auth |
 | `DEMO_ROBLOX` | `0` in production; `1` only for testing without purchases |
 
@@ -166,7 +168,8 @@ Legacy static HTML still lives in `gate/` (Discord updated). Prefer `gate-site/`
 - `CORS_ORIGINS` — comma-separated frontend origins
 - `DB_PATH` — `/data/keys.db` with disk
 - `DISCORD_INVITE` — `https://discord.gg/3PXJ8r56T`
-- `ROBLOX_ASSET_WEEK` / `ROBLOX_ASSET_MONTH` / `ROBLOX_GAMEPASS_LIFETIME` — Roblox product IDs
+- `ROBLOX_GAMEPASS_WEEK` / `ROBLOX_GAMEPASS_MONTH` / `ROBLOX_GAMEPASS_LIFETIME` — preferred Roblox gamepass IDs
+- `ROBLOX_ASSET_WEEK` / `ROBLOX_ASSET_MONTH` — shirt fallbacks if gamepass unset
 - `ROBLOX_COOKIE` — optional ownership auth
 - `DEMO_ROBLOX` — `0` for real sales
 
@@ -183,9 +186,24 @@ Legacy static HTML still lives in `gate/` (Discord updated). Prefer `gate-site/`
 
 ## Roblox buy → claim (production)
 
-1. Create shirts / gamepass on Roblox; copy Asset IDs.
-2. Set Render env vars (table above), set `DEMO_ROBLOX=0`, redeploy API.
-3. On https://oxide-gate-site.vercel.app/buy → **Pay with Roblox** → buy → claim with username → redeem key.
+### Create game passes
+
+1. Open your experience on [create.roblox.com](https://create.roblox.com) → **Monetization** → **Passes**.
+2. **Lifetime** (already done): pass ID `1999478401` → set `ROBLOX_GAMEPASS_LIFETIME=1999478401`.
+3. **Week** — create a second pass:
+   - Name: **OXIDE Week**
+   - Suggested price: **499–799 Robux** (pick what fits your market)
+   - Description: e.g. “7 days of OXIDE access. Claim your key on the site after purchase.”
+4. Copy the new pass ID from the URL (`/game-pass/ID`) or the dashboard.
+5. On Render → Environment, set:
+   - `ROBLOX_GAMEPASS_WEEK=<paste ID>`
+   - `ROBLOX_GAMEPASS_LIFETIME=1999478401`
+   - Clear any old `ROBLOX_PRODUCT_MAP` that pointed week/month at the lifetime pass
+   - `DEMO_ROBLOX=0`
+6. Redeploy the API. Test: `/api/products` should show Week with a `game-pass` buy URL.
+7. Optional month: create **OXIDE Month**, set `ROBLOX_GAMEPASS_MONTH`.
+
+Shirt assets still work via `ROBLOX_ASSET_WEEK` / `ROBLOX_ASSET_MONTH` if you prefer clothing over passes.
 ---
 
 ## Alternatives (also free-ish)

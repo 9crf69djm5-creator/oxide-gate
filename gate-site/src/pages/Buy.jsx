@@ -12,20 +12,20 @@ const FALLBACK_PLANS = [
     name: "Week",
     price: 5,
     unit: "USD",
-    blurb: "Seven days. Buy the Week shirt on Roblox, then claim.",
+    blurb: "Seven days. Buy the Week gamepass on Roblox, then claim.",
     buyUrl: null,
     configured: false,
-    productKind: "Asset",
+    productKind: "GamePass",
   },
   {
     plan: "month",
     name: "Month",
     price: 12,
     unit: "USD",
-    blurb: "Thirty days. Buy the Month shirt on Roblox, then claim.",
+    blurb: "Thirty days. Buy the Month gamepass on Roblox, then claim.",
     buyUrl: null,
     configured: false,
-    productKind: "Asset",
+    productKind: "GamePass",
   },
   {
     plan: "lifetime",
@@ -77,7 +77,7 @@ export default function Buy() {
   function openRobloxBuy(product) {
     if (!product?.buyUrl) {
       window.alert(
-        "Roblox Asset ID not configured yet.\n\nSet ROBLOX_ASSET_WEEK / ROBLOX_ASSET_MONTH / ROBLOX_GAMEPASS_LIFETIME on gate-api and redeploy."
+        "Roblox product ID not configured yet.\n\nSet ROBLOX_GAMEPASS_WEEK / ROBLOX_GAMEPASS_MONTH / ROBLOX_GAMEPASS_LIFETIME on gate-api and redeploy."
       );
       return;
     }
