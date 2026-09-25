@@ -6,6 +6,7 @@ const {
   Events,
   Partials,
   ChannelType,
+  MessageFlags,
 } = require("discord.js");
 const { config } = require("./config");
 const { registerCommands } = require("./register");
@@ -92,14 +93,29 @@ client.on(Events.InteractionCreate, async (interaction) => {
   try {
     await handleCommand(interaction, client);
   } catch (err) {
+    // 10062 = interaction expired / already acknowledged — ignore, don't crash
+    if (err?.code === 10062) {
+      console.warn(`[cmd ${interaction.commandName}] interaction expired (10062)`);
+      return;
+    }
     console.error(`[cmd ${interaction.commandName}]`, err);
-    const payload = { content: `Error: \`${err.message}\``, ephemeral: true };
+    const payload = {
+      content: `Error: \`${err.message}\``,
+      flags: MessageFlags.Ephemeral,
+    };
     if (interaction.deferred || interaction.replied) {
       await interaction.followUp(payload).catch(() => {});
     } else {
       await interaction.reply(payload).catch(() => {});
     }
   }
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("[unhandledRejection]", err?.message || err);
+});
+client.on("error", (err) => {
+  console.error("[discord client]", err?.message || err);
 });
 
 client.login(config.token).catch((err) => {

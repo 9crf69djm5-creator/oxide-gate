@@ -10,8 +10,25 @@ const roblox = require("./lib/roblox");
 
 const PORT = Number(process.env.PORT) || 8787;
 const ADMIN_SECRET = process.env.ADMIN_SECRET || "change-me-to-a-long-random-string";
-const DOWNLOAD_URL = process.env.DOWNLOAD_URL || "";
+const SITE_EXE_URL = "https://oxide-gate-site.vercel.app/downloads/Oxide.exe";
+const DOWNLOAD_URL = safeDownloadUrl(process.env.DOWNLOAD_URL) || SITE_EXE_URL;
 const DISCORD_INVITE = process.env.DISCORD_INVITE || "https://discord.gg/3PXJ8r56T";
+
+/** Buyers must get Oxide.exe only — never a GitHub source repo tree. */
+function safeDownloadUrl(raw) {
+  const url = String(raw || "").trim();
+  if (!url || /^file:/i.test(url)) return "";
+  try {
+    const u = new URL(url);
+    if (/github\.com$/i.test(u.hostname) && !/\/releases\/download\//i.test(u.pathname)) {
+      console.warn("[download] Refusing GitHub repo URL; using site EXE instead:", url);
+      return "";
+    }
+  } catch {
+    return "";
+  }
+  return url;
+}
 
 const corsOrigins = (process.env.CORS_ORIGINS || "")
   .split(",")
@@ -106,7 +123,8 @@ app.post("/api/redeem", (req, res) => {
     if (!result.ok) {
       return res.status(400).json(result);
     }
-    if (!result.downloadUrl && DOWNLOAD_URL) result.downloadUrl = DOWNLOAD_URL;
+    if (!result.downloadUrl) result.downloadUrl = DOWNLOAD_URL;
+    else result.downloadUrl = safeDownloadUrl(result.downloadUrl) || DOWNLOAD_URL;
     return res.json(result);
   } catch (err) {
     console.error("[redeem]", err);

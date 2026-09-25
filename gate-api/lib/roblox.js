@@ -19,7 +19,7 @@ const PLAN_META = {
     days: 7,
     price: 5,
     unit: "USD",
-    blurb: "Seven days. Buy the Week gamepass on Roblox, then claim your key.",
+    blurb: "7-day key. Universal only (Aim / ESP / Chams / Fly) — no Games pack.",
     productKind: "GamePass",
     envKeys: [
       { key: "ROBLOX_GAMEPASS_WEEK", kind: "GamePass" },
@@ -33,7 +33,7 @@ const PLAN_META = {
     days: 30,
     price: 12,
     unit: "USD",
-    blurb: "Thirty days. Buy the Month gamepass on Roblox, then claim your key.",
+    blurb: "30-day key. Universal + Games tabs.",
     productKind: "GamePass",
     envKeys: [
       { key: "ROBLOX_GAMEPASS_MONTH", kind: "GamePass" },
@@ -47,7 +47,7 @@ const PLAN_META = {
     days: null,
     price: 40,
     unit: "USD",
-    blurb: "No renewals. Buy the Lifetime gamepass on Roblox, then claim your key.",
+    blurb: "Forever. Full OXIDE — all games + priority.",
     productKind: "GamePass",
     envKeys: [
       { key: "ROBLOX_GAMEPASS_LIFETIME", kind: "GamePass" },

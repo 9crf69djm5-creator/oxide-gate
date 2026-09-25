@@ -34,13 +34,26 @@ export async function redeemKey(raw) {
 
     const expiresAt = data.expires ? new Date(data.expires).getTime() : null;
     const prev = loadSession() || {};
+    const siteExe =
+      config.download?.url || "https://oxide-gate-site.vercel.app/downloads/Oxide.exe";
+    let downloadUrl = String(data.downloadUrl || siteExe || "").trim() || siteExe;
+    // Never persist a GitHub repo / source-tree link for buyers.
+    try {
+      const u = new URL(downloadUrl);
+      if (/github\.com$/i.test(u.hostname) && !/\/releases\/download\//i.test(u.pathname)) {
+        downloadUrl = siteExe;
+      }
+    } catch {
+      downloadUrl = siteExe;
+    }
+    if (/^file:/i.test(downloadUrl)) downloadUrl = siteExe;
     const session = {
       key: data.key || key,
       plan: data.plan || "Premium",
       redeemedAt: Date.now(),
       expiresAt,
       token: data.token || null,
-      downloadUrl: data.downloadUrl || config.download?.url || "",
+      downloadUrl,
       discordLinked: !!prev.discordLinked,
       discordUser: prev.discordUser || null,
     };

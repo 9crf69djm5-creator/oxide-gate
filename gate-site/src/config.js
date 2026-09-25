@@ -19,58 +19,51 @@ export const config = {
   payment: {
     provider: "roblox",
     checkoutUrl: "",
+    /** Fallback only — each plan has its own gamepass; prefer /api/products. */
     robloxPassUrl: "https://www.roblox.com/game-pass/1999478401",
     currencyLabel: "USD",
     note:
-      "Buy the OXIDE Access gamepass on Roblox, then claim your license key below. Redeem the same key in Oxide.exe.",
+      "Buy the Week, Month, or Lifetime gamepass on Roblox that matches the plan you want, then claim below. Redeem that key in Oxide.exe.",
   },
 
   download: {
-    url: "",
+    /** Direct EXE only — never the GitHub source repo. */
+    url: "https://oxide-gate-site.vercel.app/downloads/Oxide.exe",
     filename: "Oxide.exe",
-    note: "After redeem, enter the same key in Oxide.exe. Point oxide_auth.ini at your hosted API.",
+    note: "Download Oxide.exe, then enter your license key in the app.",
   },
 
+  /** License tiers — length and access differ. Gamepass IDs live on gate-api. */
   plans: [
-    {
-      id: "premium",
-      name: "Premium",
-      price: 15,
-      unit: "USD",
-      blurb: "One payment. Access stays on your license key.",
-      cta: "Buy OXIDE",
-      featured: true,
-      checkoutUrl: null,
-    },
     {
       id: "week",
       name: "Week",
       price: 5,
       unit: "USD",
-      blurb: "Seven days. Full build.",
+      blurb: "7-day key — Universal only (Aim / ESP / Chams / Fly). No Games pack.",
       cta: "Get week",
       featured: false,
-      checkoutUrl: null,
+      checkoutUrl: "https://www.roblox.com/game-pass/1999442394",
     },
     {
       id: "month",
       name: "Month",
       price: 12,
       unit: "USD",
-      blurb: "Thirty days. Same download.",
+      blurb: "30-day key — Universal + Games tabs.",
       cta: "Get month",
       featured: false,
-      checkoutUrl: null,
+      checkoutUrl: "https://www.roblox.com/game-pass/1999370393",
     },
     {
       id: "lifetime",
       name: "Lifetime",
       price: 40,
       unit: "USD",
-      blurb: "No renewals. Key is yours.",
+      blurb: "Forever — full OXIDE including all games + priority.",
       cta: "Get lifetime",
-      featured: false,
-      checkoutUrl: null,
+      featured: true,
+      checkoutUrl: "https://www.roblox.com/game-pass/1999478401",
     },
   ],
 

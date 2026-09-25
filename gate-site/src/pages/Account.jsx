@@ -39,19 +39,31 @@ export default function Account() {
     );
   }
 
-  const downloadUrl =
-    session.downloadUrl || config.download?.url || "#download-placeholder";
+  const siteExeUrl =
+    config.download?.url || "https://oxide-gate-site.vercel.app/downloads/Oxide.exe";
+
+  /** Prefer site EXE; never send buyers to a GitHub repo / source tree. */
+  function resolveDownloadUrl(raw) {
+    const url = String(raw || "").trim();
+    if (!url || url === "#download-placeholder" || url === apiBase()) return siteExeUrl;
+    if (/^file:/i.test(url)) return siteExeUrl;
+    try {
+      const u = new URL(url);
+      if (/github\.com$/i.test(u.hostname) && !/\/releases\/download\//i.test(u.pathname)) {
+        return siteExeUrl;
+      }
+    } catch {
+      return siteExeUrl;
+    }
+    return url;
+  }
+
+  const downloadUrl = resolveDownloadUrl(session.downloadUrl || siteExeUrl);
 
   function onDownload(e) {
-    if (
-      !downloadUrl ||
-      downloadUrl === "#download-placeholder" ||
-      downloadUrl === apiBase()
-    ) {
+    if (!downloadUrl || downloadUrl === "#download-placeholder") {
       e.preventDefault();
-      window.alert(
-        "Set DOWNLOAD_URL in gate-api/.env (or Render env).\n\nBuilt EXE (dev):\nExternal/x64/Release/Oxide.exe"
-      );
+      window.alert("Download is not configured. Contact support on Discord.");
     }
   }
 
@@ -95,11 +107,12 @@ export default function Account() {
             <a
               className="btn btn-accent btn-block"
               href={downloadUrl}
+              download={config.download?.filename || "Oxide.exe"}
               onClick={onDownload}
             >
-              Download {config.download?.filename || "Oxide.exe"}
+              Download Oxide.exe
             </a>
-            <p className="hint">{config.download?.note}</p>
+            <p className="hint">{config.download?.note || "Direct EXE download — no source code."}</p>
             <button
               type="button"
               className="btn btn-ghost btn-block"

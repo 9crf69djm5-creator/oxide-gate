@@ -24,6 +24,22 @@ function planLabel(plan) {
   return PLAN_LABELS[id] || plan || "Premium";
 }
 
+/** Buyers get Oxide.exe only — never a GitHub source repo. */
+function downloadUrl() {
+  const SITE_EXE = "https://oxide-gate-site.vercel.app/downloads/Oxide.exe";
+  const raw = String(process.env.DOWNLOAD_URL || "").trim();
+  if (!raw || /^file:/i.test(raw)) return SITE_EXE;
+  try {
+    const u = new URL(raw);
+    if (/github\.com$/i.test(u.hostname) && !/\/releases\/download\//i.test(u.pathname)) {
+      return SITE_EXE;
+    }
+  } catch {
+    return SITE_EXE;
+  }
+  return raw;
+}
+
 function generateKey() {
   const seg = () => crypto.randomBytes(2).toString("hex").toUpperCase();
   return `OXIDE-${seg()}-${seg()}-${seg()}`;
@@ -139,7 +155,7 @@ function redeem({ key: rawKey, hwid, daysOverride }) {
       plan: planLabel(row.plan),
       planId: row.plan,
       expires: row.expires_at,
-      downloadUrl: process.env.DOWNLOAD_URL || "",
+      downloadUrl: downloadUrl(),
       token,
       key,
       alreadyActive: true,
@@ -178,7 +194,7 @@ function redeem({ key: rawKey, hwid, daysOverride }) {
     plan: planLabel(row.plan),
     planId: row.plan,
     expires,
-    downloadUrl: process.env.DOWNLOAD_URL || "",
+    downloadUrl: downloadUrl(),
     token,
     key,
     alreadyActive: false,
