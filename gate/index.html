@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OXIDE — Roblox External</title>
+    <meta
+      name="description"
+      content="OXIDE reads Roblox from the outside. Buy a key, redeem, download."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body data-page="home">
+    <header class="hero">
+      <nav class="site-nav on-accent">
+        <a class="brand" href="index.html">
+          <span class="brand-mark" aria-hidden="true"></span>
+          OXIDE
+        </a>
+        <div class="nav-actions">
+          <a class="nav-link hide-sm" href="#tour">Tour</a>
+          <a class="nav-link hide-sm" href="#games">Games</a>
+          <a class="nav-link" href="buy.html">Buy</a>
+          <a class="btn btn-light" href="key.html">Get a key</a>
+        </div>
+      </nav>
+
+      <div class="hero-inner">
+        <p class="hero-brand">OXIDE</p>
+        <h1>Roblox, read from the outside.</h1>
+        <p class="hero-lead">
+          OXIDE never loads code into the game. It reads memory and drives real
+          input from its own process — nothing inside the client to find.
+        </p>
+        <div class="hero-ctas">
+          <a class="btn btn-light" href="key.html">Get a key</a>
+          <a class="btn btn-ghost" href="#tour">See the menu</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="section section-dark" id="tour">
+      <div class="wrap">
+        <p class="section-kicker">Tour</p>
+        <h2>Meet every tab.</h2>
+        <p class="section-lead">A walk through the parts you will actually use.</p>
+
+        <div class="tour-visual">
+          <div class="menu-mock" aria-hidden="true">
+            <div class="menu-rail">
+              <span></span><span></span><span></span><span></span><span></span
+              ><span></span>
+            </div>
+            <div class="menu-body">
+              <strong>OXIDE // AIM</strong>
+              <div class="menu-row accent"></div>
+              <div class="menu-row"></div>
+              <div class="menu-row short"></div>
+              <div class="menu-row"></div>
+              <div class="menu-row short"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tour-grid" id="tour-grid"></div>
+      </div>
+    </section>
+
+    <section class="section section-dark" id="why">
+      <div class="wrap">
+        <p class="section-kicker">Why external</p>
+        <h2>Why you'll choose OXIDE.</h2>
+        <div class="why-grid" id="why-grid"></div>
+      </div>
+    </section>
+
+    <section class="section section-dark" id="games">
+      <div class="wrap">
+        <p class="section-kicker">Games</p>
+        <h2>Every game.</h2>
+        <p class="section-lead">
+          Generic aim and ESP work anywhere. These have a tab of their own.
+        </p>
+        <div class="games-grid" id="games-grid"></div>
+      </div>
+    </section>
+
+    <section class="cta-band" id="get">
+      <h2>Join the community.</h2>
+      <p>
+        Grab a key, then read the setup post in Discord. You are running in a
+        couple of minutes.
+      </p>
+      <div class="hero-ctas">
+        <a class="btn btn-accent" href="key.html">Get a key</a>
+        <a class="btn btn-ghost" href="buy.html">Buy</a>
+        <a class="btn btn-ghost" data-discord href="#">Join the Discord</a>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <span>© OXIDE — your gate, your domain.</span>
+      <nav>
+        <a href="buy.html">Buy</a>
+        <a href="key.html">Key</a>
+        <a href="account.html">Account</a>
+        <a data-discord href="#">Discord</a>
+      </nav>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

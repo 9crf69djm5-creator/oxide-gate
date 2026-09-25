@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OXIDE — Account</title>
+    <meta name="description" content="Your OXIDE license and download." />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body data-page="account">
+    <div class="gate-page">
+      <canvas class="topo-canvas" data-topo aria-hidden="true"></canvas>
+
+      <a class="brand gate-brand-link" href="index.html">
+        <span class="brand-mark" aria-hidden="true"></span>
+        OXIDE
+      </a>
+
+      <main class="gate-main">
+        <div class="gate-stack">
+          <h1>Account</h1>
+
+          <div class="panel" id="account-empty" hidden>
+            <h2>No active key</h2>
+            <p class="hint">
+              Redeem a license on the key page to unlock download.
+            </p>
+            <a class="btn btn-accent btn-block" href="key.html">Get a key</a>
+            <a
+              class="btn btn-ghost btn-block"
+              href="buy.html"
+              style="margin-top: 0.65rem"
+              >Buy access</a
+            >
+          </div>
+
+          <div class="panel" id="account-filled" hidden>
+            <span class="pill">Active</span>
+            <dl class="account-meta">
+              <div>
+                <dt>Plan</dt>
+                <dd id="acc-plan">—</dd>
+              </div>
+              <div>
+                <dt>Key</dt>
+                <dd id="acc-key">—</dd>
+              </div>
+              <div>
+                <dt>Expires</dt>
+                <dd id="acc-expires">—</dd>
+              </div>
+              <div>
+                <dt>Discord</dt>
+                <dd id="acc-discord">—</dd>
+              </div>
+            </dl>
+
+            <a
+              class="btn btn-accent btn-block"
+              href="#"
+              id="acc-download"
+              style="margin-top: 1.25rem"
+              >Download Oxide.exe</a
+            >
+            <p class="hint" id="acc-download-note" style="margin-top: 0.75rem"></p>
+            <a
+              class="btn btn-ghost btn-block"
+              href="#"
+              id="acc-logout"
+              style="margin-top: 0.65rem"
+              >Clear session</a
+            >
+          </div>
+        </div>
+      </main>
+
+      <footer class="gate-footer">
+        <a href="buy.html">Buy</a>
+        <a href="key.html">Key</a>
+        <a href="index.html">Site</a>
+      </footer>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/topography.js"></script>
+  </body>
+</html>

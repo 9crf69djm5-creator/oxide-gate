@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Secrets / local env
+.env
+.env.*
+!.env.example
+!**/.env.example
+gate-api/.env
+gate-site/.env
+gate-site/.env.local
+
+# Build / local data
+dist/
+.vercel/
+gate-api/data/
+*.db
+*.db-*
+*.log
+
+# Binaries / local build junk
+x64/**/*.pdb
+x64/**/*.ilk
+x64/**/*.obj
+*.exe.bak*
+Oxide_locked.exe
+Oxide_old.exe
+Oxide_rebuild.exe
+External.exe.bak*

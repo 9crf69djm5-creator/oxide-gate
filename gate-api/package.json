@@ -1,0 +1,23 @@
+{
+  "name": "oxide-gate-api",
+  "version": "1.0.0",
+  "description": "OXIDE license key API — redeem, validate, admin create-keys",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node seed.js",
+    "create-keys": "node create-keys.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  },
+  "allowScripts": {
+    "better-sqlite3@11.10.0": true
+  }
+}

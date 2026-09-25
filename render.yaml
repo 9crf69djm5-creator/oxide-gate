@@ -1,0 +1,30 @@
+# Render Blueprint — OXIDE gate-api
+# Dashboard: New → Blueprint → connect this repo
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: oxide-gate-api
+    runtime: node
+    rootDir: gate-api
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DB_PATH
+        value: /data/keys.db
+      - key: ADMIN_SECRET
+        generateValue: true
+      - key: DOWNLOAD_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: DISCORD_INVITE
+        value: https://discord.gg/3PXJ8r56T
+    disk:
+      name: oxide-data
+      mountPath: /data
+      sizeGB: 1

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OXIDE — Get a key</title>
+    <meta name="description" content="Redeem your OXIDE license key." />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body data-page="key">
+    <div class="gate-page">
+      <canvas class="topo-canvas" data-topo aria-hidden="true"></canvas>
+
+      <a class="brand gate-brand-link" href="index.html">
+        <span class="brand-mark" aria-hidden="true"></span>
+        OXIDE
+      </a>
+
+      <main class="gate-main">
+        <div class="gate-stack">
+          <h1>Get a key</h1>
+          <p class="gate-blurb">
+            Link Discord (optional), redeem your license, then download OXIDE.
+          </p>
+
+          <div class="panel">
+            <h2>Discord</h2>
+            <p class="hint">
+              Demo: marks you linked locally and opens your invite. Set
+              <code>discord.oauthUrl</code> in config for real OAuth.
+            </p>
+            <a class="btn btn-accent btn-block" href="#" id="discord-link"
+              >Continue with Discord</a
+            >
+
+            <div class="divider">or</div>
+
+            <h2>Redeem license</h2>
+            <p class="hint">
+              Uses <code>API_BASE_URL</code> in config. Seeded demos:
+              <code>OXIDE-DEMO-WEEK</code> ·
+              <code>OXIDE-DEMO-MONTH</code> ·
+              <code>OXIDE-DEMO-LIFE</code>
+            </p>
+            <form id="redeem-form">
+              <div class="field">
+                <label for="license-key">License key</label>
+                <input
+                  id="license-key"
+                  name="key"
+                  type="text"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="OXIDE-····-····"
+                />
+              </div>
+              <button class="btn btn-light btn-block" type="submit">
+                Redeem
+              </button>
+            </form>
+            <p class="status" id="redeem-status" role="status"></p>
+          </div>
+        </div>
+      </main>
+
+      <footer class="gate-footer">
+        <a href="buy.html">Buy</a>
+        <a href="account.html">Account</a>
+        <a href="index.html">Site</a>
+      </footer>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/topography.js"></script>
+  </body>
+</html>
