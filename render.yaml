@@ -1,4 +1,4 @@
-# Render Blueprint — OXIDE gate-api
+# Render Blueprint — OXIDE gate-api + Discord bot (both run in the cloud 24/7)
 # Dashboard: New → Blueprint → connect this repo
 # Docs: https://render.com/docs/blueprint-spec
 
@@ -21,19 +21,20 @@ services:
       - key: DOWNLOAD_URL
         sync: false
       - key: CORS_ORIGINS
-        sync: false
+        value: https://oxide-gate-site.vercel.app,http://localhost:5173,http://127.0.0.1:5173,null
       - key: DISCORD_INVITE
         value: https://discord.gg/3PXJ8r56T
       - key: ROBLOX_GAMEPASS_WEEK
-        sync: false
+        value: "1999442394"
       - key: ROBLOX_GAMEPASS_MONTH
-        sync: false
+        value: "1999370393"
       - key: ROBLOX_GAMEPASS_LIFETIME
-        sync: false
+        value: "1999478401"
+      # Empty so shirt placeholders never override game passes
       - key: ROBLOX_ASSET_WEEK
-        sync: false
+        value: ""
       - key: ROBLOX_ASSET_MONTH
-        sync: false
+        value: ""
       - key: ROBLOX_COOKIE
         sync: false
       - key: DEMO_ROBLOX
@@ -42,3 +43,38 @@ services:
       name: oxide-data
       mountPath: /data
       sizeGB: 1
+
+  # Discord bot — free Web Service (binds PORT for health; bot runs 24/7 in cloud).
+  # One-time: paste DISCORD_TOKEN, CLIENT_ID, GUILD_ID in Render Environment.
+  # Prefer type:worker on paid; free plan uses web + tiny / health listener.
+  - type: web
+    name: oxide-discord-bot
+    runtime: node
+    rootDir: discord-bot
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: CLIENT_ID
+        sync: false
+      - key: GUILD_ID
+        sync: false
+      - key: ADMIN_SECRET
+        sync: false
+      - key: API_BASE_URL
+        value: https://oxide-gate-api.onrender.com
+      - key: SITE_URL
+        value: https://oxide-gate-site.vercel.app
+      - key: DISCORD_INVITE
+        value: https://discord.gg/3PXJ8r56T
+      - key: ROBLOX_POLL_MINUTES
+        value: "20"
+      - key: AUTO_SETUP
+        value: "true"
+      - key: WELCOME_MESSAGE
+        value: "true"

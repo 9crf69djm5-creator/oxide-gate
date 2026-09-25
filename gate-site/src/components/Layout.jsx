@@ -8,7 +8,14 @@ export function Nav({ onHero = false }) {
   return (
     <nav className={`site-nav${onHero ? " on-hero" : ""}`}>
       <Link className="brand" to="/">
-        <span className="brand-mark" aria-hidden="true" />
+        <img
+          className="brand-logo"
+          src="/oxide-app-icon.png"
+          alt=""
+          width={28}
+          height={28}
+          decoding="async"
+        />
         OXIDE
       </Link>
       <div className="nav-actions">

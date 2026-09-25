@@ -189,19 +189,19 @@ Legacy static HTML still lives in `gate/` (Discord updated). Prefer `gate-site/`
 ### Create game passes
 
 1. Open your experience on [create.roblox.com](https://create.roblox.com) → **Monetization** → **Passes**.
-2. **Lifetime** (already done): pass ID `1999478401` → set `ROBLOX_GAMEPASS_LIFETIME=1999478401`.
-3. **Week** — create a second pass:
-   - Name: **OXIDE Week**
-   - Suggested price: **499–799 Robux** (pick what fits your market)
-   - Description: e.g. “7 days of OXIDE access. Claim your key on the site after purchase.”
-4. Copy the new pass ID from the URL (`/game-pass/ID`) or the dashboard.
-5. On Render → Environment, set:
-   - `ROBLOX_GAMEPASS_WEEK=<paste ID>`
-   - `ROBLOX_GAMEPASS_LIFETIME=1999478401`
-   - Clear any old `ROBLOX_PRODUCT_MAP` that pointed week/month at the lifetime pass
+2. Production Game Pass IDs (set these on Render → Environment):
+
+| Plan | Env var | Game Pass ID | buyUrl |
+|------|---------|--------------|--------|
+| Week | `ROBLOX_GAMEPASS_WEEK` | `1999442394` | `https://www.roblox.com/game-pass/1999442394` |
+| Month | `ROBLOX_GAMEPASS_MONTH` | `1999370393` | `https://www.roblox.com/game-pass/1999370393` |
+| Lifetime | `ROBLOX_GAMEPASS_LIFETIME` | `1999478401` | `https://www.roblox.com/game-pass/1999478401` |
+
+3. Also on Render:
+   - **Delete** `ROBLOX_PRODUCT_MAP` (and `ROBLOX_ASSET_IDS`) if present — they override the vars above and can map week/month to the lifetime pass
+   - Clear `ROBLOX_ASSET_WEEK` / `ROBLOX_ASSET_MONTH` (or leave empty) so shirt placeholders do not override
    - `DEMO_ROBLOX=0`
-6. Redeploy the API. Test: `/api/products` should show Week with a `game-pass` buy URL.
-7. Optional month: create **OXIDE Month**, set `ROBLOX_GAMEPASS_MONTH`.
+4. Redeploy the API. Verify: `GET /api/products` returns three different `game-pass` buyUrls (table above).
 
 Shirt assets still work via `ROBLOX_ASSET_WEEK` / `ROBLOX_ASSET_MONTH` if you prefer clothing over passes.
 ---

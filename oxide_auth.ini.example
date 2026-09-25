@@ -2,7 +2,7 @@
 # Points auth at your hosted gate-api (Render URL after deploy).
 # Local default if this file is missing: http://127.0.0.1:8787
 
-api=https://YOUR-GATE-API.onrender.com
+api=https://oxide-gate-api.onrender.com
 
 # Same key also accepted:
-# API_BASE_URL=https://YOUR-GATE-API.onrender.com
+# API_BASE_URL=https://oxide-gate-api.onrender.com

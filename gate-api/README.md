@@ -53,10 +53,11 @@ Customers buy your gamepass (or clothing) on Roblox, then claim an OXIDE key on 
 5. Put IDs in `gate-api/.env` (and Render Environment):
 
 ```env
-ROBLOX_GAMEPASS_WEEK=1111111111
+ROBLOX_GAMEPASS_WEEK=1999442394
+ROBLOX_GAMEPASS_MONTH=1999370393
 ROBLOX_GAMEPASS_LIFETIME=1999478401
-# ROBLOX_GAMEPASS_MONTH=
 DEMO_ROBLOX=0
+# Do not set ROBLOX_PRODUCT_MAP — delete it on Render if present.
 # Only if inventory checks return 401/403:
 # ROBLOX_COOKIE=.ROBLOSECURITY=...
 ```

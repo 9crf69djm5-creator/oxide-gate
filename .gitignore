@@ -10,6 +10,9 @@ node_modules/
 gate-api/.env
 gate-site/.env
 gate-site/.env.local
+discord-bot/.env
+discord-bot/data/*.json
+!discord-bot/data/.gitkeep
 
 # Build / local data
 dist/
