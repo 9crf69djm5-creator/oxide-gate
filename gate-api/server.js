@@ -15,7 +15,47 @@ const ADMIN_SECRET = process.env.ADMIN_SECRET || "change-me-to-a-long-random-str
 const SITE_EXE_URL = "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
 const DOWNLOAD_URL = safeDownloadUrl(process.env.DOWNLOAD_URL) || SITE_EXE_URL;
 const DISCORD_INVITE = process.env.DISCORD_INVITE || "https://discord.gg/3PXJ8r56T";
+const DISCORD_BOT_HEALTH_URL = (
+  process.env.DISCORD_BOT_HEALTH_URL || "https://oxide-discord-bot-fra.onrender.com/"
+).replace(/\/?$/, "/");
 const downloadsDir = path.join(__dirname, "public", "downloads");
+
+/** Server-side Discord bot health probe (avoids browser CORS on the bot host). */
+async function probeDiscordBotHealth() {
+  const started = Date.now();
+  try {
+    const res = await fetch(DISCORD_BOT_HEALTH_URL, {
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "OXIDE-GateAPI-Status/1.0",
+      },
+      signal: AbortSignal.timeout(20000),
+    });
+    const body = await res.json().catch(() => null);
+    const ready = body?.ready === true;
+    const ok =
+      res.ok &&
+      (ready || body?.ok === true || body?.service === "oxide-discord-bot");
+    return {
+      ok,
+      ready: ready || (ok && body?.ready !== false),
+      user: body?.user || null,
+      service: body?.service || null,
+      status: res.status,
+      latencyMs: Date.now() - started,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      ready: false,
+      user: null,
+      service: null,
+      status: 0,
+      latencyMs: Date.now() - started,
+      error: err?.message || "unreachable",
+    };
+  }
+}
 
 /** Buyers must get Oxide.exe only — never a GitHub source repo tree. */
 function safeDownloadUrl(raw) {
@@ -128,7 +168,10 @@ app.get("/api/status", async (_req, res) => {
     const configured = products.filter((p) => p.configured).length;
     const download = externalVersion.probeHostedExe(downloadsDir, DOWNLOAD_URL);
     const hosted = externalVersion.readHostedClientVersion();
-    const external = await externalVersion.collectExternalStatus();
+    const [external, bot] = await Promise.all([
+      externalVersion.collectExternalStatus(),
+      probeDiscordBotHealth(),
+    ]);
 
     return res.json({
       ok: true,
@@ -173,6 +216,7 @@ app.get("/api/status", async (_req, res) => {
         liveRobloxVersion: external.liveRobloxVersion,
         liveNumericVersion: external.liveNumericVersion,
       },
+      bot,
     });
   } catch (err) {
     console.error("[status]", err);

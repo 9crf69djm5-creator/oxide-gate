@@ -257,6 +257,23 @@ export async function fetchSystemStatus() {
   const products = snap.products || {};
   const external = snap.external || {};
 
+  // Prefer server-side bot probe from gate-api (no browser CORS on bot host).
+  // Fall back to direct health fetch when aggregate has no bot field.
+  let botResult = bot;
+  if (snap.bot && typeof snap.bot === "object") {
+    const b = snap.bot;
+    const ready = b.ready === true || b.ok === true;
+    const ok = Boolean(ready || b.service === "oxide-discord-bot");
+    botResult = {
+      ok,
+      state:
+        ok && b.ready !== false ? "online" : ok || b.status ? "degraded" : "offline",
+      status: b.status || (ok ? 200 : 0),
+      body: b,
+      latency: b.latencyMs != null ? b.latencyMs : bot.latency,
+    };
+  }
+
   const apiOnline = Boolean(agg.ok);
   const dlAvailable =
     download.available === true ||
@@ -387,27 +404,27 @@ export async function fetchSystemStatus() {
       id: "bot",
       name: "Discord bot",
       detail: "Community + verify gate",
-      state: bot.state || (bot.ok ? "online" : "offline"),
-      latency: bot.latency,
+      state: botResult.state || (botResult.ok ? "online" : "offline"),
+      latency: botResult.latency,
       fields: [
         {
           label: "Ready",
           value:
-            bot.body?.ready === true
+            botResult.body?.ready === true
               ? "Yes"
-              : bot.body?.ready === false
+              : botResult.body?.ready === false
                 ? "No"
-                : bot.ok
+                : botResult.ok
                   ? "Responding"
                   : "—",
         },
         {
           label: "Bot",
-          value: bot.body?.user || bot.body?.service || "—",
+          value: botResult.body?.user || botResult.body?.service || "—",
         },
         {
           label: "Latency",
-          value: bot.latency != null ? `${bot.latency}ms` : "—",
+          value: botResult.latency != null ? `${botResult.latency}ms` : "—",
         },
       ],
     },

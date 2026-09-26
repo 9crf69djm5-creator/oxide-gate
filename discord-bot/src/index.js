@@ -239,12 +239,27 @@ client.login(config.token).catch((err) => {
 });
 
 // Optional HTTP bind so Render free Web Service stays healthy (PORT set by host).
+// CORS is required so gate-site (localhost / Vercel) can read ready/user in the browser.
 const port = Number(process.env.PORT);
 if (Number.isFinite(port) && port > 0) {
   const http = require("http");
+  const healthCors = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+    "Access-Control-Allow-Headers": "Accept, Content-Type",
+    "Access-Control-Max-Age": "86400",
+  };
   http
-    .createServer((_req, res) => {
-      res.writeHead(200, { "Content-Type": "application/json" });
+    .createServer((req, res) => {
+      if (req.method === "OPTIONS") {
+        res.writeHead(204, healthCors);
+        res.end();
+        return;
+      }
+      res.writeHead(200, {
+        "Content-Type": "application/json",
+        ...healthCors,
+      });
       res.end(
         JSON.stringify({
           ok: true,
