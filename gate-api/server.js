@@ -7,12 +7,15 @@ const dbModule = require("./lib/db");
 const keys = require("./lib/keys");
 const claims = require("./lib/claims");
 const roblox = require("./lib/roblox");
+const externalVersion = require("./lib/external-version");
+const offsetsLib = require("./lib/offsets");
 
 const PORT = Number(process.env.PORT) || 8787;
 const ADMIN_SECRET = process.env.ADMIN_SECRET || "change-me-to-a-long-random-string";
 const SITE_EXE_URL = "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
 const DOWNLOAD_URL = safeDownloadUrl(process.env.DOWNLOAD_URL) || SITE_EXE_URL;
 const DISCORD_INVITE = process.env.DISCORD_INVITE || "https://discord.gg/3PXJ8r56T";
+const downloadsDir = path.join(__dirname, "public", "downloads");
 
 /** Buyers must get Oxide.exe only — never a GitHub source repo tree. */
 function safeDownloadUrl(raw) {
@@ -55,17 +58,141 @@ app.use(
   })
 );
 
+/**
+ * Public health — no DB paths, secrets, tokens, or internal env.
+ */
 app.get("/api/health", (_req, res) => {
+  const exeMeta = externalVersion.probeHostedExe(downloadsDir, DOWNLOAD_URL);
+  const hosted = externalVersion.readHostedClientVersion();
   res.json({
     ok: true,
     service: "oxide-gate-api",
-    db: dbModule.dbPath,
     dbBackend: dbModule.dbBackend,
-    dbEphemeral: dbModule.dbEphemeral,
+    dbEphemeral: Boolean(dbModule.dbEphemeral),
     downloadConfigured: Boolean(DOWNLOAD_URL),
+    downloadAvailable: Boolean(exeMeta.available),
+    downloadSizeBytes: exeMeta.sizeBytes ?? null,
+    downloadModifiedAt: exeMeta.modifiedAt || null,
+    hostedClientVersion: hosted.version,
     robloxDemo: roblox.isDemoMode(),
     robloxProductsConfigured: claims.listProducts().filter((p) => p.configured).length,
   });
+});
+
+/**
+ * Hosted External / Oxide.exe version vs live Roblox Windows client.
+ * Used by the status page to show whether an external update is needed.
+ */
+app.get("/api/external-version", async (_req, res) => {
+  try {
+    const external = await externalVersion.collectExternalStatus();
+    const download = externalVersion.probeHostedExe(downloadsDir, DOWNLOAD_URL);
+    return res.json({
+      ok: true,
+      status: external.status,
+      updateNeeded: external.updateNeeded,
+      matched: external.matched,
+      message: external.message,
+      hostedClientVersion: external.hostedClientVersion,
+      hostedVersionSource: external.hostedVersionSource,
+      liveRobloxVersion: external.liveRobloxVersion,
+      liveNumericVersion: external.liveNumericVersion,
+      checkedAt: external.checkedAt,
+      download: {
+        available: Boolean(download.available),
+        filename: download.filename,
+        url: download.url,
+        sizeBytes: download.sizeBytes ?? null,
+        sizeLabel: download.sizeLabel || null,
+        modifiedAt: download.modifiedAt || null,
+      },
+    });
+  } catch (err) {
+    console.error("[external-version]", err);
+    return res.status(500).json({
+      ok: false,
+      error: "server_error",
+      message: "Could not collect external version status.",
+    });
+  }
+});
+
+/**
+ * Aggregated public status for the gate site / Discord / ops dashboards.
+ * Intentionally omits secrets, DB paths, tokens, and admin flags.
+ */
+app.get("/api/status", async (_req, res) => {
+  const started = Date.now();
+  try {
+    const products = claims.listProducts();
+    const configured = products.filter((p) => p.configured).length;
+    const download = externalVersion.probeHostedExe(downloadsDir, DOWNLOAD_URL);
+    const hosted = externalVersion.readHostedClientVersion();
+    const external = await externalVersion.collectExternalStatus();
+
+    return res.json({
+      ok: true,
+      service: "oxide-gate-api",
+      checkedAt: new Date().toISOString(),
+      latencyMs: Date.now() - started,
+      api: {
+        ok: true,
+        service: "oxide-gate-api",
+        dbBackend: dbModule.dbBackend,
+        dbEphemeral: Boolean(dbModule.dbEphemeral),
+        downloadConfigured: Boolean(DOWNLOAD_URL),
+        hostedClientVersion: hosted.version,
+        robloxDemo: roblox.isDemoMode(),
+        robloxProductsConfigured: configured,
+      },
+      download: {
+        available: Boolean(download.available),
+        filename: download.filename,
+        url: download.url,
+        sizeBytes: download.sizeBytes ?? null,
+        sizeLabel: download.sizeLabel || null,
+        modifiedAt: download.modifiedAt || null,
+      },
+      products: {
+        ok: true,
+        configured,
+        total: products.length,
+        demo: roblox.isDemoMode(),
+        items: products.map((p) => ({
+          plan: p.plan || p.id || null,
+          name: p.name || p.plan || null,
+          configured: Boolean(p.configured),
+        })),
+      },
+      external: {
+        status: external.status,
+        updateNeeded: external.updateNeeded,
+        matched: external.matched,
+        message: external.message,
+        hostedClientVersion: external.hostedClientVersion,
+        liveRobloxVersion: external.liveRobloxVersion,
+        liveNumericVersion: external.liveNumericVersion,
+      },
+    });
+  } catch (err) {
+    console.error("[status]", err);
+    return res.status(500).json({
+      ok: false,
+      error: "server_error",
+      message: "Could not collect system status.",
+    });
+  }
+});
+
+/**
+ * Public Roblox offset dump (from exported offsets.h). No secrets.
+ */
+app.get("/api/offsets", (_req, res) => {
+  const payload = offsetsLib.publicOffsetsPayload();
+  if (!payload.ok) {
+    return res.status(503).json(payload);
+  }
+  return res.json(payload);
 });
 
 /**
@@ -262,7 +389,6 @@ app.post("/api/webhooks/sellapp", (req, res) => {
 });
 
 /** Direct Oxide.exe download — never point buyers at the GitHub source repo. */
-const downloadsDir = path.join(__dirname, "public", "downloads");
 app.get(["/downloads/Oxide.exe", "/download/Oxide.exe", "/Oxide.exe"], (req, res) => {
   const file = path.join(downloadsDir, "Oxide.exe");
   res.download(file, "Oxide.exe", (err) => {

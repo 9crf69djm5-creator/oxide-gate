@@ -7,6 +7,7 @@ import Key from "./pages/Key";
 import Account from "./pages/Account";
 import Features from "./pages/Features";
 import Status from "./pages/Status";
+import Offsets from "./pages/Offsets";
 
 export default function App() {
   const location = useLocation();
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/account" element={<Account />} />
           <Route path="/features" element={<Features />} />
           <Route path="/status" element={<Status />} />
+          <Route path="/offsets" element={<Offsets />} />
         </Routes>
       </AnimatePresence>
     </Layout>

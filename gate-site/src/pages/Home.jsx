@@ -4,6 +4,7 @@ import { config } from "../config";
 import { Nav, Footer, PageMotion, Reveal } from "../components/Layout";
 import { Topography } from "../components/Topography";
 import { HeroShowcase } from "../components/HeroShowcase";
+import { StatusStrip } from "../components/StatusStrip";
 
 const trust = [
   { k: "0", label: "Injected code" },
@@ -84,6 +85,8 @@ export default function Home() {
           ))}
         </motion.div>
       </header>
+
+      <StatusStrip />
 
       <section className="section section-strip" id="signals">
         <div className="wrap strip-row">

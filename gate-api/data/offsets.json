@@ -1,0 +1,3073 @@
+{
+  "ok": true,
+  "source": "OXIDE",
+  "robloxVersion": "version-2366ba214ec740ca",
+  "generatedAt": "2026-09-26T03:17:03.948Z",
+  "totalOffsets": 712,
+  "namespaces": {
+    "Adornment": {
+      "Adornee": {
+        "hex": "0xB8",
+        "decimal": 184
+      },
+      "Effect": {
+        "hex": "0xF8",
+        "decimal": 248
+      },
+      "FillColor": {
+        "hex": "0xD0",
+        "decimal": 208
+      },
+      "LineThickness": {
+        "hex": "0xF0",
+        "decimal": 240
+      },
+      "ModelModifier": {
+        "hex": "0x100",
+        "decimal": 256
+      },
+      "OutlineColor": {
+        "hex": "0xDC",
+        "decimal": 220
+      },
+      "Prop": {
+        "hex": "0xB0",
+        "decimal": 176
+      },
+      "ReservedId": {
+        "hex": "0xF4",
+        "decimal": 244
+      }
+    },
+    "AirProperties": {
+      "AirDensity": {
+        "hex": "0x18",
+        "decimal": 24
+      },
+      "GlobalWind": {
+        "hex": "0x3C",
+        "decimal": 60
+      }
+    },
+    "Alloc": {
+      "Malloc": {
+        "hex": "0x17E3C30",
+        "decimal": 25050160
+      }
+    },
+    "Animator": {
+      "ActiveAnimations": {
+        "hex": "0xAB0",
+        "decimal": 2736
+      }
+    },
+    "Atmosphere": {
+      "Color": {
+        "hex": "0xB8",
+        "decimal": 184
+      },
+      "Decay": {
+        "hex": "0xC4",
+        "decimal": 196
+      },
+      "Density": {
+        "hex": "0xD0",
+        "decimal": 208
+      },
+      "Glare": {
+        "hex": "0xD4",
+        "decimal": 212
+      },
+      "Haze": {
+        "hex": "0xD8",
+        "decimal": 216
+      },
+      "Offset": {
+        "hex": "0xDC",
+        "decimal": 220
+      }
+    },
+    "Attachment": {
+      "Position": {
+        "hex": "0xC4",
+        "decimal": 196
+      }
+    },
+    "Attribute": {
+      "Key": {
+        "hex": "0x0",
+        "decimal": 0
+      },
+      "Size": {
+        "hex": "0x58",
+        "decimal": 88
+      },
+      "TypeIdRva": {
+        "hex": "0x87948E4",
+        "decimal": 142166244
+      },
+      "TypeIdRvaNew": {
+        "hex": "0x87949D4",
+        "decimal": 142166484
+      },
+      "Value": {
+        "hex": "0x8",
+        "decimal": 8
+      }
+    },
+    "AttributesMap": {
+      "Attributes": {
+        "hex": "0x10",
+        "decimal": 16
+      },
+      "Length": {
+        "hex": "0x0",
+        "decimal": 0
+      }
+    },
+    "BasePart": {
+      "CastShadow": {
+        "hex": "0x125",
+        "decimal": 293
+      },
+      "Color3": {
+        "hex": "0x198",
+        "decimal": 408
+      },
+      "Locked": {
+        "hex": "0x126",
+        "decimal": 294
+      },
+      "Massless": {
+        "hex": "0x127",
+        "decimal": 295
+      },
+      "Primitive": {
+        "hex": "0x178",
+        "decimal": 376
+      },
+      "Reflectance": {
+        "hex": "0xFC",
+        "decimal": 252
+      },
+      "Shape": {
+        "hex": "0x1A8",
+        "decimal": 424
+      },
+      "Transparency": {
+        "hex": "0x120",
+        "decimal": 288
+      }
+    },
+    "Beam": {
+      "Attachment0": {
+        "hex": "0x160",
+        "decimal": 352
+      },
+      "Attachment1": {
+        "hex": "0x170",
+        "decimal": 368
+      },
+      "Brightness": {
+        "hex": "0x180",
+        "decimal": 384
+      },
+      "CurveSize0": {
+        "hex": "0x184",
+        "decimal": 388
+      },
+      "CurveSize1": {
+        "hex": "0x188",
+        "decimal": 392
+      },
+      "LightEmission": {
+        "hex": "0x18C",
+        "decimal": 396
+      },
+      "LightInfluence": {
+        "hex": "0x190",
+        "decimal": 400
+      },
+      "TextureLength": {
+        "hex": "0x19C",
+        "decimal": 412
+      },
+      "TextureSpeed": {
+        "hex": "0x1A4",
+        "decimal": 420
+      },
+      "Width0": {
+        "hex": "0x1A8",
+        "decimal": 424
+      },
+      "Width1": {
+        "hex": "0x1AC",
+        "decimal": 428
+      },
+      "ZOffset": {
+        "hex": "0x1B0",
+        "decimal": 432
+      }
+    },
+    "BloomEffect": {
+      "Enabled": {
+        "hex": "0xB0",
+        "decimal": 176
+      },
+      "Intensity": {
+        "hex": "0xB8",
+        "decimal": 184
+      },
+      "Size": {
+        "hex": "0xBC",
+        "decimal": 188
+      },
+      "Threshold": {
+        "hex": "0xC0",
+        "decimal": 192
+      }
+    },
+    "BlurEffect": {
+      "Enabled": {
+        "hex": "0xB0",
+        "decimal": 176
+      },
+      "Size": {
+        "hex": "0xB8",
+        "decimal": 184
+      }
+    },
+    "ByteCode": {
+      "Pointer": {
+        "hex": "0x10",
+        "decimal": 16
+      },
+      "Size": {
+        "hex": "0x28",
+        "decimal": 40
+      }
+    },
+    "CachedItem": {
+      "FileMeshData": {
+        "hex": "0x40",
+        "decimal": 64
+      }
+    },
+    "Camera": {
+      "CFrame": {
+        "hex": "0xC8",
+        "decimal": 200
+      },
+      "CameraSubject": {
+        "hex": "0xB8",
+        "decimal": 184
+      },
+      "CameraType": {
+        "hex": "0x128",
+        "decimal": 296
+      },
+      "FieldOfView": {
+        "hex": "0x130",
+        "decimal": 304
+      },
+      "Position": {
+        "hex": "0xEC",
+        "decimal": 236
+      },
+      "Rotation": {
+        "hex": "0xC8",
+        "decimal": 200
+      },
+      "Viewport": {
+        "hex": "0x27C",
+        "decimal": 636
+      },
+      "ViewportInt16": {
+        "hex": "0x27C",
+        "decimal": 636
+      },
+      "ViewportSize": {
+        "hex": "0x2BC",
+        "decimal": 700
+      }
+    },
+    "CharacterMesh": {
+      "BaseTextureId": {
+        "hex": "0xC8",
+        "decimal": 200
+      },
+      "BodyPart": {
+        "hex": "0x148",
+        "decimal": 328
+      },
+      "MeshId": {
+        "hex": "0xF8",
+        "decimal": 248
+      },
+      "OverlayTextureId": {
+        "hex": "0x128",
+        "decimal": 296
+      }
+    },
+    "Chat": {
+      "IsFocused": {
+        "hex": "0x154",
+        "decimal": 340
+      }
+    },
+    "ClassDescriptor": {
+      "ClassName": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "Creator": {
+        "hex": "0x230",
+        "decimal": 560
+      },
+      "EventDescriptors": {
+        "hex": "0x88",
+        "decimal": 136
+      },
+      "FunctionDescriptors": {
+        "hex": "0xD0",
+        "decimal": 208
+      },
+      "PropertyDescriptors": {
+        "hex": "0x40",
+        "decimal": 64
+      }
+    },
+    "ClickDetector": {
+      "MaxActivationDistance": {
+        "hex": "0xE8",
+        "decimal": 232
+      },
+      "MouseIcon": {
+        "hex": "0xC8",
+        "decimal": 200
+      }
+    },
+    "Clothing": {
+      "Color3": {
+        "hex": "0x120",
+        "decimal": 288
+      },
+      "Template": {
+        "hex": "0x100",
+        "decimal": 256
+      }
+    },
+    "ColorCorrectionEffect": {
+      "Brightness": {
+        "hex": "0xC4",
+        "decimal": 196
+      },
+      "Contrast": {
+        "hex": "0xC8",
+        "decimal": 200
+      },
+      "Enabled": {
+        "hex": "0xB0",
+        "decimal": 176
+      },
+      "TintColor": {
+        "hex": "0xB8",
+        "decimal": 184
+      }
+    },
+    "ColorGradingEffect": {
+      "Enabled": {
+        "hex": "0xB0",
+        "decimal": 176
+      },
+      "TonemapperPreset": {
+        "hex": "0xB8",
+        "decimal": 184
+      }
+    },
+    "Creator": {
+      "MapEnd": {
+        "hex": "0x844F058",
+        "decimal": 138735704
+      },
+      "MapStart": {
+        "hex": "0x844F050",
+        "decimal": 138735696
+      }
+    },
+    "DataModel": {
+      "CreatorId": {
+        "hex": "0x178",
+        "decimal": 376
+      },
+      "GameId": {
+        "hex": "0x180",
+        "decimal": 384
+      },
+      "GameLoaded": {
+        "hex": "0x5D0",
+        "decimal": 1488
+      },
+      "JobId": {
+        "hex": "0x110",
+        "decimal": 272
+      },
+      "PlaceId": {
+        "hex": "0x188",
+        "decimal": 392
+      },
+      "ServerIP": {
+        "hex": "0x5B8",
+        "decimal": 1464
+      },
+      "ToRenderView1": {
+        "hex": "0x1C0",
+        "decimal": 448
+      },
+      "ToRenderView2": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "ToRenderView3": {
+        "hex": "0x28",
+        "decimal": 40
+      },
+      "Workspace": {
+        "hex": "0x150",
+        "decimal": 336
+      }
+    },
+    "DepthOfFieldEffect": {
+      "Enabled": {
+        "hex": "0xB0",
+        "decimal": 176
+      },
+      "FarIntensity": {
+        "hex": "0xB8",
+        "decimal": 184
+      },
+      "FocusDistance": {
+        "hex": "0xBC",
+        "decimal": 188
+      },
+      "InFocusRadius": {
+        "hex": "0xC0",
+        "decimal": 192
+      },
+      "NearIntensity": {
+        "hex": "0xC4",
+        "decimal": 196
+      }
+    },
+    "Descriptor": {
+      "Name": {
+        "hex": "0x8",
+        "decimal": 8
+      }
+    },
+    "DragDetector": {
+      "MaxActivationDistance": {
+        "hex": "0xE8",
+        "decimal": 232
+      },
+      "MaxDragAngle": {
+        "hex": "0x2A8",
+        "decimal": 680
+      },
+      "MaxForce": {
+        "hex": "0x2AC",
+        "decimal": 684
+      },
+      "MaxTorque": {
+        "hex": "0x2B0",
+        "decimal": 688
+      },
+      "MinDragAngle": {
+        "hex": "0x2B4",
+        "decimal": 692
+      },
+      "Responsiveness": {
+        "hex": "0x2C0",
+        "decimal": 704
+      }
+    },
+    "FakeDataModel": {
+      "Pointer": {
+        "hex": "0x8EE1728",
+        "decimal": 149821224
+      },
+      "RealDataModel": {
+        "hex": "0x1F8",
+        "decimal": 504
+      }
+    },
+    "FastClusterEntity": {
+      "AlphaByte": {
+        "hex": "0x14",
+        "decimal": 20
+      },
+      "BBoxMaxX": {
+        "hex": "0xA4",
+        "decimal": 164
+      },
+      "BBoxMaxY": {
+        "hex": "0xA8",
+        "decimal": 168
+      },
+      "BBoxMaxZ": {
+        "hex": "0xAC",
+        "decimal": 172
+      },
+      "BBoxMinX": {
+        "hex": "0x98",
+        "decimal": 152
+      },
+      "BBoxMinY": {
+        "hex": "0x9C",
+        "decimal": 156
+      },
+      "BBoxMinZ": {
+        "hex": "0xA0",
+        "decimal": 160
+      },
+      "ContextPtr": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "DecalMaterialPtr": {
+        "hex": "0x48",
+        "decimal": 72
+      },
+      "MaterialPtr": {
+        "hex": "0x20",
+        "decimal": 32
+      },
+      "PrimitiveIndexArrayPtr": {
+        "hex": "0x80",
+        "decimal": 128
+      },
+      "RenderQueueId": {
+        "hex": "0x10",
+        "decimal": 16
+      },
+      "TechniqueArrayPtr": {
+        "hex": "0x70",
+        "decimal": 112
+      },
+      "VTableRva": {
+        "hex": "0x6B3EC18",
+        "decimal": 112454680
+      }
+    },
+    "Context": {
+      "PrimitivePoolPtr": {
+        "hex": "0x1A0",
+        "decimal": 416
+      }
+    },
+    "PrimitivePool": {
+      "ArrayBase": {
+        "hex": "0x20",
+        "decimal": 32
+      }
+    },
+    "PrimitiveRecord": {
+      "Stride": {
+        "hex": "0x30",
+        "decimal": 48
+      },
+      "Translation": {
+        "hex": "0x24",
+        "decimal": 36
+      }
+    },
+    "FileMeshData": {
+      "AabbMax": {
+        "hex": "0x18C",
+        "decimal": 396
+      },
+      "AabbMin": {
+        "hex": "0x180",
+        "decimal": 384
+      },
+      "Faces": {
+        "hex": "0x30",
+        "decimal": 48
+      },
+      "FacesEnd": {
+        "hex": "0x38",
+        "decimal": 56
+      },
+      "Vertices": {
+        "hex": "0x0",
+        "decimal": 0
+      },
+      "VerticesEnd": {
+        "hex": "0x8",
+        "decimal": 8
+      }
+    },
+    "Fire": {
+      "FireProximityPrompt": {
+        "hex": "0x3102650",
+        "decimal": 51390032
+      }
+    },
+    "FunctionDescriptor": {
+      "Function": {
+        "hex": "0x80",
+        "decimal": 128
+      }
+    },
+    "Functions": {
+      "Clone": {
+        "hex": "0x1642CE0",
+        "decimal": 23342304
+      },
+      "Destroy": {
+        "hex": "0x1642D00",
+        "decimal": 23342336
+      },
+      "FindPartOnRay": {
+        "hex": "0xECE7A0",
+        "decimal": 15525792
+      },
+      "FindPartOnRayWithIgnoreList": {
+        "hex": "0xECE820",
+        "decimal": 15525920
+      },
+      "FindPartOnRayWithWhitelist": {
+        "hex": "0xECE8B0",
+        "decimal": 15526064
+      },
+      "FireServer": {
+        "hex": "0xCAC950",
+        "decimal": 13289808
+      },
+      "Print": {
+        "hex": "0x1CAB4B0",
+        "decimal": 30061744
+      },
+      "RaisePropertyChanged": {
+        "hex": "0xF7C720",
+        "decimal": 16238368
+      },
+      "Raycast": {
+        "hex": "0xEC5D60",
+        "decimal": 15490400
+      },
+      "SetParent": {
+        "hex": "0xEC0090",
+        "decimal": 15466640
+      },
+      "SetParentInternal": {
+        "hex": "0x1CF3A00",
+        "decimal": 30358016
+      },
+      "SetParent_User": {
+        "hex": "0x1CD37F0",
+        "decimal": 30226416
+      },
+      "Shapecast": {
+        "hex": "0xEC7720",
+        "decimal": 15496992
+      }
+    },
+    "GuiBase2D": {
+      "AbsolutePosition": {
+        "hex": "0xFC",
+        "decimal": 252
+      },
+      "AbsoluteRotation": {
+        "hex": "0xD8",
+        "decimal": 216
+      },
+      "AbsoluteSize": {
+        "hex": "0x104",
+        "decimal": 260
+      }
+    },
+    "ScreenGui": {
+      "Enabled": {
+        "hex": "0x4B4",
+        "decimal": 1204
+      }
+    },
+    "GuiObject": {
+      "Active": {
+        "hex": "0x5A8",
+        "decimal": 1448
+      },
+      "AnchorPoint": {
+        "hex": "0x54C",
+        "decimal": 1356
+      },
+      "AutomaticSize": {
+        "hex": "0x560",
+        "decimal": 1376
+      },
+      "BackgroundColor3": {
+        "hex": "0x530",
+        "decimal": 1328
+      },
+      "BackgroundTransparency": {
+        "hex": "0x54C",
+        "decimal": 1356
+      },
+      "BorderColor3": {
+        "hex": "0x54C",
+        "decimal": 1356
+      },
+      "BorderMode": {
+        "hex": "0x568",
+        "decimal": 1384
+      },
+      "BorderSizePixel": {
+        "hex": "0x56C",
+        "decimal": 1388
+      },
+      "ClipsDescendants": {
+        "hex": "0x5A9",
+        "decimal": 1449
+      },
+      "GuiState": {
+        "hex": "0x578",
+        "decimal": 1400
+      },
+      "Interactable": {
+        "hex": "0x5AB",
+        "decimal": 1451
+      },
+      "LayoutOrder": {
+        "hex": "0x56C",
+        "decimal": 1388
+      },
+      "Position": {
+        "hex": "0x500",
+        "decimal": 1280
+      },
+      "Rotation": {
+        "hex": "0xE8",
+        "decimal": 232
+      },
+      "Selectable": {
+        "hex": "0x5AC",
+        "decimal": 1452
+      },
+      "SelectionOrder": {
+        "hex": "0x598",
+        "decimal": 1432
+      },
+      "Size": {
+        "hex": "0x520",
+        "decimal": 1312
+      },
+      "SizeConstraint": {
+        "hex": "0x5A0",
+        "decimal": 1440
+      },
+      "Visible": {
+        "hex": "0x59D",
+        "decimal": 1437
+      },
+      "ZIndex": {
+        "hex": "0x5A4",
+        "decimal": 1444
+      }
+    },
+    "Highlight": {
+      "Adornee": {
+        "hex": "0xB8",
+        "decimal": 184
+      },
+      "DepthMode": {
+        "hex": "0xE0",
+        "decimal": 224
+      },
+      "Effect": {
+        "hex": "0xF8",
+        "decimal": 248
+      },
+      "Enabled": {
+        "hex": "0xF4",
+        "decimal": 244
+      },
+      "FillColor": {
+        "hex": "0xC8",
+        "decimal": 200
+      },
+      "FillColor_User": {
+        "hex": "0xD0",
+        "decimal": 208
+      },
+      "FillTransparency": {
+        "hex": "0xE4",
+        "decimal": 228
+      },
+      "LineThickness": {
+        "hex": "0xF0",
+        "decimal": 240
+      },
+      "ModelModifier": {
+        "hex": "0x100",
+        "decimal": 256
+      },
+      "OutlineColor": {
+        "hex": "0xD4",
+        "decimal": 212
+      },
+      "OutlineColor_User": {
+        "hex": "0xDC",
+        "decimal": 220
+      },
+      "OutlineTransparency": {
+        "hex": "0xEC",
+        "decimal": 236
+      },
+      "Prop": {
+        "hex": "0xB0",
+        "decimal": 176
+      },
+      "ReservedId": {
+        "hex": "0xF4",
+        "decimal": 244
+      }
+    },
+    "HopperBin": {
+      "BinType": {
+        "hex": "0x468",
+        "decimal": 1128
+      }
+    },
+    "Humanoid": {
+      "AutoJumpEnabled": {
+        "hex": "0x1D4",
+        "decimal": 468
+      },
+      "AutoRotate": {
+        "hex": "0x1D5",
+        "decimal": 469
+      },
+      "AutomaticScalingEnabled": {
+        "hex": "0x1D6",
+        "decimal": 470
+      },
+      "BreakJointsOnDeath": {
+        "hex": "0xC5",
+        "decimal": 197
+      },
+      "CameraOffset": {
+        "hex": "0x128",
+        "decimal": 296
+      },
+      "DisplayDistanceType": {
+        "hex": "0x180",
+        "decimal": 384
+      },
+      "DisplayName": {
+        "hex": "0xA8",
+        "decimal": 168
+      },
+      "EvaluateStateMachine": {
+        "hex": "0x1D8",
+        "decimal": 472
+      },
+      "Health": {
+        "hex": "0x180",
+        "decimal": 384
+      },
+      "HealthDisplayDistance": {
+        "hex": "0x188",
+        "decimal": 392
+      },
+      "HealthDisplayType": {
+        "hex": "0x18C",
+        "decimal": 396
+      },
+      "HipHeight": {
+        "hex": "0x184",
+        "decimal": 388
+      },
+      "HumanoidRootPart": {
+        "hex": "0x458",
+        "decimal": 1112
+      },
+      "HumanoidState": {
+        "hex": "0x8A0",
+        "decimal": 2208
+      },
+      "HumanoidStateID": {
+        "hex": "0x20",
+        "decimal": 32
+      },
+      "IsWalking": {
+        "hex": "0x95F",
+        "decimal": 2399
+      },
+      "Jump": {
+        "hex": "0x1CA",
+        "decimal": 458
+      },
+      "JumpHeight": {
+        "hex": "0x190",
+        "decimal": 400
+      },
+      "JumpPower": {
+        "hex": "0x194",
+        "decimal": 404
+      },
+      "MaxHealth": {
+        "hex": "0x198",
+        "decimal": 408
+      },
+      "MaxSlopeAngle": {
+        "hex": "0x1AC",
+        "decimal": 428
+      },
+      "MoveDirection": {
+        "hex": "0x130",
+        "decimal": 304
+      },
+      "MoveToPart": {
+        "hex": "0x118",
+        "decimal": 280
+      },
+      "MoveToPoint": {
+        "hex": "0x164",
+        "decimal": 356
+      },
+      "NameDisplayDistance": {
+        "hex": "0x1B0",
+        "decimal": 432
+      },
+      "NameOcclusion": {
+        "hex": "0x1B4",
+        "decimal": 436
+      },
+      "PlatformStand": {
+        "hex": "0x1CC",
+        "decimal": 460
+      },
+      "PlatformStatePointer": {
+        "hex": "0xC7C059FA",
+        "decimal": 3351271930
+      },
+      "RequiresNeck": {
+        "hex": "0x1DD",
+        "decimal": 477
+      },
+      "RigType": {
+        "hex": "0x1B0",
+        "decimal": 432
+      },
+      "SeatPart": {
+        "hex": "0x108",
+        "decimal": 264
+      },
+      "Sit": {
+        "hex": "0x1CD",
+        "decimal": 461
+      },
+      "TargetPoint": {
+        "hex": "0x14C",
+        "decimal": 332
+      },
+      "UseJumpPower": {
+        "hex": "0x1E0",
+        "decimal": 480
+      },
+      "WalkSpeed": {
+        "hex": "0x1C0",
+        "decimal": 448
+      },
+      "WalkSpeedCheck": {
+        "hex": "0x39C",
+        "decimal": 924
+      },
+      "WalkToPoint": {
+        "hex": "0x164",
+        "decimal": 356
+      },
+      "Walkspeed": {
+        "hex": "0x1D0",
+        "decimal": 464
+      },
+      "WalkspeedCheck": {
+        "hex": "0x3B4",
+        "decimal": 948
+      }
+    },
+    "ICreator": {
+      "Create": {
+        "hex": "0x0",
+        "decimal": 0
+      }
+    },
+    "InputObject": {
+      "MousePosition": {
+        "hex": "0xD4",
+        "decimal": 212
+      }
+    },
+    "Instance": {
+      "AttributeContainer": {
+        "hex": "0x40",
+        "decimal": 64
+      },
+      "AttributeList": {
+        "hex": "0x10",
+        "decimal": 16
+      },
+      "AttributeToNext": {
+        "hex": "0x58",
+        "decimal": 88
+      },
+      "AttributeToValue": {
+        "hex": "0x18",
+        "decimal": 24
+      },
+      "ChildrenEnd": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "ChildrenStart": {
+        "hex": "0x78",
+        "decimal": 120
+      },
+      "ChildrenStride": {
+        "hex": "0x10",
+        "decimal": 16
+      },
+      "ClassByName": {
+        "hex": "0x46F6BFE",
+        "decimal": 74411006
+      },
+      "ClassDescriptor": {
+        "hex": "0x18",
+        "decimal": 24
+      },
+      "ClassName": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "ComponentMap": {
+        "hex": "0x38",
+        "decimal": 56
+      },
+      "Creator_create": {
+        "hex": "0x0",
+        "decimal": 0
+      },
+      "Creator_isCreatable": {
+        "hex": "0x10",
+        "decimal": 16
+      },
+      "FromExisting": {
+        "hex": "0x417C6B0",
+        "decimal": 68667056
+      },
+      "Name": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "NameContainer": {
+        "hex": "0x70",
+        "decimal": 112
+      },
+      "New": {
+        "hex": "0x360A4D0",
+        "decimal": 56665296
+      },
+      "Parent": {
+        "hex": "0x68",
+        "decimal": 104
+      },
+      "SetParent": {
+        "hex": "0x7E4470",
+        "decimal": 8275056
+      },
+      "This": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "WhJobNopSlot": {
+        "hex": "0x10",
+        "decimal": 16
+      }
+    },
+    "Lighting": {
+      "Ambient": {
+        "hex": "0xD0",
+        "decimal": 208
+      },
+      "Atmosphere": {
+        "hex": "0x1D8",
+        "decimal": 472
+      },
+      "Brightness": {
+        "hex": "0x118",
+        "decimal": 280
+      },
+      "ClockTime": {
+        "hex": "0xC8",
+        "decimal": 200
+      },
+      "ColorShift_Bottom": {
+        "hex": "0xE8",
+        "decimal": 232
+      },
+      "ColorShift_Top": {
+        "hex": "0xDC",
+        "decimal": 220
+      },
+      "EnvironmentDiffuseScale": {
+        "hex": "0x11C",
+        "decimal": 284
+      },
+      "EnvironmentSpecularScale": {
+        "hex": "0x120",
+        "decimal": 288
+      },
+      "ExposureCompensation": {
+        "hex": "0x124",
+        "decimal": 292
+      },
+      "FogColor": {
+        "hex": "0xF4",
+        "decimal": 244
+      },
+      "FogEnd": {
+        "hex": "0x12C",
+        "decimal": 300
+      },
+      "FogStart": {
+        "hex": "0x130",
+        "decimal": 304
+      },
+      "GeographicLatitude": {
+        "hex": "0x134",
+        "decimal": 308
+      },
+      "GradientBottom": {
+        "hex": "0x190",
+        "decimal": 400
+      },
+      "GradientTop": {
+        "hex": "0x150",
+        "decimal": 336
+      },
+      "LightColor": {
+        "hex": "0x15C",
+        "decimal": 348
+      },
+      "LightDirection": {
+        "hex": "0x168",
+        "decimal": 360
+      },
+      "MoonPosition": {
+        "hex": "0x184",
+        "decimal": 388
+      },
+      "OutdoorAmbient": {
+        "hex": "0x100",
+        "decimal": 256
+      },
+      "ShadowSoftness": {
+        "hex": "0x13C",
+        "decimal": 316
+      },
+      "Sky": {
+        "hex": "0x1C8",
+        "decimal": 456
+      },
+      "Source": {
+        "hex": "0x174",
+        "decimal": 372
+      },
+      "SunPosition": {
+        "hex": "0x178",
+        "decimal": 376
+      }
+    },
+    "LightingParameters": {
+      "GeographicLatitude": {
+        "hex": "0x134",
+        "decimal": 308
+      },
+      "LightColor": {
+        "hex": "0x15C",
+        "decimal": 348
+      },
+      "LightDirection": {
+        "hex": "0x168",
+        "decimal": 360
+      },
+      "SkyAmbient": {
+        "hex": "0x150",
+        "decimal": 336
+      },
+      "SkyAmbient2": {
+        "hex": "0x138",
+        "decimal": 312
+      },
+      "Source": {
+        "hex": "0x174",
+        "decimal": 372
+      },
+      "TrueMoonPosition": {
+        "hex": "0x184",
+        "decimal": 388
+      },
+      "TrueSunPosition": {
+        "hex": "0x178",
+        "decimal": 376
+      }
+    },
+    "LocalScript": {
+      "ByteCode": {
+        "hex": "0x190",
+        "decimal": 400
+      },
+      "Bytecode": {
+        "hex": "0x190",
+        "decimal": 400
+      },
+      "Hash": {
+        "hex": "0x1A0",
+        "decimal": 416
+      }
+    },
+    "LruHolder": {
+      "MemEnforcedLRUCache": {
+        "hex": "0x20",
+        "decimal": 32
+      }
+    },
+    "LruNode": {
+      "CachedItem": {
+        "hex": "0x38",
+        "decimal": 56
+      },
+      "MeshId": {
+        "hex": "0x10",
+        "decimal": 16
+      },
+      "Next": {
+        "hex": "0x0",
+        "decimal": 0
+      }
+    },
+    "LuaState": {
+      "Base": {
+        "hex": "0x28",
+        "decimal": 40
+      },
+      "Global": {
+        "hex": "0x20",
+        "decimal": 32
+      },
+      "Top": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "TypeTag": {
+        "hex": "0x0",
+        "decimal": 0
+      }
+    },
+    "Luau": {
+      "lua_getglobal": {
+        "hex": "0x0",
+        "decimal": 0
+      },
+      "require_impl": {
+        "hex": "0x0",
+        "decimal": 0
+      }
+    },
+    "LuauGlobal": {
+      "GCthreshold": {
+        "hex": "0x48",
+        "decimal": 72
+      },
+      "currentwhite": {
+        "hex": "0x58",
+        "decimal": 88
+      },
+      "dummynode": {
+        "hex": "0x6CF3AF8",
+        "decimal": 114244344
+      },
+      "gcopages": {
+        "hex": "0x2F0",
+        "decimal": 752
+      },
+      "gcopages_end": {
+        "hex": "0x2F8",
+        "decimal": 760
+      },
+      "gcopages_large": {
+        "hex": "0x2F0",
+        "decimal": 752
+      },
+      "gcpause": {
+        "hex": "0x38",
+        "decimal": 56
+      },
+      "gcstate": {
+        "hex": "0x59",
+        "decimal": 89
+      },
+      "gcstepmul": {
+        "hex": "0x3C",
+        "decimal": 60
+      },
+      "gcstepsize": {
+        "hex": "0x40",
+        "decimal": 64
+      },
+      "gray": {
+        "hex": "0x10",
+        "decimal": 16
+      },
+      "grayagain": {
+        "hex": "0x18",
+        "decimal": 24
+      },
+      "page_next_all": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "page_next_free": {
+        "hex": "0x18",
+        "decimal": 24
+      },
+      "strt_hash": {
+        "hex": "0x0",
+        "decimal": 0
+      },
+      "strt_size": {
+        "hex": "0xC",
+        "decimal": 12
+      },
+      "totalbytes": {
+        "hex": "0x50",
+        "decimal": 80
+      },
+      "weak": {
+        "hex": "0x20",
+        "decimal": 32
+      }
+    },
+    "LuauObject": {
+      "marked": {
+        "hex": "0x2",
+        "decimal": 2
+      },
+      "page_block": {
+        "hex": "0x24",
+        "decimal": 36
+      },
+      "page_data": {
+        "hex": "0x40",
+        "decimal": 64
+      },
+      "page_next": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "page_size": {
+        "hex": "0x20",
+        "decimal": 32
+      },
+      "table_array": {
+        "hex": "0x28",
+        "decimal": 40
+      },
+      "table_gclist": {
+        "hex": "0x20",
+        "decimal": 32
+      },
+      "table_lsz": {
+        "hex": "0x7",
+        "decimal": 7
+      },
+      "table_node": {
+        "hex": "0x18",
+        "decimal": 24
+      },
+      "table_sizearray": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "tt": {
+        "hex": "0xC",
+        "decimal": 12
+      }
+    },
+    "MaterialColors": {
+      "Asphalt": {
+        "hex": "0x30",
+        "decimal": 48
+      },
+      "Basalt": {
+        "hex": "0x27",
+        "decimal": 39
+      },
+      "Brick": {
+        "hex": "0xF",
+        "decimal": 15
+      },
+      "Cobblestone": {
+        "hex": "0x33",
+        "decimal": 51
+      },
+      "Concrete": {
+        "hex": "0xC",
+        "decimal": 12
+      },
+      "CrackedLava": {
+        "hex": "0x2D",
+        "decimal": 45
+      },
+      "Glacier": {
+        "hex": "0x1B",
+        "decimal": 27
+      },
+      "Grass": {
+        "hex": "0x6",
+        "decimal": 6
+      },
+      "Ground": {
+        "hex": "0x2A",
+        "decimal": 42
+      },
+      "Ice": {
+        "hex": "0x36",
+        "decimal": 54
+      },
+      "LeafyGrass": {
+        "hex": "0x39",
+        "decimal": 57
+      },
+      "Limestone": {
+        "hex": "0x3F",
+        "decimal": 63
+      },
+      "Mud": {
+        "hex": "0x24",
+        "decimal": 36
+      },
+      "Pavement": {
+        "hex": "0x42",
+        "decimal": 66
+      },
+      "Rock": {
+        "hex": "0x18",
+        "decimal": 24
+      },
+      "Salt": {
+        "hex": "0x3C",
+        "decimal": 60
+      },
+      "Sand": {
+        "hex": "0x12",
+        "decimal": 18
+      },
+      "Sandstone": {
+        "hex": "0x21",
+        "decimal": 33
+      },
+      "Slate": {
+        "hex": "0x9",
+        "decimal": 9
+      },
+      "Snow": {
+        "hex": "0x1E",
+        "decimal": 30
+      },
+      "WoodPlanks": {
+        "hex": "0x15",
+        "decimal": 21
+      }
+    },
+    "MaterialLayer": {
+      "ColorData": {
+        "hex": "0x24",
+        "decimal": 36
+      },
+      "FillModeByte": {
+        "hex": "0x11",
+        "decimal": 17
+      },
+      "Flags2": {
+        "hex": "0x20",
+        "decimal": 32
+      },
+      "MatFlags": {
+        "hex": "0x18",
+        "decimal": 24
+      },
+      "Param": {
+        "hex": "0x1C",
+        "decimal": 28
+      },
+      "Stride": {
+        "hex": "0x88",
+        "decimal": 136
+      }
+    },
+    "MemEnforcedLRUCache": {
+      "Head": {
+        "hex": "0x8",
+        "decimal": 8
+      }
+    },
+    "MeshContentProvider": {
+      "AssetID": {
+        "hex": "0x10",
+        "decimal": 16
+      },
+      "Cache": {
+        "hex": "0xD8",
+        "decimal": 216
+      },
+      "LRUCache": {
+        "hex": "0x20",
+        "decimal": 32
+      },
+      "LruHolder": {
+        "hex": "0xD8",
+        "decimal": 216
+      },
+      "MeshData": {
+        "hex": "0x40",
+        "decimal": 64
+      },
+      "ToMeshData": {
+        "hex": "0x40",
+        "decimal": 64
+      }
+    },
+    "MeshData": {
+      "FaceEnd": {
+        "hex": "0x38",
+        "decimal": 56
+      },
+      "FaceStart": {
+        "hex": "0x30",
+        "decimal": 48
+      },
+      "VertexEnd": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "VertexStart": {
+        "hex": "0x0",
+        "decimal": 0
+      }
+    },
+    "MeshPart": {
+      "MeshId": {
+        "hex": "0x310",
+        "decimal": 784
+      },
+      "Texture": {
+        "hex": "0x340",
+        "decimal": 832
+      },
+      "TextureId": {
+        "hex": "0x340",
+        "decimal": 832
+      }
+    },
+    "Misc": {
+      "AnimationId": {
+        "hex": "0xC0",
+        "decimal": 192
+      },
+      "StringLength": {
+        "hex": "0x10",
+        "decimal": 16
+      },
+      "Value": {
+        "hex": "0xA8",
+        "decimal": 168
+      }
+    },
+    "Model": {
+      "PrimaryPart": {
+        "hex": "0x248",
+        "decimal": 584
+      },
+      "Scale": {
+        "hex": "0x144",
+        "decimal": 324
+      }
+    },
+    "ModuleScript": {
+      "ByteCode": {
+        "hex": "0x138",
+        "decimal": 312
+      },
+      "Bytecode": {
+        "hex": "0x138",
+        "decimal": 312
+      },
+      "Hash": {
+        "hex": "0x148",
+        "decimal": 328
+      },
+      "IsCoreScript": {
+        "hex": "0x168",
+        "decimal": 360
+      },
+      "IsRobloxScript": {
+        "hex": "0x168",
+        "decimal": 360
+      }
+    },
+    "MouseService": {
+      "InputObject": {
+        "hex": "0xF0",
+        "decimal": 240
+      },
+      "InputObject2": {
+        "hex": "0x100",
+        "decimal": 256
+      },
+      "MousePosition": {
+        "hex": "0xD4",
+        "decimal": 212
+      },
+      "SensitivityPointer": {
+        "hex": "0x0",
+        "decimal": 0
+      }
+    },
+    "ParticleEmitter": {
+      "Brightness": {
+        "hex": "0x21C",
+        "decimal": 540
+      },
+      "Drag": {
+        "hex": "0x220",
+        "decimal": 544
+      },
+      "LightEmission": {
+        "hex": "0x238",
+        "decimal": 568
+      },
+      "LightInfluence": {
+        "hex": "0x23C",
+        "decimal": 572
+      },
+      "Rate": {
+        "hex": "0x248",
+        "decimal": 584
+      },
+      "Texture": {
+        "hex": "0x1C0",
+        "decimal": 448
+      },
+      "TimeScale": {
+        "hex": "0x25C",
+        "decimal": 604
+      },
+      "VelocityInheritance": {
+        "hex": "0x260",
+        "decimal": 608
+      },
+      "ZOffset": {
+        "hex": "0x264",
+        "decimal": 612
+      }
+    },
+    "Player": {
+      "AccountAge": {
+        "hex": "0x34C",
+        "decimal": 844
+      },
+      "Character": {
+        "hex": "0x288",
+        "decimal": 648
+      },
+      "DisplayName": {
+        "hex": "0x128",
+        "decimal": 296
+      },
+      "HealthDisplayDistance": {
+        "hex": "0x384",
+        "decimal": 900
+      },
+      "LocalPlayer": {
+        "hex": "0x120",
+        "decimal": 288
+      },
+      "LocaleId": {
+        "hex": "0x108",
+        "decimal": 264
+      },
+      "MaxZoomDistance": {
+        "hex": "0x358",
+        "decimal": 856
+      },
+      "MinZoomDistance": {
+        "hex": "0x35C",
+        "decimal": 860
+      },
+      "ModelInstance": {
+        "hex": "0x288",
+        "decimal": 648
+      },
+      "NameDisplayDistance": {
+        "hex": "0x394",
+        "decimal": 916
+      },
+      "Team": {
+        "hex": "0x2C8",
+        "decimal": 712
+      },
+      "TeamColor": {
+        "hex": "0x3A0",
+        "decimal": 928
+      },
+      "UserId": {
+        "hex": "0xC0",
+        "decimal": 192
+      }
+    },
+    "PlayerConfigurer": {
+      "Pointer": {
+        "hex": "0x0",
+        "decimal": 0
+      }
+    },
+    "Players": {
+      "LocalPlayer": {
+        "hex": "0x120",
+        "decimal": 288
+      }
+    },
+    "Primitive": {
+      "AssemblyAngularVelocity": {
+        "hex": "0xEC",
+        "decimal": 236
+      },
+      "AssemblyLinearVelocity": {
+        "hex": "0xE0",
+        "decimal": 224
+      },
+      "CFrame": {
+        "hex": "0xB0",
+        "decimal": 176
+      },
+      "Flags": {
+        "hex": "0x1B6",
+        "decimal": 438
+      },
+      "Material": {
+        "hex": "0x246",
+        "decimal": 582
+      },
+      "Orientation": {
+        "hex": "0xB0",
+        "decimal": 176
+      },
+      "Part": {
+        "hex": "0x210",
+        "decimal": 528
+      },
+      "Position": {
+        "hex": "0xD4",
+        "decimal": 212
+      },
+      "PrimitiveFlags": {
+        "hex": "0x1B6",
+        "decimal": 438
+      },
+      "Rotation": {
+        "hex": "0xB0",
+        "decimal": 176
+      },
+      "Size": {
+        "hex": "0x1BC",
+        "decimal": 444
+      },
+      "Validate": {
+        "hex": "0x6",
+        "decimal": 6
+      }
+    },
+    "PrimitiveFlags": {
+      "Anchored": {
+        "hex": "0x2",
+        "decimal": 2
+      },
+      "CanCollide": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "CanQuery": {
+        "hex": "0x20",
+        "decimal": 32
+      },
+      "CanTouch": {
+        "hex": "0x10",
+        "decimal": 16
+      }
+    },
+    "PropertyDescriptor": {
+      "GetSetImpl": {
+        "hex": "0x90",
+        "decimal": 144
+      },
+      "TType": {
+        "hex": "0x68",
+        "decimal": 104
+      }
+    },
+    "ProximityPrompt": {
+      "ActionText": {
+        "hex": "0xB0",
+        "decimal": 176
+      },
+      "Enabled": {
+        "hex": "0x136",
+        "decimal": 310
+      },
+      "HoldDuration": {
+        "hex": "0x120",
+        "decimal": 288
+      },
+      "KeyboardKeyCode": {
+        "hex": "0x124",
+        "decimal": 292
+      },
+      "MaxActivationDistance": {
+        "hex": "0x128",
+        "decimal": 296
+      },
+      "ObjectText": {
+        "hex": "0xD0",
+        "decimal": 208
+      },
+      "RequiresLineOfSight": {
+        "hex": "0x137",
+        "decimal": 311
+      }
+    },
+    "Reflection": {
+      "ClassDescCreatable": {
+        "hex": "0x10",
+        "decimal": 16
+      },
+      "ClassDescFlags": {
+        "hex": "0x1BC",
+        "decimal": 444
+      },
+      "CreatorTable": {
+        "hex": "0x61CE910",
+        "decimal": 102557968
+      },
+      "EntryValue": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "NameRegistry": {
+        "hex": "0x80E2C90",
+        "decimal": 135146640
+      },
+      "NameTable": {
+        "hex": "0x50",
+        "decimal": 80
+      },
+      "TableEmpty": {
+        "hex": "0x20",
+        "decimal": 32
+      },
+      "TableEnd": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "TableStart": {
+        "hex": "0x0",
+        "decimal": 0
+      },
+      "TableStride": {
+        "hex": "0x10",
+        "decimal": 16
+      }
+    },
+    "ReflectionType": {
+      "AdReward": {
+        "hex": "0x60",
+        "decimal": 96
+      },
+      "AnimTrackMetadata": {
+        "hex": "0x66",
+        "decimal": 102
+      },
+      "AnimTrackPlayState": {
+        "hex": "0x65",
+        "decimal": 101
+      },
+      "AnimTrackWeight": {
+        "hex": "0x67",
+        "decimal": 103
+      },
+      "AnimationContext": {
+        "hex": "0x54",
+        "decimal": 84
+      },
+      "AnimationMask": {
+        "hex": "0x4D",
+        "decimal": 77
+      },
+      "AnimationMaskModifier": {
+        "hex": "0x5B",
+        "decimal": 91
+      },
+      "AnimationPose": {
+        "hex": "0x4E",
+        "decimal": 78
+      },
+      "Array": {
+        "hex": "0x24",
+        "decimal": 36
+      },
+      "ArticulatedJoint": {
+        "hex": "0x53",
+        "decimal": 83
+      },
+      "AssetContentMap": {
+        "hex": "0x61",
+        "decimal": 97
+      },
+      "Axes": {
+        "hex": "0x16",
+        "decimal": 22
+      },
+      "BinaryString": {
+        "hex": "0x1E",
+        "decimal": 30
+      },
+      "Bool": {
+        "hex": "0x1",
+        "decimal": 1
+      },
+      "BrickColor": {
+        "hex": "0x1C",
+        "decimal": 28
+      },
+      "Buffer": {
+        "hex": "0x56",
+        "decimal": 86
+      },
+      "CSGPropertyData": {
+        "hex": "0x48",
+        "decimal": 72
+      },
+      "CatalogSearchParams": {
+        "hex": "0x46",
+        "decimal": 70
+      },
+      "CellId": {
+        "hex": "0x19",
+        "decimal": 25
+      },
+      "ClipEvaluator": {
+        "hex": "0x4F",
+        "decimal": 79
+      },
+      "CollectionHandle": {
+        "hex": "0x20",
+        "decimal": 32
+      },
+      "Color3": {
+        "hex": "0x11",
+        "decimal": 17
+      },
+      "Color3uint8": {
+        "hex": "0x12",
+        "decimal": 18
+      },
+      "ColorSequence": {
+        "hex": "0x2A",
+        "decimal": 42
+      },
+      "ColorSequenceKeypoint": {
+        "hex": "0x2B",
+        "decimal": 43
+      },
+      "Connection": {
+        "hex": "0x30",
+        "decimal": 48
+      },
+      "Content": {
+        "hex": "0x5C",
+        "decimal": 92
+      },
+      "ContentId": {
+        "hex": "0x31",
+        "decimal": 49
+      },
+      "CoordinateFrame": {
+        "hex": "0x10",
+        "decimal": 16
+      },
+      "DateTime": {
+        "hex": "0x40",
+        "decimal": 64
+      },
+      "DebugTable": {
+        "hex": "0x45",
+        "decimal": 69
+      },
+      "DescribedBase": {
+        "hex": "0x32",
+        "decimal": 50
+      },
+      "Dictionary": {
+        "hex": "0x25",
+        "decimal": 37
+      },
+      "DockWidgetPluginGuiInfo": {
+        "hex": "0x38",
+        "decimal": 56
+      },
+      "Double": {
+        "hex": "0x5",
+        "decimal": 5
+      },
+      "Enum": {
+        "hex": "0x21",
+        "decimal": 33
+      },
+      "EventInstance": {
+        "hex": "0x36",
+        "decimal": 54
+      },
+      "Faces": {
+        "hex": "0x15",
+        "decimal": 21
+      },
+      "FacsReplicationData": {
+        "hex": "0x5A",
+        "decimal": 90
+      },
+      "Float": {
+        "hex": "0x4",
+        "decimal": 4
+      },
+      "FloatCurveKey": {
+        "hex": "0x3C",
+        "decimal": 60
+      },
+      "Font": {
+        "hex": "0x4A",
+        "decimal": 74
+      },
+      "Function": {
+        "hex": "0x29",
+        "decimal": 41
+      },
+      "GenericFunction": {
+        "hex": "0x28",
+        "decimal": 40
+      },
+      "GuidData": {
+        "hex": "0x1A",
+        "decimal": 26
+      },
+      "Instance": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "InstanceRef": {
+        "hex": "0x51",
+        "decimal": 81
+      },
+      "Instances": {
+        "hex": "0x9",
+        "decimal": 9
+      },
+      "Int": {
+        "hex": "0x2",
+        "decimal": 2
+      },
+      "Int64": {
+        "hex": "0x3",
+        "decimal": 3
+      },
+      "Integer": {
+        "hex": "0x57",
+        "decimal": 87
+      },
+      "LazyTable": {
+        "hex": "0x44",
+        "decimal": 68
+      },
+      "Map": {
+        "hex": "0x26",
+        "decimal": 38
+      },
+      "NetAssetHandle": {
+        "hex": "0x5D",
+        "decimal": 93
+      },
+      "NetAssetRef": {
+        "hex": "0x5E",
+        "decimal": 94
+      },
+      "Null": {
+        "hex": "0x0",
+        "decimal": 0
+      },
+      "NumberRange": {
+        "hex": "0x2C",
+        "decimal": 44
+      },
+      "NumberSequence": {
+        "hex": "0x2D",
+        "decimal": 45
+      },
+      "NumberSequenceKeypoint": {
+        "hex": "0x2E",
+        "decimal": 46
+      },
+      "Object": {
+        "hex": "0x5F",
+        "decimal": 95
+      },
+      "OpenCloudModel": {
+        "hex": "0x50",
+        "decimal": 80
+      },
+      "OptionalCoordinateFrame": {
+        "hex": "0x47",
+        "decimal": 71
+      },
+      "OverlapParams": {
+        "hex": "0x43",
+        "decimal": 67
+      },
+      "Path2DControlPoint": {
+        "hex": "0x58",
+        "decimal": 88
+      },
+      "PathWaypoint": {
+        "hex": "0x3B",
+        "decimal": 59
+      },
+      "PhysicalProperties": {
+        "hex": "0x1B",
+        "decimal": 27
+      },
+      "PluginDrag": {
+        "hex": "0x39",
+        "decimal": 57
+      },
+      "Property": {
+        "hex": "0x22",
+        "decimal": 34
+      },
+      "ProtectedString": {
+        "hex": "0x7",
+        "decimal": 7
+      },
+      "Random": {
+        "hex": "0x3A",
+        "decimal": 58
+      },
+      "Ray": {
+        "hex": "0xA",
+        "decimal": 10
+      },
+      "RaycastParams": {
+        "hex": "0x41",
+        "decimal": 65
+      },
+      "RaycastResult": {
+        "hex": "0x42",
+        "decimal": 66
+      },
+      "Rect2D": {
+        "hex": "0xF",
+        "decimal": 15
+      },
+      "RefType": {
+        "hex": "0x33",
+        "decimal": 51
+      },
+      "Region3": {
+        "hex": "0x17",
+        "decimal": 23
+      },
+      "Region3int16": {
+        "hex": "0x18",
+        "decimal": 24
+      },
+      "ReplicationPV": {
+        "hex": "0x59",
+        "decimal": 89
+      },
+      "RotationCurveKey": {
+        "hex": "0x3D",
+        "decimal": 61
+      },
+      "ScopedInstanceIdentity": {
+        "hex": "0x68",
+        "decimal": 104
+      },
+      "Secret": {
+        "hex": "0x55",
+        "decimal": 85
+      },
+      "SecurityCapabilities": {
+        "hex": "0x52",
+        "decimal": 82
+      },
+      "SharedString": {
+        "hex": "0x3F",
+        "decimal": 63
+      },
+      "SharedTable": {
+        "hex": "0x4B",
+        "decimal": 75
+      },
+      "SharedTableIterator": {
+        "hex": "0x4C",
+        "decimal": 76
+      },
+      "SlimReplicationData": {
+        "hex": "0x62",
+        "decimal": 98
+      },
+      "String": {
+        "hex": "0x6",
+        "decimal": 6
+      },
+      "Surface": {
+        "hex": "0x1F",
+        "decimal": 31
+      },
+      "SystemAddress": {
+        "hex": "0x1D",
+        "decimal": 29
+      },
+      "Tuple": {
+        "hex": "0x23",
+        "decimal": 35
+      },
+      "TweenInfo": {
+        "hex": "0x37",
+        "decimal": 55
+      },
+      "UDim": {
+        "hex": "0x13",
+        "decimal": 19
+      },
+      "UDim2": {
+        "hex": "0x14",
+        "decimal": 20
+      },
+      "UniqueId": {
+        "hex": "0x49",
+        "decimal": 73
+      },
+      "User": {
+        "hex": "0x63",
+        "decimal": 99
+      },
+      "ValueCurveKey": {
+        "hex": "0x3E",
+        "decimal": 62
+      },
+      "Variant": {
+        "hex": "0x27",
+        "decimal": 39
+      },
+      "Vector2": {
+        "hex": "0xB",
+        "decimal": 11
+      },
+      "Vector2int16": {
+        "hex": "0xD",
+        "decimal": 13
+      },
+      "Vector3": {
+        "hex": "0xC",
+        "decimal": 12
+      },
+      "Vector3int16": {
+        "hex": "0xE",
+        "decimal": 14
+      },
+      "WebViewParams": {
+        "hex": "0x64",
+        "decimal": 100
+      }
+    },
+    "RenderJob": {
+      "FakeDataModel": {
+        "hex": "0x38",
+        "decimal": 56
+      },
+      "FrameDt": {
+        "hex": "0xC0",
+        "decimal": 192
+      },
+      "FrameDtAlt": {
+        "hex": "0xB8",
+        "decimal": 184
+      },
+      "RealDataModel": {
+        "hex": "0x1F0",
+        "decimal": 496
+      },
+      "RenderView": {
+        "hex": "0x1D8",
+        "decimal": 472
+      }
+    },
+    "RenderQueue": {
+      "AlwaysOnTop": {
+        "hex": "0xD",
+        "decimal": 13
+      },
+      "AlwaysOnTopAdorns": {
+        "hex": "0xE",
+        "decimal": 14
+      },
+      "Decals": {
+        "hex": "0x2",
+        "decimal": 2
+      },
+      "Glass": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "GlassTint": {
+        "hex": "0x7",
+        "decimal": 7
+      },
+      "OnTopReadOnlyDepth": {
+        "hex": "0xC",
+        "decimal": 12
+      },
+      "OnTopWithDepth": {
+        "hex": "0xB",
+        "decimal": 11
+      },
+      "Opaque": {
+        "hex": "0x0",
+        "decimal": 0
+      },
+      "OpaqueAdorns": {
+        "hex": "0x4",
+        "decimal": 4
+      },
+      "OpaqueCasters": {
+        "hex": "0x3",
+        "decimal": 3
+      },
+      "OpaqueWithAlpha": {
+        "hex": "0x5",
+        "decimal": 5
+      },
+      "Screen": {
+        "hex": "0xF",
+        "decimal": 15
+      },
+      "ScreenOnTopOfBlur": {
+        "hex": "0x10",
+        "decimal": 16
+      },
+      "Terrain": {
+        "hex": "0x1",
+        "decimal": 1
+      },
+      "Transparent": {
+        "hex": "0x9",
+        "decimal": 9
+      },
+      "TransparentCasters": {
+        "hex": "0xA",
+        "decimal": 10
+      },
+      "Water": {
+        "hex": "0x6",
+        "decimal": 6
+      }
+    },
+    "RenderView": {
+      "DeviceD3D11": {
+        "hex": "0x8",
+        "decimal": 8
+      },
+      "LightingValid": {
+        "hex": "0x278",
+        "decimal": 632
+      },
+      "SkyValid": {
+        "hex": "0x28D",
+        "decimal": 653
+      },
+      "SkyboxValid": {
+        "hex": "0x28D",
+        "decimal": 653
+      },
+      "VisualEngine": {
+        "hex": "0x10",
+        "decimal": 16
+      }
+    },
+    "RobloxString": {
+      "Size": {
+        "hex": "0x10",
+        "decimal": 16
+      },
+      "SsoCapacity": {
+        "hex": "0xF",
+        "decimal": 15
+      }
+    },
+    "RunService": {
+      "HeartbeatFPS": {
+        "hex": "0xC0",
+        "decimal": 192
+      }
+    },
+    "Script": {
+      "ByteCode": {
+        "hex": "0x190",
+        "decimal": 400
+      }
+    },
+    "ScriptContext": {
+      "LuaState": {
+        "hex": "0x28",
+        "decimal": 40
+      },
+      "LuaState2": {
+        "hex": "0x28",
+        "decimal": 40
+      },
+      "LuaStateAlt": {
+        "hex": "0xE8",
+        "decimal": 232
+      },
+      "RequireBypass": {
+        "hex": "0xBB4",
+        "decimal": 2996
+      },
+      "VmEncryptedLuaState": {
+        "hex": "0xD0",
+        "decimal": 208
+      },
+      "VmWrapper": {
+        "hex": "0x220",
+        "decimal": 544
+      },
+      "VmWrapper2": {
+        "hex": "0x528",
+        "decimal": 1320
+      },
+      "VmWrapperBig": {
+        "hex": "0x440",
+        "decimal": 1088
+      }
+    },
+    "Seat": {
+      "Occupant": {
+        "hex": "0x218",
+        "decimal": 536
+      }
+    },
+    "Sky": {
+      "MoonAngularSize": {
+        "hex": "0x244",
+        "decimal": 580
+      },
+      "MoonTextureId": {
+        "hex": "0xC8",
+        "decimal": 200
+      },
+      "SkyboxBk": {
+        "hex": "0xF8",
+        "decimal": 248
+      },
+      "SkyboxDn": {
+        "hex": "0x128",
+        "decimal": 296
+      },
+      "SkyboxFt": {
+        "hex": "0x158",
+        "decimal": 344
+      },
+      "SkyboxLf": {
+        "hex": "0x188",
+        "decimal": 392
+      },
+      "SkyboxOrientation": {
+        "hex": "0x238",
+        "decimal": 568
+      },
+      "SkyboxRt": {
+        "hex": "0x1B8",
+        "decimal": 440
+      },
+      "SkyboxUp": {
+        "hex": "0x1E8",
+        "decimal": 488
+      },
+      "StarCount": {
+        "hex": "0x248",
+        "decimal": 584
+      },
+      "SunAngularSize": {
+        "hex": "0x23C",
+        "decimal": 572
+      },
+      "SunTextureId": {
+        "hex": "0x218",
+        "decimal": 536
+      }
+    },
+    "Sound": {
+      "IsPlaying": {
+        "hex": "0x140",
+        "decimal": 320
+      },
+      "Looped": {
+        "hex": "0x13D",
+        "decimal": 317
+      },
+      "PlaybackSpeed": {
+        "hex": "0x11C",
+        "decimal": 284
+      },
+      "RollOffMaxDistance": {
+        "hex": "0x120",
+        "decimal": 288
+      },
+      "RollOffMinDistance": {
+        "hex": "0x124",
+        "decimal": 292
+      },
+      "SoundId": {
+        "hex": "0xC8",
+        "decimal": 200
+      },
+      "Volume": {
+        "hex": "0x130",
+        "decimal": 304
+      }
+    },
+    "SpawnLocation": {
+      "AllowTeamChangeOnTouch": {
+        "hex": "0x3D",
+        "decimal": 61
+      },
+      "ForcefieldDuration": {
+        "hex": "0x1E8",
+        "decimal": 488
+      }
+    },
+    "SpecialMesh": {
+      "MeshId": {
+        "hex": "0xF8",
+        "decimal": 248
+      },
+      "Offset": {
+        "hex": "0xB8",
+        "decimal": 184
+      },
+      "Scale": {
+        "hex": "0xC4",
+        "decimal": 196
+      },
+      "TextureId": {
+        "hex": "0x128",
+        "decimal": 296
+      }
+    },
+    "SunRaysEffect": {
+      "Enabled": {
+        "hex": "0xB0",
+        "decimal": 176
+      },
+      "Intensity": {
+        "hex": "0xB8",
+        "decimal": 184
+      },
+      "Spread": {
+        "hex": "0xBC",
+        "decimal": 188
+      }
+    },
+    "SurfaceAppearance": {
+      "ColorMap": {
+        "hex": "0xC8",
+        "decimal": 200
+      },
+      "EmissiveStrength": {
+        "hex": "0x1F4",
+        "decimal": 500
+      },
+      "MetalnessMap": {
+        "hex": "0x128",
+        "decimal": 296
+      },
+      "NormalMap": {
+        "hex": "0x158",
+        "decimal": 344
+      },
+      "RoughnessMap": {
+        "hex": "0x188",
+        "decimal": 392
+      }
+    },
+    "TaskScheduler": {
+      "JobEnd": {
+        "hex": "0xD0",
+        "decimal": 208
+      },
+      "JobName": {
+        "hex": "0x18",
+        "decimal": 24
+      },
+      "JobStart": {
+        "hex": "0xC8",
+        "decimal": 200
+      },
+      "MaxFPS": {
+        "hex": "0xB0",
+        "decimal": 176
+      },
+      "MaxFps": {
+        "hex": "0xB0",
+        "decimal": 176
+      },
+      "Pointer": {
+        "hex": "0x8C8D108",
+        "decimal": 147378440
+      }
+    },
+    "Team": {
+      "BrickColor": {
+        "hex": "0xB8",
+        "decimal": 184
+      },
+      "TeamColor": {
+        "hex": "0xB8",
+        "decimal": 184
+      }
+    },
+    "TechniqueArray": {
+      "BeginOffset": {
+        "hex": "0x0",
+        "decimal": 0
+      },
+      "EndOffset": {
+        "hex": "0x8",
+        "decimal": 8
+      }
+    },
+    "Terrain": {
+      "GrassLength": {
+        "hex": "0x1F0",
+        "decimal": 496
+      },
+      "MaterialColors": {
+        "hex": "0x4B8",
+        "decimal": 1208
+      },
+      "WaterColor": {
+        "hex": "0x1E0",
+        "decimal": 480
+      },
+      "WaterReflectance": {
+        "hex": "0x1F8",
+        "decimal": 504
+      },
+      "WaterTransparency": {
+        "hex": "0x1FC",
+        "decimal": 508
+      },
+      "WaterWaveSize": {
+        "hex": "0x200",
+        "decimal": 512
+      },
+      "WaterWaveSpeed": {
+        "hex": "0x204",
+        "decimal": 516
+      }
+    },
+    "TextButton": {
+      "AutoButtonColor": {
+        "hex": "0x9DC",
+        "decimal": 2524
+      },
+      "ContentText": {
+        "hex": "0xE18",
+        "decimal": 3608
+      },
+      "Font": {
+        "hex": "0x6",
+        "decimal": 6
+      },
+      "LineHeight": {
+        "hex": "0xF30",
+        "decimal": 3888
+      },
+      "LocalizedText": {
+        "hex": "0xE18",
+        "decimal": 3608
+      },
+      "MaxVisibleGraphemes": {
+        "hex": "0x114C",
+        "decimal": 4428
+      },
+      "Modal": {
+        "hex": "0x9DD",
+        "decimal": 2525
+      },
+      "RichText": {
+        "hex": "0x102E",
+        "decimal": 4142
+      },
+      "Selected": {
+        "hex": "0x9DE",
+        "decimal": 2526
+      },
+      "Text": {
+        "hex": "0xE18",
+        "decimal": 3608
+      },
+      "TextColor3": {
+        "hex": "0x1130",
+        "decimal": 4400
+      },
+      "TextDirection": {
+        "hex": "0xFD0",
+        "decimal": 4048
+      },
+      "TextScaled": {
+        "hex": "0xE01",
+        "decimal": 3585
+      },
+      "TextSize": {
+        "hex": "0x1154",
+        "decimal": 4436
+      },
+      "TextStrokeColor3": {
+        "hex": "0x113C",
+        "decimal": 4412
+      },
+      "TextStrokeTransparency": {
+        "hex": "0x1158",
+        "decimal": 4440
+      },
+      "TextTransparency": {
+        "hex": "0x115C",
+        "decimal": 4444
+      },
+      "TextTruncate": {
+        "hex": "0x1160",
+        "decimal": 4448
+      },
+      "TextWrapped": {
+        "hex": "0x1028",
+        "decimal": 4136
+      },
+      "TextXAlignment": {
+        "hex": "0x1164",
+        "decimal": 4452
+      },
+      "TextYAlignment": {
+        "hex": "0xF78",
+        "decimal": 3960
+      }
+    },
+    "TextLabel": {
+      "ContentText": {
+        "hex": "0xB98",
+        "decimal": 2968
+      },
+      "Font": {
+        "hex": "0x6",
+        "decimal": 6
+      },
+      "LineHeight": {
+        "hex": "0xCB0",
+        "decimal": 3248
+      },
+      "LocalizedText": {
+        "hex": "0xB98",
+        "decimal": 2968
+      },
+      "MaxVisibleGraphemes": {
+        "hex": "0xECC",
+        "decimal": 3788
+      },
+      "RichText": {
+        "hex": "0xDAE",
+        "decimal": 3502
+      },
+      "Text": {
+        "hex": "0xB98",
+        "decimal": 2968
+      },
+      "TextColor3": {
+        "hex": "0xEA0",
+        "decimal": 3744
+      },
+      "TextDirection": {
+        "hex": "0xD50",
+        "decimal": 3408
+      },
+      "TextScaled": {
+        "hex": "0xB81",
+        "decimal": 2945
+      },
+      "TextSize": {
+        "hex": "0xEC4",
+        "decimal": 3780
+      },
+      "TextStrokeColor3": {
+        "hex": "0xEAC",
+        "decimal": 3756
+      },
+      "TextStrokeTransparency": {
+        "hex": "0xEC8",
+        "decimal": 3784
+      },
+      "TextTransparency": {
+        "hex": "0xECC",
+        "decimal": 3788
+      },
+      "TextTruncate": {
+        "hex": "0xED0",
+        "decimal": 3792
+      },
+      "TextWrapped": {
+        "hex": "0xD98",
+        "decimal": 3480
+      },
+      "TextXAlignment": {
+        "hex": "0xED4",
+        "decimal": 3796
+      },
+      "TextYAlignment": {
+        "hex": "0xCE8",
+        "decimal": 3304
+      }
+    },
+    "Textures": {
+      "Decal_Texture": {
+        "hex": "0x1E0",
+        "decimal": 480
+      },
+      "Texture_Texture": {
+        "hex": "0x1E0",
+        "decimal": 480
+      }
+    },
+    "Tool": {
+      "CanBeDropped": {
+        "hex": "0x4B8",
+        "decimal": 1208
+      },
+      "Enabled": {
+        "hex": "0x475",
+        "decimal": 1141
+      },
+      "Grip": {
+        "hex": "0x4AC",
+        "decimal": 1196
+      },
+      "GripForward": {
+        "hex": "0x4A0",
+        "decimal": 1184
+      },
+      "GripPos": {
+        "hex": "0x4AC",
+        "decimal": 1196
+      },
+      "GripRight": {
+        "hex": "0x488",
+        "decimal": 1160
+      },
+      "GripUp": {
+        "hex": "0x494",
+        "decimal": 1172
+      },
+      "ManualActivationOnly": {
+        "hex": "0x295",
+        "decimal": 661
+      },
+      "RequiresHandle": {
+        "hex": "0x4BB",
+        "decimal": 1211
+      },
+      "Tooltip": {
+        "hex": "0x468",
+        "decimal": 1128
+      }
+    },
+    "Types": {
+      "AllTypes": {
+        "hex": "0x89482B8",
+        "decimal": 143950520
+      }
+    },
+    "UserInputService": {
+      "WindowInputState": {
+        "hex": "0x2C0",
+        "decimal": 704
+      }
+    },
+    "StatsItem": {
+      "Value": {
+        "hex": "0xC8",
+        "decimal": 200
+      }
+    },
+    "Value": {
+      "Value": {
+        "hex": "0xA8",
+        "decimal": 168
+      }
+    },
+    "VehicleSeat": {
+      "MaxSpeed": {
+        "hex": "0x228",
+        "decimal": 552
+      },
+      "Occupant": {
+        "hex": "0x208",
+        "decimal": 520
+      },
+      "SteerFloat": {
+        "hex": "0x22C",
+        "decimal": 556
+      },
+      "ThrottleFloat": {
+        "hex": "0x230",
+        "decimal": 560
+      },
+      "Torque": {
+        "hex": "0x234",
+        "decimal": 564
+      },
+      "TurnSpeed": {
+        "hex": "0x238",
+        "decimal": 568
+      }
+    },
+    "VisualEngine": {
+      "Dimensions": {
+        "hex": "0xB10",
+        "decimal": 2832
+      },
+      "FakeDataModel": {
+        "hex": "0xAF0",
+        "decimal": 2800
+      },
+      "Pointer": {
+        "hex": "0x851BF08",
+        "decimal": 139575048
+      },
+      "RenderView": {
+        "hex": "0xC30",
+        "decimal": 3120
+      },
+      "ViewMatrix": {
+        "hex": "0x1B0",
+        "decimal": 432
+      }
+    },
+    "Weld": {
+      "Part0": {
+        "hex": "0x118",
+        "decimal": 280
+      },
+      "Part1": {
+        "hex": "0x128",
+        "decimal": 296
+      }
+    },
+    "WeldConstraint": {
+      "Part0": {
+        "hex": "0xB8",
+        "decimal": 184
+      },
+      "Part1": {
+        "hex": "0xC8",
+        "decimal": 200
+      }
+    },
+    "WindowInputState": {
+      "CapsLock": {
+        "hex": "0x40",
+        "decimal": 64
+      },
+      "CurrentTextBox": {
+        "hex": "0x48",
+        "decimal": 72
+      }
+    },
+    "Workspace": {
+      "CurrentCamera": {
+        "hex": "0x4A8",
+        "decimal": 1192
+      },
+      "ReadOnlyGravity": {
+        "hex": "0x9F0",
+        "decimal": 2544
+      },
+      "World": {
+        "hex": "0x400",
+        "decimal": 1024
+      }
+    },
+    "World": {
+      "AirProperties": {
+        "hex": "0x240",
+        "decimal": 576
+      },
+      "FallenPartsDestroyHeight": {
+        "hex": "0x220",
+        "decimal": 544
+      },
+      "Gravity": {
+        "hex": "0x22C",
+        "decimal": 556
+      },
+      "Primitives": {
+        "hex": "0x2B0",
+        "decimal": 688
+      },
+      "WorldSteps": {
+        "hex": "0x728",
+        "decimal": 1832
+      },
+      "worldStepsPerSec": {
+        "hex": "0x728",
+        "decimal": 1832
+      }
+    },
+    "WorldRoot": {
+      "RaycastBoundDesc": {
+        "hex": "0x8197D90",
+        "decimal": 135888272
+      },
+      "RaycastBoundFn": {
+        "hex": "0x80",
+        "decimal": 128
+      }
+    }
+  }
+}

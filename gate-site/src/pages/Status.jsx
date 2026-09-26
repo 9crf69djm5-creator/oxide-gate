@@ -12,8 +12,17 @@ function formatMs(ms) {
 function StatusRow({ item }) {
   const online = item.state === "online";
   const degraded = item.state === "degraded";
-  const label = online ? "Online" : degraded ? "Degraded" : "Offline";
-  const cls = online ? "online" : degraded ? "degraded" : "offline";
+  const unknown = item.state === "unknown";
+  const label = online
+    ? "Online"
+    : degraded
+      ? item.id === "external"
+        ? "Update needed"
+        : "Degraded"
+      : unknown
+        ? "Unknown"
+        : "Offline";
+  const cls = online ? "online" : degraded ? "degraded" : unknown ? "unknown" : "offline";
 
   return (
     <article className={`sys-status-card ${cls}`}>
@@ -70,9 +79,13 @@ export default function Status() {
   const overall = data?.overall || "unknown";
   const overallLabel =
     overall === "online"
-      ? "All systems operational"
+      ? data?.updateNeeded
+        ? "API up — external update needed"
+        : "All systems operational"
       : overall === "degraded"
-        ? "Partial outage"
+        ? data?.updateNeeded
+          ? "External update needed"
+          : "Partial outage"
         : overall === "offline"
           ? "Major outage"
           : "Checking…";
@@ -85,8 +98,9 @@ export default function Status() {
             <p className="section-kicker">Ops</p>
             <h2>System status</h2>
             <p className="section-lead">
-              Live health for the gate API, downloads, products, and Discord bot.
-              Refreshes every minute.
+              Live health for the gate API, Oxide.exe download, products, Roblox
+              version match, and Discord bot. Refreshes every minute. No secrets
+              are shown here.
             </p>
           </Reveal>
 
@@ -131,11 +145,11 @@ export default function Status() {
 
           <Reveal delay={0.2}>
             <div className="hero-ctas" style={{ marginTop: "2.5rem" }}>
-              <Link className="btn btn-accent" to="/key">
-                Get a key
+              <Link className="btn btn-accent" to="/offsets">
+                Browse offsets
               </Link>
-              <Link className="btn btn-ghost" to="/buy">
-                Buy
+              <Link className="btn btn-ghost" to="/key">
+                Get a key
               </Link>
               <a
                 className="btn btn-ghost"
@@ -156,8 +170,27 @@ export default function Status() {
 function placeholderItems() {
   return [
     { id: "api", name: "Gate API", detail: "Checking…", state: "unknown", fields: [] },
-    { id: "downloads", name: "Downloads", detail: "Checking…", state: "unknown", fields: [] },
-    { id: "products", name: "Products", detail: "Checking…", state: "unknown", fields: [] },
+    {
+      id: "downloads",
+      name: "Oxide.exe download",
+      detail: "Checking…",
+      state: "unknown",
+      fields: [],
+    },
+    {
+      id: "products",
+      name: "Products / gamepasses",
+      detail: "Checking…",
+      state: "unknown",
+      fields: [],
+    },
+    {
+      id: "external",
+      name: "External / Roblox version",
+      detail: "Checking…",
+      state: "unknown",
+      fields: [],
+    },
     { id: "bot", name: "Discord bot", detail: "Checking…", state: "unknown", fields: [] },
   ];
 }

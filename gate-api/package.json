@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "seed": "node seed.js",
-    "create-keys": "node create-keys.js"
+    "create-keys": "node create-keys.js",
+    "export-offsets": "node scripts/export-offsets.js"
   },
   "engines": {
     "node": ">=18"

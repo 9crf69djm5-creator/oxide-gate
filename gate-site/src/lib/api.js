@@ -37,7 +37,6 @@ export async function redeemKey(raw) {
     const siteExe =
       config.download?.url || "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
     let downloadUrl = String(data.downloadUrl || siteExe || "").trim() || siteExe;
-    // Never persist a GitHub repo / source-tree link for buyers.
     try {
       const u = new URL(downloadUrl);
       if (/github\.com$/i.test(u.hostname) && !/\/releases\/download\//i.test(u.pathname)) {
@@ -117,22 +116,86 @@ export async function fetchProducts() {
   }
 }
 
+function formatBytes(n) {
+  if (!Number.isFinite(n) || n < 0) return null;
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function formatDate(iso) {
+  if (!iso) return null;
+  try {
+    return new Date(iso).toLocaleString();
+  } catch {
+    return String(iso);
+  }
+}
+
 /**
- * Claim an OXIDE key after buying the mapped Shirt / Gamepass on Roblox.
- * Body handled server-side: { username, plan }
+ * Public offsets dump from gate-api (static JSON from offsets.h — not a live dumper).
  */
+export async function fetchOffsets() {
+  const base = apiBase();
+  try {
+    const res = await fetch(`${base}/api/offsets`, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(30000),
+    });
+    const body = await res.json().catch(() => null);
+    if (res.ok && body?.ok) {
+      return {
+        ok: true,
+        source: body.source || "OXIDE",
+        robloxVersion: body.robloxVersion || null,
+        generatedAt: body.generatedAt || null,
+        totalOffsets: body.totalOffsets || 0,
+        namespaces: body.namespaces || {},
+      };
+    }
+  } catch {
+    /* fall through to static site copy */
+  }
+
+  try {
+    const res = await fetch("/offsets.json", {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(15000),
+    });
+    const body = await res.json().catch(() => null);
+    if (res.ok && body?.ok) {
+      return {
+        ok: true,
+        source: body.source || "OXIDE",
+        robloxVersion: body.robloxVersion || null,
+        generatedAt: body.generatedAt || null,
+        totalOffsets: body.totalOffsets || 0,
+        namespaces: body.namespaces || {},
+      };
+    }
+  } catch (err) {
+    return {
+      ok: false,
+      message: err?.message || `Can't reach ${base}/api/offsets`,
+    };
+  }
+
+  return {
+    ok: false,
+    message: `Could not load offsets from ${base}/api/offsets or /offsets.json`,
+  };
+}
+
 /**
- * Probe gate-api, downloads, products, and Discord bot health for /status.
+ * Probe gate-api status + Discord bot for /status and home strip.
+ * Never surfaces secrets — only online/latency/versions/update flags.
  */
 export async function fetchSystemStatus() {
   const base = apiBase();
-  const botHealth =
-    String(config.discordBotHealthUrl || "https://oxide-discord-bot-fra.onrender.com/").replace(
-      /\/?$/,
-      "/"
-    );
-  const downloadUrl =
-    config.download?.url || `${base}/downloads/Oxide.exe`;
+  const botHealth = String(
+    config.discordBotHealthUrl || "https://oxide-discord-bot-fra.onrender.com/"
+  ).replace(/\/?$/, "/");
+  const downloadUrl = config.download?.url || `${base}/downloads/Oxide.exe`;
   const checkedAt = Date.now();
 
   const timed = async (fn) => {
@@ -150,58 +213,28 @@ export async function fetchSystemStatus() {
     }
   };
 
-  const [api, downloads, products, bot] = await Promise.all([
+  const [agg, bot] = await Promise.all([
     timed(async () => {
-      const res = await fetch(`${base}/api/health`, {
+      const res = await fetch(`${base}/api/status`, {
         headers: { Accept: "application/json" },
-        signal: AbortSignal.timeout(25000),
+        signal: AbortSignal.timeout(30000),
       });
       const body = await res.json().catch(() => null);
-      const ok = res.ok && body?.ok !== false;
-      return {
-        ok,
-        state: ok ? "online" : "offline",
-        status: res.status,
-        body,
-      };
-    }),
-    timed(async () => {
-      const res = await fetch(downloadUrl, {
-        method: "HEAD",
-        signal: AbortSignal.timeout(25000),
-      });
-      // Some hosts reject HEAD — fall back to ranged GET
-      if (res.status === 405 || res.status === 501) {
-        const getRes = await fetch(downloadUrl, {
-          method: "GET",
-          headers: { Range: "bytes=0-0" },
-          signal: AbortSignal.timeout(25000),
-        });
-        const ok = getRes.ok || getRes.status === 206;
-        return { ok, state: ok ? "online" : "offline", status: getRes.status };
+      if (res.ok && body?.ok) {
+        return { ok: true, state: "online", status: res.status, body, mode: "status" };
       }
-      const ok = res.ok || res.status === 206;
-      return { ok, state: ok ? "online" : "offline", status: res.status };
-    }),
-    timed(async () => {
-      const res = await fetch(`${base}/api/products`, {
+      // Fallback for older API deploys without /api/status
+      const healthRes = await fetch(`${base}/api/health`, {
         headers: { Accept: "application/json" },
         signal: AbortSignal.timeout(25000),
       });
-      const body = await res.json().catch(() => null);
-      const list = body?.products || [];
-      const configured = list.filter((p) => p.configured).length;
-      const ok = res.ok && body?.ok !== false;
-      const state =
-        ok && configured > 0 ? "online" : ok ? "degraded" : "offline";
+      const health = await healthRes.json().catch(() => null);
       return {
-        ok,
-        state,
-        status: res.status,
-        body,
-        configured,
-        total: list.length,
-        demo: !!body?.demo,
+        ok: healthRes.ok && health?.ok !== false,
+        state: healthRes.ok && health?.ok !== false ? "online" : "offline",
+        status: healthRes.status,
+        body: { api: health, download: null, products: null, external: null },
+        mode: "health",
       };
     }),
     timed(async () => {
@@ -212,73 +245,151 @@ export async function fetchSystemStatus() {
       const body = await res.json().catch(() => null);
       const ready = body?.ready === true || body?.ok === true;
       const ok = res.ok && (ready || body?.service === "oxide-discord-bot");
-      const state = ok && body?.ready !== false ? "online" : res.ok ? "degraded" : "offline";
-      return {
-        ok,
-        state,
-        status: res.status,
-        body,
-      };
+      const state =
+        ok && body?.ready !== false ? "online" : res.ok ? "degraded" : "offline";
+      return { ok, state, status: res.status, body };
     }),
   ]);
+
+  const snap = agg.body || {};
+  const apiBody = snap.api || snap;
+  const download = snap.download || {};
+  const products = snap.products || {};
+  const external = snap.external || {};
+
+  const apiOnline = Boolean(agg.ok);
+  const dlAvailable =
+    download.available === true ||
+    apiBody?.downloadAvailable === true ||
+    apiBody?.downloadConfigured === true;
+
+  let dlState = "offline";
+  if (apiOnline && download.available === true) dlState = "online";
+  else if (apiOnline && apiBody?.downloadConfigured) dlState = "degraded";
+  else if (!apiOnline) {
+    // Last-resort HEAD probe when aggregate endpoint is down
+    const probe = await timed(async () => {
+      const res = await fetch(downloadUrl, {
+        method: "HEAD",
+        signal: AbortSignal.timeout(20000),
+      });
+      const ok = res.ok || res.status === 206;
+      return { ok, state: ok ? "online" : "offline", status: res.status };
+    });
+    dlState = probe.state;
+  }
+
+  const configured = products.configured ?? apiBody?.robloxProductsConfigured ?? 0;
+  const total = products.total ?? configured;
+  const productsState =
+    apiOnline && configured > 0 ? "online" : apiOnline ? "degraded" : "offline";
+
+  let externalState = "unknown";
+  if (external.status === "current" || external.updateNeeded === false) {
+    externalState = "online";
+  } else if (external.status === "update_needed" || external.updateNeeded === true) {
+    externalState = "degraded";
+  } else if (apiOnline && (external.hostedClientVersion || external.liveRobloxVersion)) {
+    externalState = "degraded";
+  } else if (!apiOnline) {
+    externalState = "offline";
+  }
+
+  const sizeLabel =
+    download.sizeLabel ||
+    formatBytes(download.sizeBytes ?? apiBody?.downloadSizeBytes) ||
+    null;
+  const modifiedLabel =
+    formatDate(download.modifiedAt || apiBody?.downloadModifiedAt) || null;
 
   const items = [
     {
       id: "api",
       name: "Gate API",
-      detail: base,
-      state: api.state || (api.ok ? "online" : "offline"),
-      latency: api.latency,
+      detail: "License redeem, products, downloads",
+      state: apiOnline ? "online" : "offline",
+      latency: agg.latency,
       fields: [
-        { label: "HTTP", value: String(api.status ?? "—") },
+        { label: "Reachable", value: apiOnline ? "Yes" : "No" },
         {
           label: "Database",
-          value: api.body?.dbEphemeral
+          value: apiBody?.dbEphemeral
             ? "Ephemeral (risk)"
-            : api.body?.dbBackend || api.body?.db || "—",
+            : apiBody?.dbBackend || "—",
         },
         {
-          label: "Download flag",
-          value: api.body?.downloadConfigured ? "Configured" : "Missing",
+          label: "Latency",
+          value: agg.latency != null ? `${agg.latency}ms` : "—",
         },
       ],
     },
     {
       id: "downloads",
-      name: "Downloads",
-      detail: downloadUrl,
-      state: downloads.state || (downloads.ok ? "online" : "offline"),
-      latency: downloads.latency,
+      name: "Oxide.exe download",
+      detail: "Hosted binary for buyers",
+      state: dlState,
+      latency: null,
       fields: [
-        { label: "HTTP", value: String(downloads.status ?? "—") },
-        { label: "File", value: "Oxide.exe" },
+        { label: "Available", value: dlAvailable ? "Yes" : "No" },
+        { label: "Size", value: sizeLabel || "—" },
+        { label: "Updated", value: modifiedLabel || "—" },
       ],
     },
     {
       id: "products",
       name: "Products / gamepasses",
-      detail: `${base}/api/products`,
-      state: products.state || (products.ok ? "online" : "offline"),
-      latency: products.latency,
+      detail: "Week · Month · Lifetime",
+      state: productsState,
+      latency: null,
       fields: [
         {
           label: "Configured",
-          value:
-            products.configured != null
-              ? `${products.configured} / ${products.total ?? "?"}`
-              : "—",
+          value: `${configured} / ${total || "?"}`,
         },
-        { label: "Demo mode", value: products.demo ? "On" : "Off" },
+        {
+          label: "Plans",
+          value:
+            (products.items || [])
+              .filter((p) => p.configured)
+              .map((p) => p.name || p.plan)
+              .join(", ") || "—",
+        },
+        { label: "Demo mode", value: products.demo || apiBody?.robloxDemo ? "On" : "Off" },
+      ],
+    },
+    {
+      id: "external",
+      name: "External / Roblox version",
+      detail: external.message || "Hosted offsets vs live Windows client",
+      state: externalState,
+      latency: null,
+      fields: [
+        {
+          label: "Update needed",
+          value:
+            external.updateNeeded === true
+              ? "Yes"
+              : external.updateNeeded === false
+                ? "No"
+                : "Unknown",
+        },
+        {
+          label: "Hosted target",
+          value: external.hostedClientVersion || apiBody?.hostedClientVersion || "—",
+        },
+        {
+          label: "Live Roblox",
+          value: external.liveRobloxVersion || "—",
+        },
       ],
     },
     {
       id: "bot",
       name: "Discord bot",
-      detail: botHealth,
+      detail: "Community + verify gate",
       state: bot.state || (bot.ok ? "online" : "offline"),
       latency: bot.latency,
       fields: [
-        { label: "HTTP", value: String(bot.status ?? "—") },
         {
           label: "Ready",
           value:
@@ -291,8 +402,12 @@ export async function fetchSystemStatus() {
                   : "—",
         },
         {
-          label: "Identity",
+          label: "Bot",
           value: bot.body?.user || bot.body?.service || "—",
+        },
+        {
+          label: "Latency",
+          value: bot.latency != null ? `${bot.latency}ms` : "—",
         },
       ],
     },
@@ -301,9 +416,16 @@ export async function fetchSystemStatus() {
   const states = items.map((i) => i.state);
   let overall = "online";
   if (states.every((s) => s === "offline")) overall = "offline";
-  else if (states.some((s) => s !== "online")) overall = "degraded";
+  else if (states.some((s) => s !== "online" && s !== "unknown")) overall = "degraded";
+  else if (states.some((s) => s === "unknown")) overall = "degraded";
 
-  return { checkedAt, overall, items };
+  return {
+    checkedAt,
+    overall,
+    items,
+    external,
+    updateNeeded: external.updateNeeded === true,
+  };
 }
 
 export async function claimRobloxKey({ username, plan }) {
@@ -349,4 +471,3 @@ export async function claimRobloxKey({ username, plan }) {
     };
   }
 }
-

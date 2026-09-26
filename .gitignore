@@ -17,7 +17,10 @@ discord-bot/data/*.json
 # Build / local data
 dist/
 .vercel/
-gate-api/data/
+gate-api/data/*
+!gate-api/data/.gitkeep
+!gate-api/data/offsets.json
+!gate-api/data/client-version.txt
 *.db
 *.db-*
 *.log

@@ -1,5 +1,11 @@
 node_modules/
-data/
 .env
+.env.local
 *.db
 *.db-*
+data/*.db
+data/*.db-*
+data/keys.db*
+!data/offsets.json
+!data/client-version.txt
+!data/.gitkeep
