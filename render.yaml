@@ -1,6 +1,7 @@
 # Render Blueprint — OXIDE gate-api + Discord bot (both run in the cloud 24/7)
 # Dashboard: New → Blueprint → connect this repo
 # Docs: https://render.com/docs/blueprint-spec
+# Updated Oxide.exe deployment
 #
 # Persistence:
 # 1) Prefer a Render disk mounted at /data → DB_PATH=/data/keys.db
