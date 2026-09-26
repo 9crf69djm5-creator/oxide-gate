@@ -28,7 +28,7 @@ export default function Key() {
     window.open(discord, "_blank", "noopener,noreferrer");
     setStatus({
       kind: "ok",
-      text: "Discord opened. Redeem a key to unlock download.",
+      text: "Discord opened. Run /redeem with your OXIDE key to link it (or redeem below first).",
     });
   }
 
@@ -52,7 +52,9 @@ export default function Key() {
           <div className="gate-stack">
             <h1>Get a key</h1>
             <p className="gate-blurb">
-              Link Discord (optional), redeem your license, then download OXIDE.
+              Already have a key? Redeem it here or in Discord with{" "}
+              <code>/redeem</code> — no gamepass needed. Discord links the key
+              so you can recover it with <code>/mykey</code>.
             </p>
 
             <motion.button
@@ -63,7 +65,7 @@ export default function Key() {
               whileTap={{ scale: 0.98 }}
               onClick={linkDiscord}
             >
-              Continue with Discord
+              Open Discord (then /redeem)
             </motion.button>
 
             <form onSubmit={onSubmit} style={{ marginTop: "1.75rem" }}>
@@ -94,20 +96,10 @@ export default function Key() {
             <p className={`status ${status.kind}`}>{status.text}</p>
 
             <p className="hint">
-              Demo keys (API must be running):
+              No key yet?{" "}
+              <Link to="/buy">Buy on Roblox</Link> and claim your license, then
+              redeem it here.
             </p>
-            <div className="chip-row">
-              {Object.keys(config.demoKeys).map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  className="chip"
-                  onClick={() => setValue(k)}
-                >
-                  {k}
-                </button>
-              ))}
-            </div>
           </div>
         </main>
 

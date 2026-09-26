@@ -25,6 +25,8 @@ const {
   revokeKey,
   resetHwid,
   redeemKey,
+  fetchLicenseByDiscord,
+  linkDiscordKey,
 } = require("./gate");
 const { collectStatusSnapshot, buildStatusEmbed, syncStatusChannel } = require("./status");
 const { getLicense, setLicense } = require("./licenses");
@@ -32,6 +34,9 @@ const { config } = require("./config");
 
 const DEFAULT_DOWNLOAD =
   "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
+
+/** Button customId prefix: license_reveal:<discordUserId> */
+const LICENSE_REVEAL_PREFIX = "license_reveal:";
 
 /**
  * @param {import('discord.js').GuildMember} member
@@ -91,11 +96,56 @@ function downloadUrl(preferred) {
   return `${config.apiBaseUrl}/downloads/Oxide.exe` || DEFAULT_DOWNLOAD;
 }
 
+function maskKey(key) {
+  const k = String(key || "");
+  const parts = k.split("-");
+  if (parts.length >= 4) {
+    return `${parts[0]}-${parts[1]}-••••-••••`;
+  }
+  if (k.length <= 8) return "••••••••";
+  return `${k.slice(0, 8)}…••••`;
+}
+
+function remainingFromExpires(expires) {
+  if (!expires) {
+    return { daysRemaining: null, remainingLabel: "Lifetime", expired: false };
+  }
+  const end = Date.parse(expires);
+  if (!Number.isFinite(end)) {
+    return { daysRemaining: null, remainingLabel: String(expires), expired: false };
+  }
+  const ms = end - Date.now();
+  if (ms <= 0) {
+    return { daysRemaining: 0, remainingLabel: "Expired", expired: true };
+  }
+  const days = Math.floor(ms / 86400000);
+  const hours = Math.floor((ms % 86400000) / 3600000);
+  const mins = Math.floor((ms % 3600000) / 60000);
+  let remainingLabel;
+  if (days >= 2) remainingLabel = `${days} days left`;
+  else if (days === 1) remainingLabel = `1 day, ${hours}h left`;
+  else if (hours >= 1) remainingLabel = `${hours}h ${mins}m left`;
+  else remainingLabel = `${Math.max(1, mins)}m left`;
+  return {
+    daysRemaining: Math.ceil(ms / 86400000),
+    remainingLabel,
+    expired: false,
+  };
+}
+
 function formatExpiry(expires) {
   if (!expires) return "Lifetime / none";
   const t = Date.parse(expires);
   if (!Number.isFinite(t)) return String(expires);
   return `<t:${Math.floor(t / 1000)}:F> (<t:${Math.floor(t / 1000)}:R>)`;
+}
+
+function statusLabel(status, expired) {
+  if (expired || status === "expired") return "Expired";
+  if (status === "banned") return "Banned";
+  if (status === "active") return "Active";
+  if (status === "unused") return "Unused";
+  return status ? String(status) : "Active";
 }
 
 /**
@@ -109,26 +159,50 @@ function buildRedeemEmbed(opts) {
     expires,
     alreadyActive,
     title = "OXIDE license ready",
+    reveal = true,
+    status,
+    remainingLabel,
+    daysRemaining,
   } = opts;
+  const rem =
+    remainingLabel != null
+      ? { remainingLabel, daysRemaining, expired: false }
+      : remainingFromExpires(expires);
+  const displayKey = reveal ? key : maskKey(key);
   const dl = downloadUrl(opts.downloadUrl);
+  const fields = [
+    { name: "Key", value: `\`${displayKey}\``, inline: false },
+    { name: "Plan", value: plan || "—", inline: true },
+    {
+      name: "Time left",
+      value:
+        rem.daysRemaining != null && !rem.expired
+          ? `${rem.remainingLabel} (${rem.daysRemaining}d)`
+          : rem.remainingLabel || "—",
+      inline: true,
+    },
+    {
+      name: "Status",
+      value: alreadyActive
+        ? statusLabel(status || "active", rem.expired) +
+          (reveal ? " (linked)" : "")
+        : statusLabel(status || "active", rem.expired),
+      inline: true,
+    },
+    { name: "Expires", value: formatExpiry(expires), inline: false },
+    { name: "Download", value: `[Oxide.exe](${dl})`, inline: false },
+  ];
   return new EmbedBuilder()
     .setTitle(title)
-    .setColor(0xe6852e)
+    .setColor(rem.expired ? 0xe74c3c : 0xe6852e)
     .setDescription(
-      "**Paste this key into Oxide.exe when it asks.**\n" +
-        "Download the EXE, launch it, and enter the key below."
+      reveal
+        ? "**Paste this key into Oxide.exe when it asks.**\n" +
+            "Download the EXE, launch it, and enter the key below."
+        : "**Your license is linked to this Discord.**\n" +
+            "Key is masked — tap **Reveal key** if you need the full string."
     )
-    .addFields(
-      { name: "Key", value: `\`${key}\``, inline: false },
-      { name: "Plan", value: plan || "—", inline: true },
-      { name: "Expires", value: formatExpiry(expires), inline: true },
-      {
-        name: "Status",
-        value: alreadyActive ? "Already active (re-linked)" : "Activated",
-        inline: true,
-      },
-      { name: "Download", value: `[Oxide.exe](${dl})`, inline: false }
-    )
+    .addFields(fields)
     .setFooter({ text: "Keep this key private — do not share it publicly." });
 }
 
@@ -139,6 +213,22 @@ function downloadRow(url) {
       .setStyle(ButtonStyle.Link)
       .setURL(downloadUrl(url))
   );
+}
+
+function licenseRows(opts) {
+  const { download, discordUserId, reveal = false } = opts;
+  const rows = [downloadRow(download)];
+  if (!reveal && discordUserId) {
+    rows.push(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`${LICENSE_REVEAL_PREFIX}${discordUserId}`)
+          .setLabel("Reveal key")
+          .setStyle(ButtonStyle.Secondary)
+      )
+    );
+  }
+  return rows;
 }
 
 /**
@@ -238,16 +328,22 @@ const commandData = [
     .setDescription("Fetch latest Roblox Windows client version and update #roblox-versions"),
   new SlashCommandBuilder()
     .setName("redeem")
-    .setDescription("Redeem an OXIDE license key and get download instructions")
+    .setDescription("Redeem or link an OXIDE key to your Discord (existing keys OK)")
     .addStringOption((o) =>
       o.setName("key").setDescription("Your OXIDE-… license key").setRequired(true)
     ),
   new SlashCommandBuilder()
     .setName("mykey")
-    .setDescription("Show your linked OXIDE license (after /redeem)"),
+    .setDescription("Show your linked OXIDE license, plan, and days left"),
   new SlashCommandBuilder()
     .setName("license")
     .setDescription("Show your linked OXIDE license (alias of /mykey)"),
+  new SlashCommandBuilder()
+    .setName("bind")
+    .setDescription("Link an existing OXIDE key to your Discord (alias of /redeem)")
+    .addStringOption((o) =>
+      o.setName("key").setDescription("Your OXIDE-… license key").setRequired(true)
+    ),
   new SlashCommandBuilder()
     .setName("key-create")
     .setDescription("Create license keys via gate API (Staff+ · needs ADMIN_SECRET)")
@@ -391,8 +487,8 @@ async function handleCommand(interaction, client) {
           "`/products` — Plans & gamepass links",
           "`/download` — Oxide.exe link",
           "`/key-redeem` — How to redeem a key",
-          "`/redeem` — Redeem `OXIDE-…` → DM + Customer",
-          "`/mykey` · `/license` — Your linked key",
+          "`/redeem` · `/bind` — Redeem/link `OXIDE-…` (friends with a key: just redeem)",
+          "`/mykey` · `/license` — Saved key + days left",
           "`/roblox-version` — Latest Windows client",
           "`/help` — This list",
           "",
@@ -523,10 +619,13 @@ async function handleCommand(interaction, client) {
       .setColor(0xe6852e)
       .setDescription(
         [
-          "1. Buy a plan on the site or Roblox gamepass.",
+          "**Already have a key?** Just run `/redeem` (or `/bind`) — no gamepass needed.",
+          "",
+          "1. Buy a plan on the site or Roblox gamepass (if you need a new key).",
           "2. Claim / receive your `OXIDE-…` key.",
-          "3. Run `/redeem key:OXIDE-…` in this server (or redeem on the site).",
-          "4. Download Oxide.exe and paste the key when asked.",
+          "3. Run `/redeem key:OXIDE-…` here (links the key to your Discord).",
+          "4. Later: `/mykey` or `/license` shows your saved key + time left.",
+          "5. Download Oxide.exe and paste the key when asked.",
           "",
           `Site redeem: ${config.siteUrl}/key`,
           `Buy: ${config.siteUrl}/buy`,
@@ -575,7 +674,7 @@ async function handleCommand(interaction, client) {
     });
   }
 
-  if (name === "redeem") {
+  if (name === "redeem" || name === "bind") {
     const rawKey = interaction.options.getString("key", true).trim();
     if (!rawKey) {
       return interaction.reply({
@@ -590,6 +689,7 @@ async function handleCommand(interaction, client) {
       result = await redeemKey({
         apiBaseUrl: config.apiBaseUrl,
         key: rawKey,
+        discordUserId: interaction.user.id,
       });
     } catch (err) {
       return interaction.editReply({
@@ -615,6 +715,9 @@ async function handleCommand(interaction, client) {
       planId: body.planId,
       expires: body.expires ?? null,
       downloadUrl: dl,
+      status: body.status || "active",
+      remainingLabel: body.remainingLabel,
+      daysRemaining: body.daysRemaining,
       redeemedAt: new Date().toISOString(),
     });
 
@@ -626,6 +729,13 @@ async function handleCommand(interaction, client) {
       expires: body.expires,
       downloadUrl: dl,
       alreadyActive: Boolean(body.alreadyActive),
+      status: body.status,
+      remainingLabel: body.remainingLabel,
+      daysRemaining: body.daysRemaining,
+      reveal: true,
+      title: body.alreadyActive
+        ? "OXIDE license linked"
+        : "OXIDE license ready",
     });
     const row = downloadRow(dl);
 
@@ -646,16 +756,18 @@ async function handleCommand(interaction, client) {
     if (delivered === "dm") {
       return interaction.editReply({
         content:
-          "✅ Key redeemed. Check your **DMs** for the key, plan, and download button.\n" +
+          "✅ Key saved to your Discord. Check your **DMs** for the key, plan, and download.\n" +
           `${roleNote}\n` +
+          "Later: `/mykey` or `/license` to recover the key + days left.\n" +
           "Paste the key into **Oxide.exe** when it asks.",
       });
     }
 
     return interaction.editReply({
       content:
-        "✅ Key redeemed (could not DM you — enable DMs from server members, or use this reply).\n" +
-        `${roleNote}`,
+        "✅ Key saved (could not DM you — enable DMs from server members, or use this reply).\n" +
+        `${roleNote}\n` +
+        "Use `/mykey` anytime to recover your key.",
       embeds: [embed],
       components: [row],
     });
@@ -663,26 +775,99 @@ async function handleCommand(interaction, client) {
 
   if (name === "mykey" || name === "license") {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    const linked = getLicense(interaction.user.id);
-    if (!linked?.key) {
+
+    let license = null;
+    let fromApi = false;
+
+    if (config.adminSecret) {
+      try {
+        const apiResult = await fetchLicenseByDiscord({
+          apiBaseUrl: config.apiBaseUrl,
+          adminSecret: config.adminSecret,
+          discordUserId: interaction.user.id,
+        });
+        if (apiResult.ok && apiResult.body?.key) {
+          license = apiResult.body;
+          fromApi = true;
+        } else if (apiResult.body?.key && apiResult.body?.error === "expired") {
+          license = apiResult.body;
+          fromApi = true;
+        }
+      } catch {
+        /* fall through to local cache */
+      }
+    }
+
+    if (!license?.key) {
+      const linked = getLicense(interaction.user.id);
+      if (linked?.key) {
+        // Local cache hit — try to re-bind on API so DB has the Discord link
+        try {
+          const linkedResult = await linkDiscordKey({
+            apiBaseUrl: config.apiBaseUrl,
+            key: linked.key,
+            discordUserId: interaction.user.id,
+          });
+          if (linkedResult.ok && linkedResult.body?.key) {
+            license = linkedResult.body;
+            fromApi = true;
+          } else {
+            license = linked;
+          }
+        } catch {
+          license = linked;
+        }
+      }
+    }
+
+    if (!license?.key) {
       return interaction.editReply({
         content:
           "No license linked to your Discord yet.\n" +
-          "Use `/redeem key:OXIDE-…` after you buy or receive a key.",
+          "Already have a key? Run `/redeem key:OXIDE-…` (or `/bind`) — no new purchase needed.\n" +
+          `Site redeem then Discord: ${config.siteUrl}/key → then \`/redeem\` here.`,
       });
     }
+
+    // Refresh local cache from authoritative API/body
+    setLicense(interaction.user.id, {
+      key: license.key,
+      plan: license.plan,
+      planId: license.planId,
+      expires: license.expires ?? null,
+      downloadUrl: downloadUrl(license.downloadUrl),
+      status: license.status,
+      remainingLabel: license.remainingLabel,
+      daysRemaining: license.daysRemaining,
+      redeemedAt: new Date().toISOString(),
+    });
+
     const embed = buildRedeemEmbed({
       title: "Your OXIDE license",
-      key: linked.key,
-      plan: linked.plan,
-      expires: linked.expires,
-      downloadUrl: linked.downloadUrl,
+      key: license.key,
+      plan: license.plan,
+      expires: license.expires,
+      downloadUrl: license.downloadUrl,
       alreadyActive: true,
+      status: license.status,
+      remainingLabel: license.remainingLabel,
+      daysRemaining: license.daysRemaining,
+      reveal: false,
     });
-    return interaction.editReply({
+
+    const reply = {
       embeds: [embed],
-      components: [downloadRow(linked.downloadUrl)],
-    });
+      components: licenseRows({
+        download: license.downloadUrl,
+        discordUserId: interaction.user.id,
+        reveal: false,
+      }),
+    };
+    if (!fromApi) {
+      reply.content =
+        "_Showing cached link — API lookup unavailable; key still on this bot._";
+    }
+    return interaction.editReply(reply);
   }
 
   if (name === "roblox-version") {
@@ -923,6 +1108,56 @@ async function handleCommand(interaction, client) {
 async function handleButton(interaction) {
   if (interaction.customId === VERIFY_BUTTON_ID) {
     return grantCitizen(interaction);
+  }
+
+  if (interaction.customId.startsWith(LICENSE_REVEAL_PREFIX)) {
+    const ownerId = interaction.customId.slice(LICENSE_REVEAL_PREFIX.length);
+    if (interaction.user.id !== ownerId) {
+      return interaction.reply({
+        content: "Only the license owner can reveal this key.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    let license = null;
+    if (config.adminSecret) {
+      try {
+        const apiResult = await fetchLicenseByDiscord({
+          apiBaseUrl: config.apiBaseUrl,
+          adminSecret: config.adminSecret,
+          discordUserId: interaction.user.id,
+        });
+        if (apiResult.body?.key) license = apiResult.body;
+      } catch {
+        /* local fallback */
+      }
+    }
+    if (!license?.key) {
+      license = getLicense(interaction.user.id);
+    }
+    if (!license?.key) {
+      return interaction.editReply({
+        content: "No linked license found. Use `/redeem` first.",
+      });
+    }
+
+    const embed = buildRedeemEmbed({
+      title: "Your OXIDE license (revealed)",
+      key: license.key,
+      plan: license.plan,
+      expires: license.expires,
+      downloadUrl: license.downloadUrl,
+      alreadyActive: true,
+      status: license.status,
+      remainingLabel: license.remainingLabel,
+      daysRemaining: license.daysRemaining,
+      reveal: true,
+    });
+    return interaction.editReply({
+      embeds: [embed],
+      components: [downloadRow(license.downloadUrl)],
+    });
   }
 }
 

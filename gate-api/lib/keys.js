@@ -71,6 +71,136 @@ function isExpired(row) {
   return new Date(row.expires_at).getTime() < Date.now();
 }
 
+/** Discord snowflake — digits only, typical 17–19 chars. */
+function normalizeDiscordUserId(raw) {
+  const s = String(raw || "").trim();
+  if (!/^\d{5,32}$/.test(s)) return null;
+  return s;
+}
+
+function maskKey(key) {
+  const k = String(key || "");
+  const parts = k.split("-");
+  if (parts.length >= 4) {
+    return `${parts[0]}-${parts[1]}-••••-••••`;
+  }
+  if (k.length <= 8) return "••••••••";
+  return `${k.slice(0, 8)}…••••`;
+}
+
+/**
+ * Human-readable time left + day count from expires_at ISO.
+ * @param {string|null|undefined} expiresAt
+ */
+function remainingFromExpires(expiresAt) {
+  if (!expiresAt) {
+    return {
+      daysRemaining: null,
+      remainingMs: null,
+      remainingLabel: "Lifetime",
+      expired: false,
+    };
+  }
+  const end = Date.parse(expiresAt);
+  if (!Number.isFinite(end)) {
+    return {
+      daysRemaining: null,
+      remainingMs: null,
+      remainingLabel: String(expiresAt),
+      expired: false,
+    };
+  }
+  const ms = end - Date.now();
+  if (ms <= 0) {
+    return {
+      daysRemaining: 0,
+      remainingMs: 0,
+      remainingLabel: "Expired",
+      expired: true,
+    };
+  }
+  const days = Math.floor(ms / 86400000);
+  const hours = Math.floor((ms % 86400000) / 3600000);
+  const mins = Math.floor((ms % 3600000) / 60000);
+  let remainingLabel;
+  if (days >= 2) remainingLabel = `${days} days left`;
+  else if (days === 1) remainingLabel = `1 day, ${hours}h left`;
+  else if (hours >= 1) remainingLabel = `${hours}h ${mins}m left`;
+  else remainingLabel = `${Math.max(1, mins)}m left`;
+  return {
+    daysRemaining: Math.ceil(ms / 86400000),
+    remainingMs: ms,
+    remainingLabel,
+    expired: false,
+  };
+}
+
+/**
+ * Attach Discord user to a key; one Discord → one key (clears prior links).
+ * @param {string} key
+ * @param {string} discordUserId
+ */
+function bindDiscordUser(key, discordUserId) {
+  const id = normalizeDiscordUserId(discordUserId);
+  if (!id) return { ok: false, error: "invalid_discord", message: "Invalid Discord user id." };
+  getDb()
+    .prepare(
+      "UPDATE keys SET discord_user_id = NULL WHERE discord_user_id = ? AND key != ?"
+    )
+    .run(id, key);
+  getDb()
+    .prepare("UPDATE keys SET discord_user_id = ? WHERE key = ?")
+    .run(id, key);
+  return { ok: true, discordUserId: id };
+}
+
+function getByDiscordUserId(rawId) {
+  const id = normalizeDiscordUserId(rawId);
+  if (!id) return null;
+  return getDb()
+    .prepare(
+      `
+      SELECT * FROM keys
+      WHERE discord_user_id = ?
+      ORDER BY
+        CASE status WHEN 'active' THEN 0 WHEN 'unused' THEN 1 ELSE 2 END,
+        COALESCE(activated_at, created_at) DESC
+      LIMIT 1
+    `
+    )
+    .get(id);
+}
+
+/**
+ * Public/admin view of a license row (includes remaining time).
+ * @param {object} row
+ * @param {{ includeFullKey?: boolean }} [opts]
+ */
+function formatLicense(row, opts = {}) {
+  if (!row) return null;
+  const rem = remainingFromExpires(row.expires_at);
+  let status = row.status;
+  if (status === "active" && rem.expired) status = "expired";
+  const includeFullKey = opts.includeFullKey !== false;
+  const out = {
+    plan: planLabel(row.plan),
+    planId: row.plan,
+    status,
+    expires: row.expires_at || null,
+    activatedAt: row.activated_at || null,
+    discordUserId: row.discord_user_id || null,
+    downloadUrl: downloadUrl(),
+    keyMasked: maskKey(row.key),
+    daysRemaining: rem.daysRemaining,
+    remainingMs: rem.remainingMs,
+    remainingLabel: rem.remainingLabel,
+    expired: rem.expired,
+  };
+  if (includeFullKey) out.key = row.key;
+  else out.key = out.keyMasked;
+  return out;
+}
+
 function createKeys({ plan, count, days }) {
   const planId = String(plan || "premium").toLowerCase();
   const n = Math.min(Math.max(parseInt(count, 10) || 1, 1), 500);
@@ -175,14 +305,27 @@ function getKey(key) {
   return getDb().prepare("SELECT * FROM keys WHERE key = ?").get(key);
 }
 
-function redeem({ key: rawKey, hwid, daysOverride }) {
+function redeem({ key: rawKey, hwid, daysOverride, discordUserId }) {
   const key = normalizeKey(rawKey);
   if (!key) return { ok: false, error: "missing_key", message: "Enter a license key." };
 
+  const discordId = normalizeDiscordUserId(discordUserId);
   const row = getKey(key);
   if (!row) return { ok: false, error: "invalid_key", message: "Invalid license key." };
   if (row.status === "banned")
     return { ok: false, error: "banned", message: "This key has been banned." };
+
+  if (
+    discordId &&
+    row.discord_user_id &&
+    String(row.discord_user_id) !== String(discordId)
+  ) {
+    return {
+      ok: false,
+      error: "discord_bound",
+      message: "This key is already linked to another Discord account.",
+    };
+  }
 
   if (row.status === "active") {
     if (isExpired(row)) {
@@ -205,15 +348,27 @@ function redeem({ key: rawKey, hwid, daysOverride }) {
     if (hwid && !row.hwid) {
       getDb().prepare("UPDATE keys SET hwid = ? WHERE key = ?").run(hwid, key);
     }
+    if (discordId) {
+      const bind = bindDiscordUser(key, discordId);
+      if (!bind.ok) return bind;
+    }
+    const fresh = getKey(key);
+    const license = formatLicense(fresh, { includeFullKey: true });
     return {
       ok: true,
-      plan: planLabel(row.plan),
-      planId: row.plan,
-      expires: row.expires_at,
-      downloadUrl: downloadUrl(),
+      plan: license.plan,
+      planId: license.planId,
+      expires: license.expires,
+      downloadUrl: license.downloadUrl,
       token,
       key,
       alreadyActive: true,
+      discordUserId: license.discordUserId,
+      daysRemaining: license.daysRemaining,
+      remainingLabel: license.remainingLabel,
+      remainingMs: license.remainingMs,
+      status: license.status,
+      keyMasked: license.keyMasked,
     };
   }
 
@@ -239,16 +394,71 @@ function redeem({ key: rawKey, hwid, daysOverride }) {
   `
   ).run(hwid || null, activated, expires, token, key);
 
+  if (discordId) {
+    const bind = bindDiscordUser(key, discordId);
+    if (!bind.ok) return bind;
+  }
+
+  const fresh = getKey(key);
+  const license = formatLicense(fresh, { includeFullKey: true });
   return {
     ok: true,
-    plan: planLabel(row.plan),
-    planId: row.plan,
-    expires,
-    downloadUrl: downloadUrl(),
+    plan: license.plan,
+    planId: license.planId,
+    expires: license.expires,
+    downloadUrl: license.downloadUrl,
     token,
     key,
     alreadyActive: false,
+    discordUserId: license.discordUserId,
+    daysRemaining: license.daysRemaining,
+    remainingLabel: license.remainingLabel,
+    remainingMs: license.remainingMs,
+    status: license.status,
+    keyMasked: license.keyMasked,
   };
+}
+
+/**
+ * Link an existing (or unused) key to a Discord user — same rules as redeem + bind.
+ * Prefer for site-redeemed keys that need Discord attachment afterward.
+ */
+function linkDiscord({ key: rawKey, discordUserId }) {
+  const discordId = normalizeDiscordUserId(discordUserId);
+  if (!discordId) {
+    return { ok: false, error: "invalid_discord", message: "Invalid Discord user id." };
+  }
+  // Reuse redeem path so unused keys activate and active keys re-link.
+  return redeem({ key: rawKey, discordUserId: discordId });
+}
+
+/**
+ * Lookup license saved for a Discord user (bot /mykey).
+ */
+function licenseForDiscord(discordUserId) {
+  const row = getByDiscordUserId(discordUserId);
+  if (!row) {
+    return {
+      ok: false,
+      error: "not_linked",
+      message: "No license linked to this Discord account. Use /redeem with your OXIDE key.",
+    };
+  }
+  if (row.status === "banned") {
+    return { ok: false, error: "banned", message: "This key has been banned." };
+  }
+  if (row.status === "active" && isExpired(row)) {
+    getDb().prepare("UPDATE keys SET status = 'expired' WHERE key = ?").run(row.key);
+    const license = formatLicense({ ...row, status: "expired" }, { includeFullKey: true });
+    return {
+      ok: false,
+      error: "expired",
+      message: "This key has expired.",
+      ...license,
+    };
+  }
+  const license = formatLicense(row, { includeFullKey: true });
+  return { ok: true, ...license };
 }
 
 function validate({ key: rawKey, hwid, token }) {
@@ -383,8 +593,14 @@ function seedDemoKeys() {
 
 module.exports = {
   normalizeKey,
+  normalizeDiscordUserId,
   createKeys,
   redeem,
+  linkDiscord,
+  licenseForDiscord,
+  formatLicense,
+  remainingFromExpires,
+  maskKey,
   validate,
   validateOrActivate,
   revokeKey,
@@ -395,4 +611,5 @@ module.exports = {
   planLabel,
   PLAN_DAYS,
   getKey,
+  getByDiscordUserId,
 };

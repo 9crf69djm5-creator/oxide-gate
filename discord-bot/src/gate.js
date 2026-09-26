@@ -147,15 +147,18 @@ async function resetHwid(opts) {
 
 /**
  * Redeem / activate a license key (HWID optional — EXE binds later).
+ * Pass discordUserId so gate-api stores the Discord ↔ key link.
  * @param {object} opts
  * @param {string} opts.apiBaseUrl
  * @param {string} opts.key
  * @param {string} [opts.hwid]
+ * @param {string} [opts.discordUserId]
  */
 async function redeemKey(opts) {
   const url = `${opts.apiBaseUrl.replace(/\/$/, "")}/api/redeem`;
   const payload = { key: String(opts.key || "").trim() };
   if (opts.hwid) payload.hwid = opts.hwid;
+  if (opts.discordUserId) payload.discordUserId = String(opts.discordUserId);
 
   const res = await fetch(url, {
     method: "POST",
@@ -171,6 +174,51 @@ async function redeemKey(opts) {
   return { ok: res.ok && body.ok !== false, status: res.status, body };
 }
 
+/**
+ * Link an existing key to Discord (same as redeem + bind on API).
+ * @param {object} opts
+ */
+async function linkDiscordKey(opts) {
+  const url = `${opts.apiBaseUrl.replace(/\/$/, "")}/api/discord/link`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "User-Agent": "OXIDE-DiscordBot/1.0",
+    },
+    body: JSON.stringify({
+      key: String(opts.key || "").trim(),
+      discordUserId: String(opts.discordUserId || ""),
+    }),
+    signal: AbortSignal.timeout(45000),
+  });
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok && body.ok !== false, status: res.status, body };
+}
+
+/**
+ * Fetch license linked to a Discord user (requires ADMIN_SECRET).
+ * @param {object} opts
+ */
+async function fetchLicenseByDiscord(opts) {
+  const base = opts.apiBaseUrl.replace(/\/$/, "");
+  const url = `${base}/api/admin/license-by-discord?discordUserId=${encodeURIComponent(
+    String(opts.discordUserId || "")
+  )}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      "X-Admin-Secret": opts.adminSecret,
+      "User-Agent": "OXIDE-DiscordBot/1.0",
+    },
+    signal: AbortSignal.timeout(45000),
+  });
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok && body.ok !== false, status: res.status, body };
+}
+
 module.exports = {
   fetchHealth,
   fetchProducts,
@@ -179,4 +227,6 @@ module.exports = {
   revokeKey,
   resetHwid,
   redeemKey,
+  linkDiscordKey,
+  fetchLicenseByDiscord,
 };

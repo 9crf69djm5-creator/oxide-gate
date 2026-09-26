@@ -410,15 +410,23 @@ app.post("/api/roblox/claim", async (req, res) => {
 });
 
 /**
- * Website redeem — activates unused key, returns download + token.
- * Body: { key, hwid? }
+ * Website / Discord redeem — activates unused key, returns download + token.
+ * Body: { key, hwid?, discordUserId? } — Discord id is saved for /mykey recovery.
  */
 app.post("/api/redeem", async (req, res) => {
   try {
-    const { key, hwid } = req.body || {};
-    const result = keys.redeem({ key, hwid: hwid || null });
+    const { key, hwid, discordUserId, discord_user_id } = req.body || {};
+    const result = keys.redeem({
+      key,
+      hwid: hwid || null,
+      discordUserId: discordUserId || discord_user_id || null,
+    });
     if (!result.ok) {
-      return res.status(400).json(result);
+      const status =
+        result.error === "discord_bound" || result.error === "banned"
+          ? 403
+          : 400;
+      return res.status(status).json(result);
     }
     if (!result.downloadUrl) result.downloadUrl = DOWNLOAD_URL;
     else result.downloadUrl = safeDownloadUrl(result.downloadUrl) || DOWNLOAD_URL;
@@ -426,6 +434,35 @@ app.post("/api/redeem", async (req, res) => {
     return res.json(result);
   } catch (err) {
     console.error("[redeem]", err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
+});
+
+/**
+ * Link an already-owned key to Discord (after site redeem, or re-bind).
+ * Body: { key, discordUserId }
+ * Same activation rules as /api/redeem when the key is unused.
+ */
+app.post("/api/discord/link", async (req, res) => {
+  try {
+    const { key, discordUserId, discord_user_id } = req.body || {};
+    const result = keys.linkDiscord({
+      key,
+      discordUserId: discordUserId || discord_user_id,
+    });
+    if (!result.ok) {
+      const status =
+        result.error === "discord_bound" || result.error === "banned"
+          ? 403
+          : 400;
+      return res.status(status).json(result);
+    }
+    if (!result.downloadUrl) result.downloadUrl = DOWNLOAD_URL;
+    else result.downloadUrl = safeDownloadUrl(result.downloadUrl) || DOWNLOAD_URL;
+    await dbModule.flushToPostgres().catch(() => {});
+    return res.json(result);
+  } catch (err) {
+    console.error("[discord/link]", err);
     return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
   }
 });
@@ -537,6 +574,74 @@ app.post("/api/admin/reset-hwid", async (req, res) => {
     return res.json(result);
   } catch (err) {
     console.error("[reset-hwid]", err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
+});
+
+/**
+ * Admin / Discord bot: look up the license linked to a Discord user id.
+ * Header: X-Admin-Secret
+ * Query or body: discordUserId
+ */
+app.get("/api/admin/license-by-discord", (req, res) => {
+  const secret =
+    req.get("X-Admin-Secret") ||
+    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+
+  if (!secret || secret !== ADMIN_SECRET) {
+    return res.status(401).json({ ok: false, error: "unauthorized", message: "Invalid admin secret." });
+  }
+
+  try {
+    const discordUserId =
+      req.query.discordUserId ||
+      req.query.discord_user_id ||
+      req.query.userId;
+    const result = keys.licenseForDiscord(discordUserId);
+    if (!result.ok && result.error === "not_linked") {
+      return res.status(404).json(result);
+    }
+    if (!result.ok && (result.error === "banned" || result.error === "expired")) {
+      return res.status(result.error === "banned" ? 403 : 400).json(result);
+    }
+    if (!result.ok) {
+      return res.status(400).json(result);
+    }
+    return res.json(result);
+  } catch (err) {
+    console.error("[license-by-discord]", err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
+});
+
+app.post("/api/admin/license-by-discord", (req, res) => {
+  const secret =
+    req.get("X-Admin-Secret") ||
+    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "") ||
+    (req.body && req.body.adminSecret);
+
+  if (!secret || secret !== ADMIN_SECRET) {
+    return res.status(401).json({ ok: false, error: "unauthorized", message: "Invalid admin secret." });
+  }
+
+  try {
+    const discordUserId =
+      req.body?.discordUserId ||
+      req.body?.discord_user_id ||
+      req.body?.userId;
+    const result = keys.licenseForDiscord(discordUserId);
+    if (!result.ok && result.error === "not_linked") {
+      return res.status(404).json(result);
+    }
+    if (!result.ok && (result.error === "banned" || result.error === "expired")) {
+      return res.status(result.error === "banned" ? 403 : 400).json(result);
+    }
+    if (!result.ok) {
+      return res.status(400).json(result);
+    }
+    return res.json(result);
+  } catch (err) {
+    console.error("[license-by-discord]", err);
     return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
   }
 });

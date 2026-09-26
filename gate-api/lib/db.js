@@ -227,7 +227,8 @@ async function initDb() {
       activated_at TEXT,
       expires_at TEXT,
       token TEXT,
-      duration_days INTEGER
+      duration_days INTEGER,
+      discord_user_id TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_keys_status ON keys(status);
     CREATE INDEX IF NOT EXISTS idx_keys_token ON keys(token);
@@ -237,6 +238,20 @@ async function initDb() {
     db.exec("ALTER TABLE keys ADD COLUMN duration_days INTEGER");
   } catch (_) {
     /* already exists */
+  }
+
+  try {
+    db.exec("ALTER TABLE keys ADD COLUMN discord_user_id TEXT");
+  } catch (_) {
+    /* already exists */
+  }
+
+  try {
+    db.exec(
+      "CREATE INDEX IF NOT EXISTS idx_keys_discord_user ON keys(discord_user_id)"
+    );
+  } catch (_) {
+    /* ignore */
   }
 
   db.exec(`

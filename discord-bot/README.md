@@ -84,8 +84,8 @@ API: https://oxide-gate-api.onrender.com
 | `/products` | Anyone | Plans / gamepass links |
 | `/download` | Citizen+ | Oxide.exe link |
 | `/key-redeem` | Anyone | How to redeem |
-| `/redeem` | Anyone | Redeem key → DM + Customer |
-| `/mykey` · `/license` | Anyone | Linked key |
+| `/redeem` · `/bind` | Anyone | Redeem/link key → saved on Discord + API |
+| `/mykey` · `/license` | Anyone | Masked key + plan + days left (Reveal button) |
 | `/roblox-version` | Anyone | Refresh `#roblox-versions` |
 | `/help` | Anyone | Command list |
 

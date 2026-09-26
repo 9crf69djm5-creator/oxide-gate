@@ -87,9 +87,19 @@ Resolves userId, verifies ownership (unless demo), creates/returns a key bound t
 
 ### `POST /api/redeem`
 
-Website redeem. Body: `{ "key": "OXIDE-....", "hwid": "optional" }`
+Website / Discord redeem. Body: `{ "key": "OXIDE-....", "hwid": "optional", "discordUserId": "optional" }`
 
-Returns `{ ok, plan, expires, downloadUrl, token }`.
+Returns `{ ok, plan, expires, downloadUrl, token, daysRemaining, remainingLabel, discordUserId, … }`.  
+When `discordUserId` is set, the key is linked in SQLite for Discord `/mykey` recovery.
+
+### `POST /api/discord/link`
+
+Body: `{ "key", "discordUserId" }` — link an existing (or unused) key to Discord after a site redeem.
+
+### `GET /api/admin/license-by-discord`
+
+Header: `X-Admin-Secret` · Query: `discordUserId`  
+Returns the linked license (full key + time remaining) for the Discord bot.
 
 ### `POST /api/validate`
 
