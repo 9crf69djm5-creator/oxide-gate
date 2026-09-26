@@ -225,6 +225,50 @@ function downloadRow(url) {
   );
 }
 
+/** Public site link buttons: Buy / Get key / Status / Offsets */
+function websiteRows() {
+  const base = config.siteUrl;
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setLabel("Buy")
+        .setStyle(ButtonStyle.Link)
+        .setURL(`${base}/buy`),
+      new ButtonBuilder()
+        .setLabel("Get key")
+        .setStyle(ButtonStyle.Link)
+        .setURL(`${base}/key`),
+      new ButtonBuilder()
+        .setLabel("Status")
+        .setStyle(ButtonStyle.Link)
+        .setURL(`${base}/status`),
+      new ButtonBuilder()
+        .setLabel("Offsets")
+        .setStyle(ButtonStyle.Link)
+        .setURL(`${base}/offsets`)
+    ),
+  ];
+}
+
+function buildWebsiteEmbed() {
+  const base = config.siteUrl;
+  return new EmbedBuilder()
+    .setTitle("OXIDE website")
+    .setColor(0xe6852e)
+    .setURL(base)
+    .setDescription(
+      `Official site: **[${base.replace(/^https?:\/\//, "")}](${base})**\n` +
+        "Buy a plan, claim your key, check status, or grab offsets."
+    )
+    .addFields(
+      { name: "Buy", value: `[Open](${base}/buy)`, inline: true },
+      { name: "Get key", value: `[Open](${base}/key)`, inline: true },
+      { name: "Status", value: `[Open](${base}/status)`, inline: true },
+      { name: "Offsets", value: `[Open](${base}/offsets)`, inline: true }
+    )
+    .setFooter({ text: "Aliases: /website · /site · /web" });
+}
+
 function licenseRows(opts) {
   const { download, discordUserId, reveal = false } = opts;
   const rows = [downloadRow(download)];
@@ -625,6 +669,15 @@ const commandData = [
         )
     ),
   new SlashCommandBuilder()
+    .setName("website")
+    .setDescription("Share the OXIDE website and quick links"),
+  new SlashCommandBuilder()
+    .setName("site")
+    .setDescription("Share the OXIDE website (alias of /website)"),
+  new SlashCommandBuilder()
+    .setName("web")
+    .setDescription("Share the OXIDE website (alias of /website)"),
+  new SlashCommandBuilder()
     .setName("help")
     .setDescription("List OXIDE bot commands"),
 ].map((c) => c.toJSON());
@@ -692,6 +745,13 @@ async function grantCitizen(interaction) {
 async function handleCommand(interaction, client) {
   const name = interaction.commandName;
 
+  if (name === "website" || name === "site" || name === "web") {
+    return interaction.reply({
+      embeds: [buildWebsiteEmbed()],
+      components: websiteRows(),
+    });
+  }
+
   if (name === "help") {
     const embed = new EmbedBuilder()
       .setTitle("OXIDE Bot")
@@ -701,6 +761,7 @@ async function handleCommand(interaction, client) {
           "**Everyone / Citizen**",
           "`/verify` — Unlock the server (Citizen role)",
           "`/ping` — Bot latency",
+          "`/website` · `/site` · `/web` — Official site + quick links",
           "`/status` — Gate API + downloads + products",
           "`/products` — Plans & gamepass links",
           "`/download` — Oxide.exe link",

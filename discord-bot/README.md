@@ -80,6 +80,7 @@ API: https://oxide-gate-api.onrender.com
 |---------|-----|------|
 | `/verify` | Anyone | Get Citizen + unlock server |
 | `/ping` | Anyone | Bot latency |
+| `/website` · `/site` · `/web` | Anyone | Official site + Buy / Get key / Status / Offsets |
 | `/status` | Anyone | API + downloads + products + bot |
 | `/products` | Anyone | Plans / gamepass links |
 | `/download` | Citizen+ | Oxide.exe link |
