@@ -7,6 +7,7 @@ const dbModule = require("./lib/db");
 const keys = require("./lib/keys");
 const claims = require("./lib/claims");
 const roblox = require("./lib/roblox");
+const identity = require("./lib/identity");
 const externalVersion = require("./lib/external-version");
 const offsetsLib = require("./lib/offsets");
 
@@ -383,8 +384,8 @@ app.get("/api/products", (_req, res) => {
 /**
  * After buying a Shirt / T-Shirt / Gamepass on Roblox, claim an OXIDE key.
  * Body: { username, plan }
- * Verifies ownership (unless DEMO_ROBLOX=1) and stores robloxUserId+assetId so
- * one purchase cannot mint infinite keys.
+ * Stamps roblox identity on the key forever; auto-links Discord when
+ * /link-roblox was run; DMs the key via the Discord bot when linked.
  */
 app.post("/api/roblox/claim", async (req, res) => {
   try {
@@ -394,7 +395,9 @@ app.post("/api/roblox/claim", async (req, res) => {
       const status =
         result.error === "not_owned"
           ? 403
-          : result.error === "user_not_found" || result.error === "missing_username" || result.error === "missing_plan"
+          : result.error === "user_not_found" ||
+              result.error === "missing_username" ||
+              result.error === "missing_plan"
             ? 400
             : result.error === "product_not_configured"
               ? 503
@@ -405,6 +408,33 @@ app.post("/api/roblox/claim", async (req, res) => {
     return res.json(result);
   } catch (err) {
     console.error("[roblox/claim]", err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
+});
+
+/**
+ * Link Discord snowflake ↔ Roblox username (bot /link-roblox, /recover).
+ * Body: { discordUserId, robloxUsername }
+ * Also attaches discord_user_id to keys already claimed by that Roblox user.
+ */
+app.post("/api/discord/link-roblox", async (req, res) => {
+  try {
+    const { discordUserId, discord_user_id, robloxUsername, username } = req.body || {};
+    const result = await identity.linkDiscordToRoblox({
+      discordUserId: discordUserId || discord_user_id,
+      robloxUsername: robloxUsername || username,
+    });
+    if (!result.ok) {
+      const status =
+        result.error === "user_not_found" || result.error === "missing_username"
+          ? 400
+          : 400;
+      return res.status(status).json(result);
+    }
+    await dbModule.flushToPostgres().catch(() => {});
+    return res.json(result);
+  } catch (err) {
+    console.error("[discord/link-roblox]", err);
     return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
   }
 });
@@ -597,8 +627,12 @@ app.get("/api/admin/license-by-discord", (req, res) => {
       req.query.discordUserId ||
       req.query.discord_user_id ||
       req.query.userId;
-    const result = keys.licenseForDiscord(discordUserId);
+    // Prefer full recovery (Discord direct → Roblox link → keys)
+    const result = identity.recoverForDiscord(discordUserId);
     if (!result.ok && result.error === "not_linked") {
+      return res.status(404).json(result);
+    }
+    if (!result.ok && result.error === "no_keys_for_roblox") {
       return res.status(404).json(result);
     }
     if (!result.ok && (result.error === "banned" || result.error === "expired")) {
@@ -629,8 +663,8 @@ app.post("/api/admin/license-by-discord", (req, res) => {
       req.body?.discordUserId ||
       req.body?.discord_user_id ||
       req.body?.userId;
-    const result = keys.licenseForDiscord(discordUserId);
-    if (!result.ok && result.error === "not_linked") {
+    const result = identity.recoverForDiscord(discordUserId);
+    if (!result.ok && (result.error === "not_linked" || result.error === "no_keys_for_roblox")) {
       return res.status(404).json(result);
     }
     if (!result.ok && (result.error === "banned" || result.error === "expired")) {
@@ -642,6 +676,95 @@ app.post("/api/admin/license-by-discord", (req, res) => {
     return res.json(result);
   } catch (err) {
     console.error("[license-by-discord]", err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
+});
+
+/**
+ * Admin / bot: recover license(s) by Roblox username.
+ * Query: ?username=RobloxName
+ */
+app.get("/api/admin/license-by-roblox", async (req, res) => {
+  const secret =
+    req.get("X-Admin-Secret") ||
+    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+
+  if (!secret || secret !== ADMIN_SECRET) {
+    return res.status(401).json({ ok: false, error: "unauthorized", message: "Invalid admin secret." });
+  }
+
+  try {
+    const username =
+      req.query.username ||
+      req.query.robloxUsername ||
+      req.query.roblox_username;
+    const result = await identity.recoverByRobloxUsername(username);
+    if (!result.ok) {
+      const status = result.error === "not_found" ? 404 : 400;
+      return res.status(status).json(result);
+    }
+    return res.json(result);
+  } catch (err) {
+    console.error("[license-by-roblox]", err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
+});
+
+/**
+ * Admin / staff recover: Discord id and/or Roblox username.
+ * Body: { discordUserId?, robloxUsername? }
+ */
+app.post("/api/admin/recover", async (req, res) => {
+  const secret =
+    req.get("X-Admin-Secret") ||
+    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "") ||
+    (req.body && req.body.adminSecret);
+
+  if (!secret || secret !== ADMIN_SECRET) {
+    return res.status(401).json({ ok: false, error: "unauthorized", message: "Invalid admin secret." });
+  }
+
+  try {
+    const discordUserId =
+      req.body?.discordUserId || req.body?.discord_user_id || req.body?.userId;
+    const robloxUsername =
+      req.body?.robloxUsername || req.body?.username || req.body?.roblox_username;
+
+    if (robloxUsername && discordUserId) {
+      const linked = await identity.linkDiscordToRoblox({
+        discordUserId,
+        robloxUsername,
+      });
+      if (!linked.ok) return res.status(400).json(linked);
+      await dbModule.flushToPostgres().catch(() => {});
+      const recovered = identity.recoverForDiscord(discordUserId);
+      return res.json({ ...recovered, link: linked });
+    }
+
+    if (discordUserId) {
+      const result = identity.recoverForDiscord(discordUserId);
+      if (!result.ok && (result.error === "not_linked" || result.error === "no_keys_for_roblox")) {
+        return res.status(404).json(result);
+      }
+      if (!result.ok) return res.status(400).json(result);
+      return res.json(result);
+    }
+
+    if (robloxUsername) {
+      const result = await identity.recoverByRobloxUsername(robloxUsername);
+      if (!result.ok) {
+        return res.status(result.error === "not_found" ? 404 : 400).json(result);
+      }
+      return res.json(result);
+    }
+
+    return res.status(400).json({
+      ok: false,
+      error: "missing_identity",
+      message: "Provide discordUserId and/or robloxUsername.",
+    });
+  } catch (err) {
+    console.error("[admin/recover]", err);
     return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
   }
 });

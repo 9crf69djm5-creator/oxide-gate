@@ -171,6 +171,105 @@ function getByDiscordUserId(rawId) {
     .get(id);
 }
 
+function getByRobloxUserId(rawId) {
+  const id = String(rawId || "").trim();
+  if (!id) return null;
+  return getDb()
+    .prepare(
+      `
+      SELECT * FROM keys
+      WHERE roblox_user_id = ?
+      ORDER BY
+        CASE status WHEN 'active' THEN 0 WHEN 'unused' THEN 1 ELSE 2 END,
+        COALESCE(activated_at, created_at) DESC
+      LIMIT 1
+    `
+    )
+    .get(id);
+}
+
+function listKeysForRobloxUserId(rawId) {
+  const id = String(rawId || "").trim();
+  if (!id) return [];
+  return getDb()
+    .prepare(
+      `
+      SELECT * FROM keys
+      WHERE roblox_user_id = ?
+      ORDER BY
+        CASE status WHEN 'active' THEN 0 WHEN 'unused' THEN 1 ELSE 2 END,
+        COALESCE(activated_at, created_at) DESC
+    `
+    )
+    .all(id);
+}
+
+/**
+ * Permanently stamp Roblox identity onto a key (claim / recovery).
+ */
+function attachRoblox(rawKey, { robloxUserId, robloxUsername }) {
+  const key = normalizeKey(rawKey);
+  if (!key) return { ok: false, error: "missing_key", message: "Missing key." };
+  const row = getKey(key);
+  if (!row) return { ok: false, error: "invalid_key", message: "Invalid license key." };
+
+  const rid = String(robloxUserId || "").trim();
+  const rname = String(robloxUsername || "").trim() || null;
+  if (!rid) {
+    return { ok: false, error: "missing_roblox", message: "Missing Roblox user id." };
+  }
+
+  getDb()
+    .prepare(
+      `
+      UPDATE keys SET
+        roblox_user_id = ?,
+        roblox_username = COALESCE(?, roblox_username)
+      WHERE key = ?
+    `
+    )
+    .run(rid, rname, key);
+
+  return { ok: true, key, robloxUserId: rid, robloxUsername: rname };
+}
+
+/**
+ * Attach Discord to every key owned by a Roblox user (and stamp roblox fields).
+ * Also pulls keys from roblox_claims that lack keys.roblox_user_id yet.
+ */
+function attachDiscordToRobloxKeys({ robloxUserId, discordUserId, robloxUsername }) {
+  const rid = String(robloxUserId || "").trim();
+  const discordId = normalizeDiscordUserId(discordUserId);
+  if (!rid || !discordId) return { count: 0, keys: [] };
+
+  // Backfill from claims table
+  const claimKeys = getDb()
+    .prepare("SELECT key FROM roblox_claims WHERE roblox_user_id = ?")
+    .all(rid);
+  for (const c of claimKeys) {
+    attachRoblox(c.key, { robloxUserId: rid, robloxUsername });
+  }
+
+  const rows = listKeysForRobloxUserId(rid);
+  const linked = [];
+  for (const row of rows) {
+    if (row.status === "banned") continue;
+    if (
+      row.discord_user_id &&
+      String(row.discord_user_id) !== String(discordId)
+    ) {
+      // Already bound to someone else — skip
+      continue;
+    }
+    const bind = bindDiscordUser(row.key, discordId);
+    if (bind.ok) {
+      attachRoblox(row.key, { robloxUserId: rid, robloxUsername });
+      linked.push(row.key);
+    }
+  }
+  return { count: linked.length, keys: linked };
+}
+
 /**
  * Public/admin view of a license row (includes remaining time).
  * @param {object} row
@@ -189,6 +288,8 @@ function formatLicense(row, opts = {}) {
     expires: row.expires_at || null,
     activatedAt: row.activated_at || null,
     discordUserId: row.discord_user_id || null,
+    robloxUserId: row.roblox_user_id || null,
+    robloxUsername: row.roblox_username || null,
     downloadUrl: downloadUrl(),
     keyMasked: maskKey(row.key),
     daysRemaining: rem.daysRemaining,
@@ -612,4 +713,9 @@ module.exports = {
   PLAN_DAYS,
   getKey,
   getByDiscordUserId,
+  getByRobloxUserId,
+  listKeysForRobloxUserId,
+  attachRoblox,
+  attachDiscordToRobloxKeys,
+  bindDiscordUser,
 };

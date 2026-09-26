@@ -479,6 +479,12 @@ export async function claimRobloxKey({ username, plan }) {
       alreadyClaimed: !!data.alreadyClaimed,
       demo: !!data.demo,
       buyUrl: data.buyUrl,
+      robloxUsername: data.robloxUsername || name,
+      robloxUserId: data.robloxUserId || null,
+      discordLinked: !!data.discordLinked,
+      discordUserId: data.discordUserId || null,
+      savedForever: data.savedForever !== false,
+      downloadUrl: data.downloadUrl || null,
     };
   } catch {
     return {

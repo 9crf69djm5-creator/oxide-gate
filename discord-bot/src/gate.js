@@ -199,6 +199,7 @@ async function linkDiscordKey(opts) {
 
 /**
  * Fetch license linked to a Discord user (requires ADMIN_SECRET).
+ * Now also recovers via Discord↔Roblox link when set.
  * @param {object} opts
  */
 async function fetchLicenseByDiscord(opts) {
@@ -219,6 +220,75 @@ async function fetchLicenseByDiscord(opts) {
   return { ok: res.ok && body.ok !== false, status: res.status, body };
 }
 
+/**
+ * Link Discord ↔ Roblox username (persisted on gate-api).
+ * @param {object} opts
+ */
+async function linkRobloxIdentity(opts) {
+  const url = `${opts.apiBaseUrl.replace(/\/$/, "")}/api/discord/link-roblox`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "User-Agent": "OXIDE-DiscordBot/1.0",
+    },
+    body: JSON.stringify({
+      discordUserId: String(opts.discordUserId || ""),
+      robloxUsername: String(opts.robloxUsername || "").trim(),
+    }),
+    signal: AbortSignal.timeout(45000),
+  });
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok && body.ok !== false, status: res.status, body };
+}
+
+/**
+ * Staff recover by Roblox username (ADMIN_SECRET).
+ * @param {object} opts
+ */
+async function fetchLicenseByRoblox(opts) {
+  const base = opts.apiBaseUrl.replace(/\/$/, "");
+  const url = `${base}/api/admin/license-by-roblox?username=${encodeURIComponent(
+    String(opts.robloxUsername || "")
+  )}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      "X-Admin-Secret": opts.adminSecret,
+      "User-Agent": "OXIDE-DiscordBot/1.0",
+    },
+    signal: AbortSignal.timeout(45000),
+  });
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok && body.ok !== false, status: res.status, body };
+}
+
+/**
+ * Staff recover: optional Discord + Roblox (ADMIN_SECRET).
+ * @param {object} opts
+ */
+async function adminRecover(opts) {
+  const url = `${opts.apiBaseUrl.replace(/\/$/, "")}/api/admin/recover`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-Admin-Secret": opts.adminSecret,
+      "User-Agent": "OXIDE-DiscordBot/1.0",
+    },
+    body: JSON.stringify({
+      discordUserId: opts.discordUserId || undefined,
+      robloxUsername: opts.robloxUsername || undefined,
+    }),
+    signal: AbortSignal.timeout(45000),
+  });
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok && body.ok !== false, status: res.status, body };
+}
+
 module.exports = {
   fetchHealth,
   fetchProducts,
@@ -229,4 +299,7 @@ module.exports = {
   redeemKey,
   linkDiscordKey,
   fetchLicenseByDiscord,
+  linkRobloxIdentity,
+  fetchLicenseByRoblox,
+  adminRecover,
 };

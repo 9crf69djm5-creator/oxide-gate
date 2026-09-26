@@ -1,8 +1,13 @@
+"use strict";
+
 const dbModule = require("./db");
 const keys = require("./keys");
 const roblox = require("./roblox");
+const identity = require("./identity");
 
-function getDb() { return dbModule.db; }
+function getDb() {
+  return dbModule.db;
+}
 
 function nowIso() {
   return new Date().toISOString();
@@ -17,24 +22,131 @@ function getClaim(robloxUserId, assetId) {
 }
 
 function insertClaim(row) {
-  getDb().prepare(
-    `
+  getDb()
+    .prepare(
+      `
     INSERT INTO roblox_claims
       (roblox_user_id, roblox_username, asset_id, asset_type, plan, key, claimed_at)
     VALUES
       (@roblox_user_id, @roblox_username, @asset_id, @asset_type, @plan, @key, @claimed_at)
   `
-  ).run(row);
+    )
+    .run(row);
+}
+
+/**
+ * Best-effort DM via Discord bot internal endpoint.
+ */
+async function notifyDiscordKeyDelivery(payload) {
+  const base = String(
+    process.env.DISCORD_BOT_NOTIFY_URL ||
+      process.env.DISCORD_BOT_HEALTH_URL ||
+      "https://oxide-discord-bot-fra.onrender.com"
+  )
+    .trim()
+    .replace(/\/$/, "");
+  const secret = String(process.env.ADMIN_SECRET || "").trim();
+  if (!base || !secret || !payload?.discordUserId || !payload?.key) {
+    return { ok: false, skipped: true };
+  }
+
+  try {
+    const res = await fetch(`${base}/internal/deliver-key`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "X-Admin-Secret": secret,
+        "User-Agent": "OXIDE-GateAPI/1.0",
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(20000),
+    });
+    const body = await res.json().catch(() => ({}));
+    return { ok: res.ok && body.ok !== false, status: res.status, body };
+  } catch (err) {
+    console.warn("[claim] Discord notify failed:", err.message);
+    return { ok: false, error: err.message };
+  }
+}
+
+function enrichClaimResult({
+  key,
+  planId,
+  days,
+  user,
+  product,
+  alreadyClaimed,
+  demo,
+  message,
+}) {
+  keys.attachRoblox(key, {
+    robloxUserId: user.userId,
+    robloxUsername: user.username,
+  });
+
+  const link = identity.getLinkByRobloxUserId(user.userId);
+  let discordUserId = link?.discord_user_id || null;
+  let discordLinked = false;
+  let discordDm = null;
+
+  if (discordUserId) {
+    const attached = keys.attachDiscordToRobloxKeys({
+      robloxUserId: user.userId,
+      discordUserId,
+      robloxUsername: user.username,
+    });
+    discordLinked = attached.count > 0 || Boolean(keys.getKey(key)?.discord_user_id);
+  } else {
+    // Key may already have discord from a prior /redeem
+    discordUserId = keys.getKey(key)?.discord_user_id || null;
+    discordLinked = Boolean(discordUserId);
+  }
+
+  const license = keys.formatLicense(keys.getKey(key), { includeFullKey: true });
+
+  return {
+    ok: true,
+    alreadyClaimed: Boolean(alreadyClaimed),
+    key,
+    plan: keys.planLabel(planId),
+    planId,
+    days: days ?? product.days,
+    expires: license?.expires ?? null,
+    status: license?.status || "unused",
+    remainingLabel: license?.remainingLabel || null,
+    robloxUserId: String(user.userId),
+    robloxUsername: user.username,
+    assetId: product.assetId,
+    productKind: product.productKind,
+    buyUrl: product.buyUrl,
+    discordUserId,
+    discordLinked,
+    discordDm,
+    savedForever: true,
+    downloadUrl: license?.downloadUrl || null,
+    message:
+      message ||
+      (discordLinked
+        ? "Purchase verified. Key saved under your Roblox + Discord — check Discord DMs / /mykey."
+        : "Purchase verified. Key saved forever under your Roblox username. Link Discord with /link-roblox or /redeem."),
+    demo: Boolean(demo),
+  };
 }
 
 /**
  * Claim an OXIDE key after verifying Roblox ownership of the mapped product.
  * One (robloxUserId, assetId) pair → one key forever.
+ * Stamps roblox_* on the key and auto-attaches Discord when linked.
  */
 async function claimKey({ username, plan }) {
   const planId = String(plan || "").toLowerCase().trim();
   if (!planId) {
-    return { ok: false, error: "missing_plan", message: "Choose a plan (week, month, or lifetime)." };
+    return {
+      ok: false,
+      error: "missing_plan",
+      message: "Choose a plan (week, month, or lifetime).",
+    };
   }
 
   const product = roblox.resolveProduct(planId);
@@ -53,21 +165,28 @@ async function claimKey({ username, plan }) {
   const existing = getClaim(user.userId, product.assetId);
   if (existing) {
     const keyRow = keys.getKey(existing.key);
-    return {
-      ok: true,
-      alreadyClaimed: true,
+    const result = enrichClaimResult({
       key: existing.key,
-      plan: keys.planLabel(existing.plan),
       planId: existing.plan,
       days: keyRow?.duration_days ?? product.days,
-      robloxUserId: user.userId,
-      robloxUsername: user.username,
-      assetId: product.assetId,
-      productKind: product.productKind,
-      buyUrl: product.buyUrl,
-      message: "You already claimed a key for this Roblox purchase.",
+      user,
+      product,
+      alreadyClaimed: true,
       demo: roblox.isDemoMode(),
-    };
+      message: "Already claimed — here’s your saved key (linked to this Roblox username forever).",
+    });
+    if (result.discordUserId) {
+      result.discordDm = await notifyDiscordKeyDelivery({
+        discordUserId: result.discordUserId,
+        key: result.key,
+        plan: result.plan,
+        planId: result.planId,
+        expires: result.expires,
+        robloxUsername: result.robloxUsername,
+        alreadyClaimed: true,
+      });
+    }
+    return result;
   }
 
   const ownership = await roblox.checkOwnership({
@@ -82,7 +201,9 @@ async function claimKey({ username, plan }) {
     return {
       ok: false,
       error: "not_owned",
-      message: `We could not find that ${product.productKind === "GamePass" ? "gamepass" : "shirt"} on your Roblox account. Buy it first, wait a few seconds, then claim again.`,
+      message: `We could not find that ${
+        product.productKind === "GamePass" ? "gamepass" : "shirt"
+      } on your Roblox account. Buy it first, wait a few seconds, then claim again.`,
       buyUrl: product.buyUrl,
       assetId: product.assetId,
     };
@@ -95,7 +216,11 @@ async function claimKey({ username, plan }) {
   });
   const keyInfo = created.keys[0];
   if (!keyInfo) {
-    return { ok: false, error: "key_create_failed", message: "Could not create a license key." };
+    return {
+      ok: false,
+      error: "key_create_failed",
+      message: "Could not create a license key.",
+    };
   }
 
   try {
@@ -109,49 +234,64 @@ async function claimKey({ username, plan }) {
       claimed_at: nowIso(),
     });
   } catch (err) {
-    // Race: another claim landed first — return that key
     if (err && String(err.code || "").includes("CONSTRAINT")) {
       const raced = getClaim(user.userId, product.assetId);
       if (raced) {
-        return {
-          ok: true,
-          alreadyClaimed: true,
+        const result = enrichClaimResult({
           key: raced.key,
-          plan: keys.planLabel(raced.plan),
           planId: raced.plan,
           days: product.days,
-          robloxUserId: user.userId,
-          robloxUsername: user.username,
-          assetId: product.assetId,
-          productKind: product.productKind,
-          buyUrl: product.buyUrl,
-          message: "You already claimed a key for this Roblox purchase.",
+          user,
+          product,
+          alreadyClaimed: true,
           demo: ownership.demo || false,
-        };
+          message: "Already claimed — here’s your saved key.",
+        });
+        if (result.discordUserId) {
+          result.discordDm = await notifyDiscordKeyDelivery({
+            discordUserId: result.discordUserId,
+            key: result.key,
+            plan: result.plan,
+            planId: result.planId,
+            expires: result.expires,
+            robloxUsername: result.robloxUsername,
+            alreadyClaimed: true,
+          });
+        }
+        return result;
       }
     }
     throw err;
   }
 
-  return {
-    ok: true,
-    alreadyClaimed: false,
+  const result = enrichClaimResult({
     key: keyInfo.key,
-    plan: keys.planLabel(product.plan),
     planId: product.plan,
     days: product.days,
-    robloxUserId: user.userId,
-    robloxUsername: user.username,
-    assetId: product.assetId,
-    productKind: product.productKind,
-    buyUrl: product.buyUrl,
-    message: "Purchase verified. Your OXIDE key is ready — redeem it on Get a key.",
+    user,
+    product,
+    alreadyClaimed: false,
     demo: ownership.demo || false,
-  };
+  });
+
+  if (result.discordUserId) {
+    result.discordDm = await notifyDiscordKeyDelivery({
+      discordUserId: result.discordUserId,
+      key: result.key,
+      plan: result.plan,
+      planId: result.planId,
+      expires: result.expires,
+      robloxUsername: result.robloxUsername,
+      alreadyClaimed: false,
+    });
+  }
+
+  return result;
 }
 
 module.exports = {
   claimKey,
   getClaim,
   listProducts: roblox.listProducts,
+  notifyDiscordKeyDelivery,
 };

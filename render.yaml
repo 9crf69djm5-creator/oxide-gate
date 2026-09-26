@@ -48,6 +48,8 @@ services:
         value: https://discord.gg/3PXJ8r56T
       - key: DISCORD_BOT_HEALTH_URL
         value: https://oxide-discord-bot-fra.onrender.com/
+      - key: DISCORD_BOT_NOTIFY_URL
+        value: https://oxide-discord-bot-fra.onrender.com
       - key: ROBLOX_GAMEPASS_WEEK
         value: "1999442394"
       - key: ROBLOX_GAMEPASS_MONTH

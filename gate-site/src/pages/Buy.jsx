@@ -91,6 +91,7 @@ export default function Buy() {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState({ kind: "", text: "" });
   const [claimedKey, setClaimedKey] = useState("");
+  const [claimMeta, setClaimMeta] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -133,9 +134,10 @@ export default function Buy() {
     if (!active) return;
     setBusy(true);
     setClaimedKey("");
+    setClaimMeta(null);
     setStatus({
       kind: "",
-      text: demo ? "Demo mode — skipping ownership…" : "Checking Roblox ownership…",
+      text: "Checking Roblox ownership…",
     });
     const result = await claimRobloxKey({ username, plan: active.plan });
     setBusy(false);
@@ -144,10 +146,11 @@ export default function Buy() {
       return;
     }
     setClaimedKey(result.key);
+    setClaimMeta(result);
     setStatus({
       kind: "ok",
       text: result.alreadyClaimed
-        ? "Already claimed for this purchase — here’s your key."
+        ? "Already claimed — your key is saved forever under this Roblox username."
         : result.message,
     });
   }
@@ -155,7 +158,7 @@ export default function Buy() {
   function copyKey() {
     if (!claimedKey) return;
     navigator.clipboard?.writeText(claimedKey).catch(() => {});
-    setStatus({ kind: "ok", text: "Key copied. Redeem it on Get a key." });
+    setStatus({ kind: "ok", text: "Key copied. Keep it safe — also saved under your Roblox username." });
   }
 
   return (
@@ -243,8 +246,13 @@ export default function Buy() {
               <p>
                 After buying the gamepass for your plan on Roblox, enter your username to claim a
                 matching license key.
-                {demo ? " Demo mode is on — ownership checks are skipped." : ""}
               </p>
+              {demo ? (
+                <p className="status err" role="alert">
+                  Warning: API demo mode is on — ownership checks are skipped. Set
+                  DEMO_ROBLOX=0 on gate-api for production.
+                </p>
+              ) : null}
               {loadErr ? <p className="status err">{loadErr}</p> : null}
             </div>
 
@@ -294,14 +302,43 @@ export default function Buy() {
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.35 }}
                   >
-                    <label>Your license key</label>
+                    <label>Your license key (saved forever)</label>
                     <code className="roblox-key-value">{claimedKey}</code>
+                    <p className="hint" style={{ marginTop: "0.75rem" }}>
+                      Stored under Roblox{" "}
+                      <strong>@{claimMeta?.robloxUsername || username || "you"}</strong>
+                      {claimMeta?.discordLinked
+                        ? " and your linked Discord (check DMs / run /mykey)."
+                        : ". Link Discord so you never lose it:"}
+                    </p>
+                    {!claimMeta?.discordLinked ? (
+                      <ol className="hint" style={{ marginTop: "0.5rem", paddingLeft: "1.25rem" }}>
+                        <li>
+                          Join Discord → run{" "}
+                          <code>/link-roblox username:{claimMeta?.robloxUsername || username || "YourName"}</code>
+                        </li>
+                        <li>
+                          Or <code>/redeem</code> / <code>/bind</code> with the key above
+                        </li>
+                        <li>
+                          Later: <code>/mykey</code> or <code>/recover</code>
+                        </li>
+                      </ol>
+                    ) : null}
                     <div className="roblox-key-actions">
                       <button type="button" className="btn btn-ghost" onClick={copyKey}>
-                        Copy
+                        Copy key
                       </button>
-                      <Link className="btn btn-accent" to="/key">
-                        Redeem now
+                      <a
+                        className="btn btn-accent"
+                        href={discord}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Link Discord
+                      </a>
+                      <Link className="btn btn-ghost" to="/key">
+                        Site redeem
                       </Link>
                     </div>
                   </motion.div>

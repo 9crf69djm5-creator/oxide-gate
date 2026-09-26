@@ -28,7 +28,7 @@ export default function Key() {
     window.open(discord, "_blank", "noopener,noreferrer");
     setStatus({
       kind: "ok",
-      text: "Discord opened. Run /redeem with your OXIDE key to link it (or redeem below first).",
+      text: "Discord opened. Paste your OXIDE key with /redeem (or /bind) there — site redeem does not auto-link Discord.",
     });
   }
 
@@ -52,9 +52,11 @@ export default function Key() {
           <div className="gate-stack">
             <h1>Get a key</h1>
             <p className="gate-blurb">
-              Already have a key? Redeem it here or in Discord with{" "}
-              <code>/redeem</code> — no gamepass needed. Discord links the key
-              so you can recover it with <code>/mykey</code>.
+              Already have a key? Redeem it here for Oxide.exe, or in Discord with{" "}
+              <code>/redeem</code> / <code>/bind</code>. Site redeem alone does{" "}
+              <strong>not</strong> auto-link Discord — run{" "}
+              <code>/redeem</code> once in Discord so <code>/mykey</code> can
+              recover your key.
             </p>
 
             <motion.button

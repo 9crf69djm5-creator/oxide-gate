@@ -8,6 +8,9 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
 } = require("discord.js");
 const {
   setupGuild,
@@ -27,6 +30,9 @@ const {
   redeemKey,
   fetchLicenseByDiscord,
   linkDiscordKey,
+  linkRobloxIdentity,
+  fetchLicenseByRoblox,
+  adminRecover,
 } = require("./gate");
 const { collectStatusSnapshot, buildStatusEmbed, syncStatusChannel } = require("./status");
 const { getLicense, setLicense } = require("./licenses");
@@ -37,6 +43,10 @@ const DEFAULT_DOWNLOAD =
 
 /** Button customId prefix: license_reveal:<discordUserId> */
 const LICENSE_REVEAL_PREFIX = "license_reveal:";
+/** Open modal to paste / link an existing OXIDE key */
+const LINK_KEY_BUTTON_ID = "oxide_link_key";
+const LINK_KEY_MODAL_ID = "oxide_link_key_modal";
+const LINK_KEY_INPUT_ID = "oxide_link_key_value";
 
 /**
  * @param {import('discord.js').GuildMember} member
@@ -231,6 +241,178 @@ function licenseRows(opts) {
   return rows;
 }
 
+/** Ephemeral “no Discord link yet” embed + actions. */
+function noKeyLinkedPayload() {
+  const siteKey = `${config.siteUrl}/key`;
+  const embed = new EmbedBuilder()
+    .setTitle("No OXIDE key linked to Discord")
+    .setColor(0xe6852e)
+    .setDescription(
+      "This Discord account is not linked to a license yet.\n\n" +
+        "**Already claimed on Roblox?** Run `/link-roblox username:YourRobloxName` — that recovers keys saved under your Roblox forever.\n\n" +
+        "**Have the `OXIDE-…` key?** Click **Link my key** or run `/redeem` / `/bind`.\n\n" +
+        "Site-only redeem does **not** auto-connect Discord until you `/redeem` or `/link-roblox` once."
+    )
+    .addFields(
+      {
+        name: "Best path after buying",
+        value:
+          "1. Claim on the site with your Roblox username\n" +
+          "2. `/link-roblox` here (or `/redeem` with the key)\n" +
+          "3. `/mykey` / `/recover` anytime",
+        inline: false,
+      },
+      {
+        name: "Need a key?",
+        value: `Buy / claim: ${config.siteUrl}/buy`,
+        inline: false,
+      }
+    )
+    .setFooter({ text: "Linking is private (ephemeral) — only you see it." });
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(LINK_KEY_BUTTON_ID)
+      .setLabel("Link my key")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setLabel("Open Get a key")
+      .setStyle(ButtonStyle.Link)
+      .setURL(siteKey),
+    new ButtonBuilder()
+      .setLabel("Buy / claim")
+      .setStyle(ButtonStyle.Link)
+      .setURL(`${config.siteUrl}/buy`)
+  );
+
+  return { embeds: [embed], components: [row] };
+}
+
+function linkKeyModal() {
+  return new ModalBuilder()
+    .setCustomId(LINK_KEY_MODAL_ID)
+    .setTitle("Link OXIDE key to Discord")
+    .addComponents(
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId(LINK_KEY_INPUT_ID)
+          .setLabel("Your OXIDE license key")
+          .setPlaceholder("OXIDE-XXXX-XXXX-XXXX")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true)
+          .setMinLength(10)
+          .setMaxLength(64)
+      )
+    );
+}
+
+/**
+ * Redeem/link a key for the interacting user (interaction already deferred).
+ * @param {import('discord.js').ChatInputCommandInteraction|import('discord.js').ModalSubmitInteraction} interaction
+ * @param {string} rawKey
+ */
+async function runRedeemFlow(interaction, rawKey) {
+  const keyInput = String(rawKey || "").trim();
+  if (!keyInput) {
+    return interaction.editReply({
+      content: "Provide a license key (OXIDE-…).",
+    });
+  }
+
+  let result;
+  try {
+    result = await redeemKey({
+      apiBaseUrl: config.apiBaseUrl,
+      key: keyInput,
+      discordUserId: interaction.user.id,
+    });
+  } catch (err) {
+    return interaction.editReply({
+      content: `Gate unreachable: \`${err.message}\``,
+    });
+  }
+
+  if (!result.ok) {
+    const msg =
+      result.body?.message ||
+      result.body?.error ||
+      `Redeem failed (HTTP ${result.status})`;
+    return interaction.editReply({
+      content:
+        `❌ ${msg}\n` +
+        "If this key is already active on the site, `/redeem` still links it to Discord — double-check the full key.",
+    });
+  }
+
+  const body = result.body;
+  const key = body.key || keyInput;
+  const dl = downloadUrl(body.downloadUrl);
+
+  setLicense(interaction.user.id, {
+    key,
+    plan: body.plan,
+    planId: body.planId,
+    expires: body.expires ?? null,
+    downloadUrl: dl,
+    status: body.status || "active",
+    remainingLabel: body.remainingLabel,
+    daysRemaining: body.daysRemaining,
+    redeemedAt: new Date().toISOString(),
+  });
+
+  await ensureCitizenRole(interaction);
+  const roleResult = await assignCustomerRole(interaction);
+  const embed = buildRedeemEmbed({
+    key,
+    plan: body.plan,
+    expires: body.expires,
+    downloadUrl: dl,
+    alreadyActive: Boolean(body.alreadyActive),
+    status: body.status,
+    remainingLabel: body.remainingLabel,
+    daysRemaining: body.daysRemaining,
+    reveal: true,
+    title: body.alreadyActive
+      ? "OXIDE license linked"
+      : "OXIDE license ready",
+  });
+  const row = downloadRow(dl);
+
+  const dmPayload = { embeds: [embed], components: [row] };
+  const { delivered } = await dmOrEphemeralFollowUp(interaction, dmPayload);
+
+  const roleNote =
+    roleResult.ok
+      ? roleResult.already
+        ? "Customer role already assigned."
+        : "Customer role assigned."
+      : roleResult.reason === "missing_role"
+        ? "Customer role missing — run `/setup-server`."
+        : roleResult.reason === "not_in_guild"
+          ? "Redeemed (DM only — join the server for Customer role)."
+          : `Could not assign Customer: ${roleResult.reason}`;
+
+  if (delivered === "dm") {
+    return interaction.editReply({
+      content:
+        "✅ Key linked to your Discord (saved on the API for `/mykey`).\n" +
+        "Check your **DMs** for the key, plan, and download.\n" +
+        `${roleNote}\n` +
+        "Later: `/mykey` or `/license` to recover the key + days left.\n" +
+        "Paste the key into **Oxide.exe** when it asks.",
+    });
+  }
+
+  return interaction.editReply({
+    content:
+      "✅ Key linked to your Discord (could not DM you — enable DMs from server members, or use this reply).\n" +
+      `${roleNote}\n` +
+      "Use `/mykey` anytime to recover your key.",
+    embeds: [embed],
+    components: [row],
+  });
+}
+
 /**
  * Try DM first; fall back to ephemeral reply content.
  * @param {import('discord.js').ChatInputCommandInteraction} interaction
@@ -345,6 +527,24 @@ const commandData = [
       o.setName("key").setDescription("Your OXIDE-… license key").setRequired(true)
     ),
   new SlashCommandBuilder()
+    .setName("link-roblox")
+    .setDescription("Link your Roblox username to Discord (recovers claimed keys)")
+    .addStringOption((o) =>
+      o
+        .setName("username")
+        .setDescription("Your Roblox username (same as claim)")
+        .setRequired(true)
+    ),
+  new SlashCommandBuilder()
+    .setName("recover")
+    .setDescription("Recover your OXIDE key via Discord or linked Roblox")
+    .addStringOption((o) =>
+      o
+        .setName("roblox")
+        .setDescription("Optional: Roblox username to link + recover")
+        .setRequired(false)
+    ),
+  new SlashCommandBuilder()
     .setName("key-create")
     .setDescription("Create license keys via gate API (Staff+ · needs ADMIN_SECRET)")
     .addStringOption((o) =>
@@ -376,6 +576,24 @@ const commandData = [
     .setDescription("Clear HWID binding so a key can move machines (Staff+)")
     .addStringOption((o) =>
       o.setName("key").setDescription("OXIDE-… key").setRequired(true)
+    ),
+  new SlashCommandBuilder()
+    .setName("key-recover")
+    .setDescription("Staff: recover a license by Roblox username and/or Discord id")
+    .addStringOption((o) =>
+      o
+        .setName("roblox")
+        .setDescription("Roblox username used at claim")
+        .setRequired(false)
+    )
+    .addStringOption((o) =>
+      o
+        .setName("discord_id")
+        .setDescription("Discord user snowflake")
+        .setRequired(false)
+    )
+    .addUserOption((o) =>
+      o.setName("user").setDescription("Discord member to recover for").setRequired(false)
     ),
   new SlashCommandBuilder()
     .setName("role")
@@ -487,8 +705,9 @@ async function handleCommand(interaction, client) {
           "`/products` — Plans & gamepass links",
           "`/download` — Oxide.exe link",
           "`/key-redeem` — How to redeem a key",
-          "`/redeem` · `/bind` — Redeem/link `OXIDE-…` (friends with a key: just redeem)",
-          "`/mykey` · `/license` — Saved key + days left",
+          "`/redeem` · `/bind` — Redeem/link `OXIDE-…`",
+          "`/link-roblox` — Link Roblox username (recovers claimed keys)",
+          "`/mykey` · `/license` · `/recover` — Show / recover saved key",
           "`/roblox-version` — Latest Windows client",
           "`/help` — This list",
           "",
@@ -496,6 +715,7 @@ async function handleCommand(interaction, client) {
           "`/key-create` — Mint license keys",
           "`/key-revoke` — Ban a key",
           "`/hwid-reset` — Clear machine bind",
+          "`/key-recover` — Recover by Roblox / Discord",
           "`/role` — Assign Citizen / Customer / …",
           "`/setup-server` — Verify gate + pro layout (Admin)",
           "",
@@ -619,13 +839,15 @@ async function handleCommand(interaction, client) {
       .setColor(0xe6852e)
       .setDescription(
         [
-          "**Already have a key?** Just run `/redeem` (or `/bind`) — no gamepass needed.",
+          "**Already have a key?** Run `/redeem` or `/bind` (or `/mykey` → **Link my key**).",
           "",
           "1. Buy a plan on the site or Roblox gamepass (if you need a new key).",
           "2. Claim / receive your `OXIDE-…` key.",
-          "3. Run `/redeem key:OXIDE-…` here (links the key to your Discord).",
+          "3. Run `/redeem key:OXIDE-…` **in Discord** (this links the key).",
           "4. Later: `/mykey` or `/license` shows your saved key + time left.",
           "5. Download Oxide.exe and paste the key when asked.",
+          "",
+          "⚠️ Redeeming only on the website does **not** auto-link Discord — you still need one `/redeem` here.",
           "",
           `Site redeem: ${config.siteUrl}/key`,
           `Buy: ${config.siteUrl}/buy`,
@@ -683,94 +905,7 @@ async function handleCommand(interaction, client) {
       });
     }
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
-    let result;
-    try {
-      result = await redeemKey({
-        apiBaseUrl: config.apiBaseUrl,
-        key: rawKey,
-        discordUserId: interaction.user.id,
-      });
-    } catch (err) {
-      return interaction.editReply({
-        content: `Gate unreachable: \`${err.message}\``,
-      });
-    }
-
-    if (!result.ok) {
-      const msg =
-        result.body?.message ||
-        result.body?.error ||
-        `Redeem failed (HTTP ${result.status})`;
-      return interaction.editReply({ content: `❌ ${msg}` });
-    }
-
-    const body = result.body;
-    const key = body.key || rawKey;
-    const dl = downloadUrl(body.downloadUrl);
-
-    setLicense(interaction.user.id, {
-      key,
-      plan: body.plan,
-      planId: body.planId,
-      expires: body.expires ?? null,
-      downloadUrl: dl,
-      status: body.status || "active",
-      remainingLabel: body.remainingLabel,
-      daysRemaining: body.daysRemaining,
-      redeemedAt: new Date().toISOString(),
-    });
-
-    await ensureCitizenRole(interaction);
-    const roleResult = await assignCustomerRole(interaction);
-    const embed = buildRedeemEmbed({
-      key,
-      plan: body.plan,
-      expires: body.expires,
-      downloadUrl: dl,
-      alreadyActive: Boolean(body.alreadyActive),
-      status: body.status,
-      remainingLabel: body.remainingLabel,
-      daysRemaining: body.daysRemaining,
-      reveal: true,
-      title: body.alreadyActive
-        ? "OXIDE license linked"
-        : "OXIDE license ready",
-    });
-    const row = downloadRow(dl);
-
-    const dmPayload = { embeds: [embed], components: [row] };
-    const { delivered } = await dmOrEphemeralFollowUp(interaction, dmPayload);
-
-    const roleNote =
-      roleResult.ok
-        ? roleResult.already
-          ? "Customer role already assigned."
-          : "Customer role assigned."
-        : roleResult.reason === "missing_role"
-          ? "Customer role missing — run `/setup-server`."
-          : roleResult.reason === "not_in_guild"
-            ? "Redeemed (DM only — join the server for Customer role)."
-            : `Could not assign Customer: ${roleResult.reason}`;
-
-    if (delivered === "dm") {
-      return interaction.editReply({
-        content:
-          "✅ Key saved to your Discord. Check your **DMs** for the key, plan, and download.\n" +
-          `${roleNote}\n` +
-          "Later: `/mykey` or `/license` to recover the key + days left.\n" +
-          "Paste the key into **Oxide.exe** when it asks.",
-      });
-    }
-
-    return interaction.editReply({
-      content:
-        "✅ Key saved (could not DM you — enable DMs from server members, or use this reply).\n" +
-        `${roleNote}\n` +
-        "Use `/mykey` anytime to recover your key.",
-      embeds: [embed],
-      components: [row],
-    });
+    return runRedeemFlow(interaction, rawKey);
   }
 
   if (name === "mykey" || name === "license") {
@@ -821,12 +956,7 @@ async function handleCommand(interaction, client) {
     }
 
     if (!license?.key) {
-      return interaction.editReply({
-        content:
-          "No license linked to your Discord yet.\n" +
-          "Already have a key? Run `/redeem key:OXIDE-…` (or `/bind`) — no new purchase needed.\n" +
-          `Site redeem then Discord: ${config.siteUrl}/key → then \`/redeem\` here.`,
-      });
+      return interaction.editReply(noKeyLinkedPayload());
     }
 
     // Refresh local cache from authoritative API/body
@@ -866,8 +996,174 @@ async function handleCommand(interaction, client) {
     if (!fromApi) {
       reply.content =
         "_Showing cached link — API lookup unavailable; key still on this bot._";
+    } else if (license.recoveryPath === "roblox_link" || license.robloxUsername) {
+      reply.content = `Recovered via Roblox @${license.robloxUsername || "linked"} · saved on Discord.`;
     }
     return interaction.editReply(reply);
+  }
+
+  if (name === "link-roblox") {
+    const robloxUsername = interaction.options.getString("username", true).trim();
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    try {
+      const result = await linkRobloxIdentity({
+        apiBaseUrl: config.apiBaseUrl,
+        discordUserId: interaction.user.id,
+        robloxUsername,
+      });
+      if (!result.ok) {
+        return interaction.editReply({
+          content: `❌ ${result.body?.message || `Link failed (HTTP ${result.status})`}`,
+        });
+      }
+      const body = result.body;
+      await ensureCitizenRole(interaction);
+      if (body.keysLinked > 0 && body.keys?.[0]) {
+        // Refresh license view from API
+        let license = null;
+        if (config.adminSecret) {
+          const apiResult = await fetchLicenseByDiscord({
+            apiBaseUrl: config.apiBaseUrl,
+            adminSecret: config.adminSecret,
+            discordUserId: interaction.user.id,
+          });
+          if (apiResult.body?.key) license = apiResult.body;
+        }
+        if (license?.key) {
+          setLicense(interaction.user.id, {
+            key: license.key,
+            plan: license.plan,
+            planId: license.planId,
+            expires: license.expires ?? null,
+            downloadUrl: downloadUrl(license.downloadUrl),
+            status: license.status,
+            remainingLabel: license.remainingLabel,
+            daysRemaining: license.daysRemaining,
+            redeemedAt: new Date().toISOString(),
+          });
+          const embed = buildRedeemEmbed({
+            title: "Roblox linked — key recovered",
+            key: license.key,
+            plan: license.plan,
+            expires: license.expires,
+            downloadUrl: license.downloadUrl,
+            alreadyActive: true,
+            status: license.status,
+            remainingLabel: license.remainingLabel,
+            daysRemaining: license.daysRemaining,
+            reveal: true,
+          });
+          return interaction.editReply({
+            content:
+              `✅ Linked Roblox **@${body.robloxUsername}** to Discord.\n` +
+              `Recovered **${body.keysLinked}** license(s). Future claims auto-DM this Discord.`,
+            embeds: [embed],
+            components: licenseRows({
+              download: license.downloadUrl,
+              discordUserId: interaction.user.id,
+              reveal: true,
+            }),
+          });
+        }
+      }
+      return interaction.editReply({
+        content:
+          `✅ Linked Roblox **@${body.robloxUsername}** to your Discord.\n` +
+          (body.keysLinked
+            ? `Attached ${body.keysLinked} key(s). Use \`/mykey\` to view.`
+            : `No claimed keys yet — buy + claim on ${config.siteUrl}/buy (same Roblox name), or \`/redeem\` a key you already have.\n` +
+              "After you claim, the key auto-attaches and we try to DM you."),
+      });
+    } catch (err) {
+      return interaction.editReply({
+        content: `Gate unreachable: \`${err.message}\``,
+      });
+    }
+  }
+
+  if (name === "recover") {
+    const robloxOpt = interaction.options.getString("roblox")?.trim();
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    try {
+      if (robloxOpt) {
+        const linked = await linkRobloxIdentity({
+          apiBaseUrl: config.apiBaseUrl,
+          discordUserId: interaction.user.id,
+          robloxUsername: robloxOpt,
+        });
+        if (!linked.ok) {
+          return interaction.editReply({
+            content: `❌ ${linked.body?.message || "Could not link Roblox."}`,
+          });
+        }
+      }
+
+      if (!config.adminSecret) {
+        return interaction.editReply({
+          content:
+            "`ADMIN_SECRET` missing on bot — cannot look up the API store. Use `/redeem` with your key.",
+        });
+      }
+
+      const apiResult = await fetchLicenseByDiscord({
+        apiBaseUrl: config.apiBaseUrl,
+        adminSecret: config.adminSecret,
+        discordUserId: interaction.user.id,
+      });
+
+      if (apiResult.body?.key) {
+        const license = apiResult.body;
+        setLicense(interaction.user.id, {
+          key: license.key,
+          plan: license.plan,
+          planId: license.planId,
+          expires: license.expires ?? null,
+          downloadUrl: downloadUrl(license.downloadUrl),
+          status: license.status,
+          remainingLabel: license.remainingLabel,
+          daysRemaining: license.daysRemaining,
+          redeemedAt: new Date().toISOString(),
+        });
+        await ensureCitizenRole(interaction);
+        await assignCustomerRole(interaction);
+        const embed = buildRedeemEmbed({
+          title: "Recovered OXIDE license",
+          key: license.key,
+          plan: license.plan,
+          expires: license.expires,
+          downloadUrl: license.downloadUrl,
+          alreadyActive: true,
+          status: license.status,
+          remainingLabel: license.remainingLabel,
+          daysRemaining: license.daysRemaining,
+          reveal: true,
+        });
+        return interaction.editReply({
+          content:
+            license.robloxUsername
+              ? `Recovered via Roblox @${license.robloxUsername}.`
+              : "Recovered from your Discord link.",
+          embeds: [embed],
+          components: licenseRows({
+            download: license.downloadUrl,
+            discordUserId: interaction.user.id,
+            reveal: true,
+          }),
+        });
+      }
+
+      return interaction.editReply({
+        ...noKeyLinkedPayload(),
+        content:
+          apiResult.body?.message ||
+          "Nothing to recover yet — link Roblox or paste your key.",
+      });
+    } catch (err) {
+      return interaction.editReply({
+        content: `Gate unreachable: \`${err.message}\``,
+      });
+    }
   }
 
   if (name === "roblox-version") {
@@ -1100,6 +1396,85 @@ async function handleCommand(interaction, client) {
       return interaction.editReply({ content: `Failed: \`${err.message}\`` });
     }
   }
+
+  if (name === "key-recover") {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    if (!isStaffPlus(interaction.member)) {
+      return interaction.editReply({ content: "Staff+ only." });
+    }
+    if (!config.adminSecret) {
+      return interaction.editReply({
+        content: "`ADMIN_SECRET` is not set on this bot.",
+      });
+    }
+    const roblox = interaction.options.getString("roblox")?.trim();
+    const discordIdOpt = interaction.options.getString("discord_id")?.trim();
+    const userOpt = interaction.options.getUser("user");
+    const discordUserId = discordIdOpt || userOpt?.id || null;
+    if (!roblox && !discordUserId) {
+      return interaction.editReply({
+        content: "Provide `roblox` and/or `user` / `discord_id`.",
+      });
+    }
+    try {
+      const result = await adminRecover({
+        apiBaseUrl: config.apiBaseUrl,
+        adminSecret: config.adminSecret,
+        discordUserId: discordUserId || undefined,
+        robloxUsername: roblox || undefined,
+      });
+      if (!result.ok) {
+        // Try roblox-only lookup for staff display
+        if (roblox) {
+          const byRoblox = await fetchLicenseByRoblox({
+            apiBaseUrl: config.apiBaseUrl,
+            adminSecret: config.adminSecret,
+            robloxUsername: roblox,
+          });
+          if (byRoblox.ok && byRoblox.body?.licenses?.length) {
+            const lines = byRoblox.body.licenses
+              .map(
+                (l) =>
+                  `\`${l.key}\` · ${l.plan} · ${l.status}` +
+                  (l.discordUserId ? ` · discord \`${l.discordUserId}\`` : "")
+              )
+              .join("\n");
+            return interaction.editReply({
+              content:
+                `Roblox @${byRoblox.body.robloxUsername} — **${byRoblox.body.count}** key(s):\n${lines}`,
+            });
+          }
+        }
+        return interaction.editReply({
+          content:
+            result.body?.message ||
+            `Recover failed (HTTP ${result.status}).`,
+        });
+      }
+      const body = result.body;
+      if (body.licenses?.length) {
+        const lines = body.licenses
+          .map((l) => `\`${l.key}\` · ${l.plan} · ${l.status}`)
+          .join("\n");
+        return interaction.editReply({
+          content:
+            `Roblox @${body.robloxUsername} · discord \`${body.discordUserId || "—"}\`\n${lines}`,
+        });
+      }
+      if (body.key) {
+        return interaction.editReply({
+          content:
+            `Recovered \`${body.key}\` · ${body.plan || "—"} · ${body.status || "—"}` +
+            (body.robloxUsername ? ` · Roblox @${body.robloxUsername}` : ""),
+        });
+      }
+      return interaction.editReply({
+        content: `OK: \`\`\`${JSON.stringify(body).slice(0, 1500)}\`\`\``,
+      });
+    } catch (err) {
+      return interaction.editReply({ content: `Failed: \`${err.message}\`` });
+    }
+  }
 }
 
 /**
@@ -1108,6 +1483,10 @@ async function handleCommand(interaction, client) {
 async function handleButton(interaction) {
   if (interaction.customId === VERIFY_BUTTON_ID) {
     return grantCitizen(interaction);
+  }
+
+  if (interaction.customId === LINK_KEY_BUTTON_ID) {
+    return interaction.showModal(linkKeyModal());
   }
 
   if (interaction.customId.startsWith(LICENSE_REVEAL_PREFIX)) {
@@ -1137,9 +1516,7 @@ async function handleButton(interaction) {
       license = getLicense(interaction.user.id);
     }
     if (!license?.key) {
-      return interaction.editReply({
-        content: "No linked license found. Use `/redeem` first.",
-      });
+      return interaction.editReply(noKeyLinkedPayload());
     }
 
     const embed = buildRedeemEmbed({
@@ -1161,10 +1538,21 @@ async function handleButton(interaction) {
   }
 }
 
+/**
+ * @param {import('discord.js').ModalSubmitInteraction} interaction
+ */
+async function handleModal(interaction) {
+  if (interaction.customId !== LINK_KEY_MODAL_ID) return;
+  const rawKey = interaction.fields.getTextInputValue(LINK_KEY_INPUT_ID);
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  return runRedeemFlow(interaction, rawKey);
+}
+
 module.exports = {
   commandData,
   handleCommand,
   handleButton,
+  handleModal,
   isStaffPlus,
   isCitizen,
   grantCitizen,

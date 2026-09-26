@@ -12,7 +12,7 @@ const {
 } = require("discord.js");
 const { config } = require("./config");
 const { registerCommands } = require("./register");
-const { handleCommand, handleButton, isStaffPlus } = require("./commands");
+const { handleCommand, handleButton, handleModal, isStaffPlus } = require("./commands");
 const {
   setupGuild,
   needsSetup,
@@ -22,6 +22,7 @@ const {
 } = require("./setup");
 const { syncRobloxVersion } = require("./roblox");
 const { syncStatusChannel } = require("./status");
+const { deliverKeyDm } = require("./deliver");
 
 const client = new Client({
   intents: [
@@ -201,6 +202,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
       await handleButton(interaction);
       return;
     }
+    if (interaction.isModalSubmit()) {
+      await handleModal(interaction);
+      return;
+    }
     if (!interaction.isChatInputCommand()) return;
     await handleCommand(interaction, client);
   } catch (err) {
@@ -240,22 +245,71 @@ client.login(config.token).catch((err) => {
 
 // Optional HTTP bind so Render free Web Service stays healthy (PORT set by host).
 // CORS is required so gate-site (localhost / Vercel) can read ready/user in the browser.
+// Also accepts POST /internal/deliver-key from gate-api (claim → Discord DM).
 const port = Number(process.env.PORT);
 if (Number.isFinite(port) && port > 0) {
   const http = require("http");
   const healthCors = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-    "Access-Control-Allow-Headers": "Accept, Content-Type",
+    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS, POST",
+    "Access-Control-Allow-Headers": "Accept, Content-Type, X-Admin-Secret",
     "Access-Control-Max-Age": "86400",
   };
+
+  function readBody(req) {
+    return new Promise((resolve, reject) => {
+      const chunks = [];
+      req.on("data", (c) => chunks.push(c));
+      req.on("end", () => {
+        try {
+          const raw = Buffer.concat(chunks).toString("utf8");
+          resolve(raw ? JSON.parse(raw) : {});
+        } catch (err) {
+          reject(err);
+        }
+      });
+      req.on("error", reject);
+    });
+  }
+
   http
-    .createServer((req, res) => {
+    .createServer(async (req, res) => {
+      const urlPath = String(req.url || "/").split("?")[0];
+
       if (req.method === "OPTIONS") {
         res.writeHead(204, healthCors);
         res.end();
         return;
       }
+
+      if (req.method === "POST" && urlPath === "/internal/deliver-key") {
+        const secret = req.headers["x-admin-secret"];
+        if (!config.adminSecret || secret !== config.adminSecret) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ ok: false, error: "unauthorized" }));
+          return;
+        }
+        try {
+          const body = await readBody(req);
+          if (!client.isReady()) {
+            res.writeHead(503, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ ok: false, error: "bot_not_ready" }));
+            return;
+          }
+          const result = await deliverKeyDm(client, body);
+          res.writeHead(result.ok ? 200 : 400, {
+            "Content-Type": "application/json",
+          });
+          res.end(JSON.stringify(result));
+        } catch (err) {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(
+            JSON.stringify({ ok: false, error: "server_error", message: err.message })
+          );
+        }
+        return;
+      }
+
       res.writeHead(200, {
         "Content-Type": "application/json",
         ...healthCors,

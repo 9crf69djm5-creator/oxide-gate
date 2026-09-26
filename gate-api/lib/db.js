@@ -228,7 +228,9 @@ async function initDb() {
       expires_at TEXT,
       token TEXT,
       duration_days INTEGER,
-      discord_user_id TEXT
+      discord_user_id TEXT,
+      roblox_user_id TEXT,
+      roblox_username TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_keys_status ON keys(status);
     CREATE INDEX IF NOT EXISTS idx_keys_token ON keys(token);
@@ -247,8 +249,28 @@ async function initDb() {
   }
 
   try {
+    db.exec("ALTER TABLE keys ADD COLUMN roblox_user_id TEXT");
+  } catch (_) {
+    /* already exists */
+  }
+
+  try {
+    db.exec("ALTER TABLE keys ADD COLUMN roblox_username TEXT");
+  } catch (_) {
+    /* already exists */
+  }
+
+  try {
     db.exec(
       "CREATE INDEX IF NOT EXISTS idx_keys_discord_user ON keys(discord_user_id)"
+    );
+  } catch (_) {
+    /* ignore */
+  }
+
+  try {
+    db.exec(
+      "CREATE INDEX IF NOT EXISTS idx_keys_roblox_user ON keys(roblox_user_id)"
     );
   } catch (_) {
     /* ignore */
@@ -268,6 +290,17 @@ async function initDb() {
     );
     CREATE INDEX IF NOT EXISTS idx_roblox_claims_user ON roblox_claims(roblox_user_id);
     CREATE INDEX IF NOT EXISTS idx_roblox_claims_key ON roblox_claims(key);
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS discord_roblox_links (
+      discord_user_id TEXT PRIMARY KEY,
+      roblox_user_id TEXT NOT NULL,
+      roblox_username TEXT NOT NULL,
+      linked_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_discord_roblox_roblox
+      ON discord_roblox_links(roblox_user_id);
   `);
 
   if (persistClient) {
