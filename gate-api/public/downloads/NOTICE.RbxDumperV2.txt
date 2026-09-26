@@ -1,0 +1,20 @@
+OXIDE Roblox offset dumper distribution notes
+=============================================
+
+Dump engine: RbxDumperV2
+Upstream:    https://git.imtheo.lol/theo/RbxDumperV2
+Author:      theo
+License:     GNU General Public License v3.0
+
+This folder ships OxideDumper.exe / RbxDumperV2.exe built from the upstream
+RbxDumperV2 sources (vendored at tools/RbxDumperV2 in the OXIDE repository).
+
+GPL v3 requires that anyone who receives this binary can also obtain the
+corresponding source code under the same license. Source is included in:
+
+  tools/RbxDumperV2/
+
+and remains available from the upstream repository above.
+
+OXIDE branding on the website/API is separate; offset values are produced by
+dumping the live Roblox client — not by scraping offsets.imtheo.lol.

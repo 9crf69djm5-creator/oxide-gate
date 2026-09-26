@@ -248,7 +248,23 @@ app.get("/api/status", async (_req, res) => {
  * Public Roblox offset dump (live dumper upload or exported headers). No secrets.
  * Open CORS — developers may fetch from any origin (theo-style public dump).
  */
-app.options(["/api/offsets", "/api/offsets/raw", "/api/offsets/hex", "/api/offsets.hpp", "/api/offsets.cs", "/api/offsets.txt", "/offsets.json", "/offsets.hpp", "/offsets.cs", "/offsets.txt"], publicOffsetsCors);
+app.options(
+  [
+    "/api/offsets",
+    "/api/offsets/raw",
+    "/api/offsets/hex",
+    "/api/offsets.hpp",
+    "/api/offsets.h",
+    "/api/offsets.cs",
+    "/api/offsets.txt",
+    "/offsets.json",
+    "/offsets.hpp",
+    "/offsets.h",
+    "/offsets.cs",
+    "/offsets.txt",
+  ],
+  publicOffsetsCors
+);
 
 app.get("/api/offsets", publicOffsetsCors, (_req, res) => {
   const payload = offsetsLib.publicOffsetsPayload();
@@ -281,7 +297,7 @@ app.get("/api/offsets/hex", publicOffsetsCors, (_req, res) => {
   return res.json(payload);
 });
 
-app.get(["/api/offsets.hpp", "/offsets.hpp"], publicOffsetsCors, (_req, res) => {
+app.get(["/api/offsets.hpp", "/api/offsets.h", "/offsets.hpp", "/offsets.h"], publicOffsetsCors, (_req, res) => {
   const body = offsetsLib.offsetsHpp();
   if (!body) return res.status(503).type("text/plain").send("Offsets dump not found.");
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
@@ -349,6 +365,7 @@ app.post("/api/admin/offsets", (req, res) => {
         raw: "/api/offsets/raw",
         hex: "/api/offsets/hex",
         hpp: "/api/offsets.hpp",
+        h: "/api/offsets.h",
         cs: "/api/offsets.cs",
         txt: "/api/offsets.txt",
       },
@@ -793,14 +810,34 @@ app.get(["/downloads/Oxide.exe", "/download/Oxide.exe", "/Oxide.exe"], (req, res
     }
   });
 });
+
+/** Staff/dev: Roblox offset dumper binary. */
+app.get(
+  ["/downloads/OxideDumper.exe", "/download/OxideDumper.exe", "/OxideDumper.exe"],
+  (req, res) => {
+    const file = path.join(downloadsDir, "OxideDumper.exe");
+    res.download(file, "OxideDumper.exe", (err) => {
+      if (err && !res.headersSent) {
+        console.error("[download dumper]", err.message);
+        res.status(404).json({
+          ok: false,
+          error: "missing_dumper",
+          message: "OxideDumper.exe is not on this server yet.",
+        });
+      }
+    });
+  }
+);
+
 app.use(
   "/downloads",
   express.static(downloadsDir, {
     fallthrough: true,
     setHeaders(res, filePath) {
       if (/\.exe$/i.test(filePath)) {
+        const base = path.basename(filePath);
         res.setHeader("Content-Type", "application/octet-stream");
-        res.setHeader("Content-Disposition", 'attachment; filename="Oxide.exe"');
+        res.setHeader("Content-Disposition", `attachment; filename="${base}"`);
       }
     },
   })

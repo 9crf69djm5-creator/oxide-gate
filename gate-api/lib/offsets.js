@@ -199,6 +199,7 @@ function publicOffsetsPayload() {
       raw: "/api/offsets/raw",
       hex: "/api/offsets/hex",
       hpp: "/api/offsets.hpp",
+      h: "/api/offsets.h",
       cs: "/api/offsets.cs",
       txt: "/api/offsets.txt",
     },
