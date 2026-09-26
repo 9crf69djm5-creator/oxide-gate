@@ -1363,3 +1363,171 @@ input {
 .page-enter {
   will-change: transform, opacity;
 }
+
+/* —— System status page —— */
+.sys-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1.15rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+
+.sys-status-banner > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.sys-status-banner strong {
+  display: block;
+  color: var(--text-bright);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+.sys-status-banner p {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.sys-status-banner.online {
+  border-color: rgba(111, 191, 122, 0.35);
+}
+
+.sys-status-banner.degraded {
+  border-color: rgba(230, 133, 46, 0.4);
+}
+
+.sys-status-banner.offline {
+  border-color: rgba(232, 93, 76, 0.4);
+}
+
+.sys-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--muted);
+  box-shadow: 0 0 0 4px rgba(110, 105, 96, 0.15);
+}
+
+.sys-status-dot.online {
+  background: var(--ok);
+  box-shadow: 0 0 0 4px rgba(111, 191, 122, 0.18);
+}
+
+.sys-status-dot.degraded {
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.sys-status-dot.offline,
+.sys-status-dot.unknown {
+  background: var(--danger);
+  box-shadow: 0 0 0 4px rgba(232, 93, 76, 0.18);
+}
+
+.sys-status-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 720px) {
+  .sys-status-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.sys-status-card {
+  padding: 1.15rem 1.2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.sys-status-card.online {
+  border-color: rgba(111, 191, 122, 0.22);
+}
+
+.sys-status-card.degraded {
+  border-color: rgba(230, 133, 46, 0.28);
+}
+
+.sys-status-card.offline {
+  border-color: rgba(232, 93, 76, 0.28);
+}
+
+.sys-status-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.sys-status-head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--text-bright);
+}
+
+.sys-status-meta {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  word-break: break-all;
+  font-family: var(--font-mono);
+}
+
+.sys-status-badge {
+  margin-left: auto;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.sys-status-badge.online {
+  color: var(--ok);
+}
+
+.sys-status-badge.degraded {
+  color: var(--accent-hot);
+}
+
+.sys-status-badge.offline {
+  color: var(--danger);
+}
+
+.sys-status-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem 1rem;
+  margin: 1rem 0 0;
+}
+
+.sys-status-fields dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.sys-status-fields dd {
+  margin: 0.15rem 0 0;
+  color: var(--text-bright);
+  font-size: 0.9rem;
+  word-break: break-word;
+}
+
+.sys-status-latency {
+  margin: 0.9rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}

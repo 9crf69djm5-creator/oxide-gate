@@ -7,22 +7,33 @@ const {
   Partials,
   ChannelType,
   MessageFlags,
+  EmbedBuilder,
+  PermissionFlagsBits,
 } = require("discord.js");
 const { config } = require("./config");
 const { registerCommands } = require("./register");
-const { handleCommand } = require("./commands");
-const { setupGuild, needsSetup, findRole, findChannel } = require("./setup");
+const { handleCommand, handleButton, isStaffPlus } = require("./commands");
+const {
+  setupGuild,
+  needsSetup,
+  findChannel,
+  isHoneypotChannel,
+  CHANNELS,
+} = require("./setup");
 const { syncRobloxVersion } = require("./roblox");
+const { syncStatusChannel } = require("./status");
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
   ],
-  partials: [Partials.Channel, Partials.GuildMember],
+  partials: [Partials.Channel, Partials.GuildMember, Partials.Message],
 });
 
 let robloxTimer = null;
+let statusTimer = null;
 
 async function runRobloxJob(reason) {
   try {
@@ -32,6 +43,84 @@ async function runRobloxJob(reason) {
   } catch (err) {
     console.warn(`[roblox] ${reason} failed:`, err.message);
   }
+}
+
+async function runStatusJob(reason) {
+  try {
+    const result = await syncStatusChannel(client, config.guildId);
+    console.log(
+      `[status] ${reason}: ${result.created ? "posted" : "updated"} #status`
+    );
+  } catch (err) {
+    console.warn(`[status] ${reason} failed:`, err.message);
+  }
+}
+
+/**
+ * Kick non-staff who type in the honeypot channel.
+ * @param {import('discord.js').Message} message
+ */
+async function handleHoneypot(message) {
+  if (!message.guild || message.guild.id !== config.guildId) return;
+  if (message.author?.bot) return;
+  if (!isHoneypotChannel(message.channel)) return;
+
+  let member = message.member;
+  if (!member) {
+    member = await message.guild.members.fetch(message.author.id).catch(() => null);
+  }
+  if (!member) return;
+
+  // Never kick staff / admins
+  if (isStaffPlus(member)) return;
+  try {
+    if (member.permissions?.has?.(PermissionFlagsBits.Administrator)) return;
+  } catch {
+    /* ignore */
+  }
+
+  const reason = "OXIDE honeypot: typed in #do-not-type";
+  try {
+    await message.delete().catch(() => {});
+  } catch {
+    /* ignore */
+  }
+
+  let kicked = false;
+  try {
+    await member.kick(reason);
+    kicked = true;
+  } catch (err) {
+    console.warn(`[honeypot] kick failed ${message.author.tag}:`, err.message);
+  }
+
+  const logCh =
+    findChannel(message.guild, CHANNELS.keyLogs, ChannelType.GuildText) ||
+    findChannel(message.guild, "staff-chat", ChannelType.GuildText);
+
+  if (logCh?.isTextBased()) {
+    await logCh
+      .send({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle(kicked ? "Honeypot kick" : "Honeypot kick FAILED")
+            .setColor(kicked ? 0xe74c3c : 0xe6852e)
+            .setDescription(
+              `<@${message.author.id}> (\`${message.author.tag}\` · \`${message.author.id}\`)\n` +
+                (kicked
+                  ? "Kicked for typing in 🚫・do-not-type."
+                  : "Could not kick — check bot role hierarchy / permissions.")
+            )
+            .setTimestamp(new Date())
+            .setFooter({ text: "OXIDE anti-spam" }),
+        ],
+      })
+      .catch(() => {});
+  }
+
+  console.log(
+    `[honeypot] ${kicked ? "kicked" : "FAILED"} ${message.author.tag}`
+  );
 }
 
 client.once(Events.ClientReady, async (c) => {
@@ -50,8 +139,11 @@ client.once(Events.ClientReady, async (c) => {
     const guild = await client.guilds.fetch(config.guildId);
     await guild.channels.fetch();
     if (config.autoSetup && needsSetup(guild)) {
-      console.log("Empty/partial layout detected — running auto /setup…");
-      const summary = await setupGuild(guild);
+      console.log("Empty/partial layout detected — running auto /setup-server…");
+      const summary = await setupGuild(guild, {
+        siteUrl: config.siteUrl,
+        discordInvite: config.discordInvite,
+      });
       console.log("Auto-setup done:", summary);
     }
   } catch (err) {
@@ -59,30 +151,34 @@ client.once(Events.ClientReady, async (c) => {
   }
 
   await runRobloxJob("startup");
+  await runStatusJob("startup");
+
   if (robloxTimer) clearInterval(robloxTimer);
   robloxTimer = setInterval(() => runRobloxJob("poll"), config.robloxPollMs);
   console.log(`Roblox poll every ${config.robloxPollMs / 60000} min`);
+
+  if (statusTimer) clearInterval(statusTimer);
+  // Refresh #status every 10 minutes
+  statusTimer = setInterval(() => runStatusJob("poll"), 10 * 60 * 1000);
+  if (statusTimer.unref) statusTimer.unref();
+  console.log("Status channel poll every 10 min");
 });
 
 client.on(Events.GuildMemberAdd, async (member) => {
   if (member.guild.id !== config.guildId) return;
   try {
-    await member.guild.roles.fetch();
-    const memberRole = findRole(member.guild, "Member");
-    if (memberRole && !member.roles.cache.has(memberRole.id)) {
-      await member.roles.add(memberRole, "OXIDE auto Member on join");
-      console.log(`[join] Assigned Member → ${member.user.tag}`);
-    }
-
+    // Do NOT auto-grant Citizen — they must verify.
     if (config.welcomeEnabled) {
-      const welcomeCh =
-        findChannel(member.guild, "announcements", ChannelType.GuildText) ||
-        findChannel(member.guild, "help", ChannelType.GuildText);
-      if (welcomeCh?.isTextBased()) {
-        await welcomeCh.send({
+      const verifyCh = findChannel(
+        member.guild,
+        CHANNELS.verify,
+        ChannelType.GuildText
+      );
+      if (verifyCh?.isTextBased()) {
+        await verifyCh.send({
           content:
-            `Welcome <@${member.id}> — you're a **Member**. ` +
-            `Buy at ${config.siteUrl}/buy · Support: #help · Invite: ${config.discordInvite}`,
+            `Welcome <@${member.id}> — click the **Verify** button above to unlock OXIDE.\n` +
+            `Do **not** type in 🚫・do-not-type.`,
         });
       }
     }
@@ -91,17 +187,33 @@ client.on(Events.GuildMemberAdd, async (member) => {
   }
 });
 
-client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+client.on(Events.MessageCreate, async (message) => {
   try {
-    await handleCommand(interaction, client);
+    await handleHoneypot(message);
   } catch (err) {
-    // 10062 = interaction expired / already acknowledged — ignore, don't crash
-    if (err?.code === 10062) {
-      console.warn(`[cmd ${interaction.commandName}] interaction expired (10062)`);
+    console.warn("[honeypot]", err.message);
+  }
+});
+
+client.on(Events.InteractionCreate, async (interaction) => {
+  try {
+    if (interaction.isButton()) {
+      await handleButton(interaction);
       return;
     }
-    console.error(`[cmd ${interaction.commandName}]`, err);
+    if (!interaction.isChatInputCommand()) return;
+    await handleCommand(interaction, client);
+  } catch (err) {
+    if (err?.code === 10062) {
+      console.warn(
+        `[interaction] expired (10062) ${interaction.commandName || interaction.customId}`
+      );
+      return;
+    }
+    console.error(
+      `[interaction ${interaction.commandName || interaction.customId}]`,
+      err
+    );
     const payload = {
       content: `Error: \`${err.message}\``,
       flags: MessageFlags.Ephemeral,
@@ -127,8 +239,6 @@ client.login(config.token).catch((err) => {
 });
 
 // Optional HTTP bind so Render free Web Service stays healthy (PORT set by host).
-// Free web services still sleep after ~15m with no inbound HTTP — mutual keep-alive
-// with gate-api + GitHub Action / external ping keep both awake.
 const port = Number(process.env.PORT);
 if (Number.isFinite(port) && port > 0) {
   const http = require("http");
@@ -181,12 +291,14 @@ if (Number.isFinite(port) && port > 0) {
 
 process.on("SIGINT", () => {
   if (robloxTimer) clearInterval(robloxTimer);
+  if (statusTimer) clearInterval(statusTimer);
   client.destroy();
   process.exit(0);
 });
 
 process.on("SIGTERM", () => {
   if (robloxTimer) clearInterval(robloxTimer);
+  if (statusTimer) clearInterval(statusTimer);
   client.destroy();
   process.exit(0);
 });

@@ -317,6 +317,45 @@ function validateOrActivate({ key, hwid, token }) {
   return validate({ key: normalized, hwid, token });
 }
 
+/** Ban / revoke a key (status → banned). */
+function revokeKey({ key: rawKey }) {
+  const key = normalizeKey(rawKey);
+  if (!key) return { ok: false, error: "missing_key", message: "Enter a license key." };
+  const row = getKey(key);
+  if (!row) return { ok: false, error: "invalid_key", message: "Invalid license key." };
+  getDb()
+    .prepare("UPDATE keys SET status = 'banned', token = NULL WHERE key = ?")
+    .run(key);
+  return {
+    ok: true,
+    key,
+    plan: planLabel(row.plan),
+    planId: row.plan,
+    previousStatus: row.status,
+    message: "Key revoked (banned).",
+  };
+}
+
+/** Clear HWID binding so the key can activate on a new machine. */
+function resetHwid({ key: rawKey }) {
+  const key = normalizeKey(rawKey);
+  if (!key) return { ok: false, error: "missing_key", message: "Enter a license key." };
+  const row = getKey(key);
+  if (!row) return { ok: false, error: "invalid_key", message: "Invalid license key." };
+  if (row.status === "banned") {
+    return { ok: false, error: "banned", message: "This key has been banned." };
+  }
+  getDb().prepare("UPDATE keys SET hwid = NULL WHERE key = ?").run(key);
+  return {
+    ok: true,
+    key,
+    plan: planLabel(row.plan),
+    planId: row.plan,
+    previousHwid: row.hwid || null,
+    message: "HWID cleared. Next EXE launch will bind a new machine.",
+  };
+}
+
 function seedDemoKeys() {
   const demos = [
     { key: "OXIDE-DEMO-WEEK", plan: "week" },
@@ -348,6 +387,8 @@ module.exports = {
   redeem,
   validate,
   validateOrActivate,
+  revokeKey,
+  resetHwid,
   seedDemoKeys,
   repairLifetimeKeys,
   resolveDurationDays,

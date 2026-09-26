@@ -105,6 +105,7 @@ Use `gate-api/Dockerfile`. On Render: **New Web Service** → Docker → root `g
 |-----|--------|
 | `VITE_API_BASE_URL` | `https://YOUR-API.onrender.com` (no trailing slash) |
 | `VITE_DISCORD_INVITE` | `https://discord.gg/3PXJ8r56T` |
+| `VITE_DISCORD_BOT_HEALTH_URL` | `https://oxide-discord-bot-fra.onrender.com/` (optional; status page) |
 
 5. Deploy → copy the site URL, e.g. `https://oxide-gate.vercel.app`.
 
@@ -247,3 +248,17 @@ curl -X POST https://YOUR-API.onrender.com/api/admin/create-keys \
 ```
 
 Or from this machine: `cd gate-api && node create-keys.js` (uses local `.env` — point `API` only if you add a remote helper; CLI talks to local DB by default). For production keys, use the curl against Render.
+
+---
+
+## Discord bot refresh (verify gate + status)
+
+1. Push / redeploy **oxide-discord-bot-fra** on Render.
+2. In Discord as Admin: run **`/setup-server` once**.
+3. Move the bot role **above Citizen** in Server Settings → Roles.
+4. Confirm new members only see VERIFY until they click the button.
+5. Site status page: `https://YOUR-SITE.vercel.app/status` (redeploy **gate-site** after pull).
+6. Keep bot awake: ping `https://oxide-discord-bot-fra.onrender.com/` every 5–10 minutes.
+
+Full command list: [discord-bot/README.md](discord-bot/README.md).
+

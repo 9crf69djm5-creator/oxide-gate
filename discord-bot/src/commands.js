@@ -9,9 +9,24 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-const { setupGuild, findRole, STAFF_PLUS } = require("./setup");
+const {
+  setupGuild,
+  findRole,
+  findChannel,
+  STAFF_PLUS,
+  VERIFY_BUTTON_ID,
+  CHANNELS,
+} = require("./setup");
 const { syncRobloxVersion, fetchRobloxWindowsVersion, buildEmbed, readLocalClientVersion } = require("./roblox");
-const { fetchHealth, createKeys, redeemKey } = require("./gate");
+const {
+  fetchHealth,
+  fetchProducts,
+  createKeys,
+  revokeKey,
+  resetHwid,
+  redeemKey,
+} = require("./gate");
+const { collectStatusSnapshot, buildStatusEmbed, syncStatusChannel } = require("./status");
 const { getLicense, setLicense } = require("./licenses");
 const { config } = require("./config");
 
@@ -39,11 +54,32 @@ function isStaffPlus(member) {
 }
 
 /**
+ * Citizen / Customer / Staff / Member (legacy) — public verified access.
+ * @param {import('discord.js').GuildMember|null} member
+ */
+function isCitizen(member) {
+  if (!member) return false;
+  if (isStaffPlus(member)) return true;
+  const guild = member.guild;
+  if (!guild) return false;
+  const cache = member.roles?.cache;
+  if (!cache) return false;
+  return ["Citizen", "Customer", "Reseller", "Member"].some((name) => {
+    const role = findRole(guild, name);
+    return role && cache.has(role.id);
+  });
+}
+
+/**
  * @param {import('discord.js').GuildMember|null} member
  */
 function hasCustomerAccess(member) {
   if (!member) return false;
-  if (member.permissions.has(PermissionFlagsBits.Administrator)) return true;
+  try {
+    if (member.permissions.has(PermissionFlagsBits.Administrator)) return true;
+  } catch {
+    /* ignore */
+  }
   if (isStaffPlus(member)) return true;
   const customer = findRole(member.guild, "Customer");
   return Boolean(customer && member.roles.cache.has(customer.id));
@@ -143,17 +179,63 @@ async function assignCustomerRole(interaction) {
   }
 }
 
+/**
+ * Ensure Citizen after redeem (buyers should see community).
+ * @param {import('discord.js').ChatInputCommandInteraction} interaction
+ */
+async function ensureCitizenRole(interaction) {
+  if (!interaction.guild || !interaction.member) return;
+  const role = findRole(interaction.guild, "Citizen");
+  if (!role) return;
+  const member =
+    interaction.member.roles?.cache != null
+      ? interaction.member
+      : await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+  if (!member || member.roles.cache.has(role.id)) return;
+  await member.roles.add(role, "OXIDE redeem → Citizen").catch(() => {});
+}
+
+async function logToKeyLogs(guild, embed) {
+  try {
+    const logCh = findChannel(guild, CHANNELS.keyLogs);
+    if (logCh?.isTextBased()) {
+      await logCh.send({ embeds: [embed] });
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 const commandData = [
   new SlashCommandBuilder()
-    .setName("setup")
-    .setDescription("Create OXIDE roles, categories, and channels (idempotent)")
+    .setName("setup-server")
+    .setDescription("Create OXIDE roles, verify gate, honeypot, and pro channels (Admin)")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder()
+    .setName("setup")
+    .setDescription("Alias of /setup-server (Admin)")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder()
+    .setName("verify")
+    .setDescription("Get the Citizen role and unlock the server"),
+  new SlashCommandBuilder()
+    .setName("ping")
+    .setDescription("Bot latency check"),
+  new SlashCommandBuilder()
+    .setName("status")
+    .setDescription("Live OXIDE API / downloads / products / bot health"),
+  new SlashCommandBuilder()
+    .setName("products")
+    .setDescription("List OXIDE plans and Roblox gamepass links"),
+  new SlashCommandBuilder()
+    .setName("download")
+    .setDescription("Get the Oxide.exe download link"),
+  new SlashCommandBuilder()
+    .setName("key-redeem")
+    .setDescription("How to redeem an OXIDE license key"),
   new SlashCommandBuilder()
     .setName("roblox-version")
     .setDescription("Fetch latest Roblox Windows client version and update #roblox-versions"),
-  new SlashCommandBuilder()
-    .setName("status")
-    .setDescription("Ping OXIDE gate API health"),
   new SlashCommandBuilder()
     .setName("redeem")
     .setDescription("Redeem an OXIDE license key and get download instructions")
@@ -166,9 +248,6 @@ const commandData = [
   new SlashCommandBuilder()
     .setName("license")
     .setDescription("Show your linked OXIDE license (alias of /mykey)"),
-  new SlashCommandBuilder()
-    .setName("download")
-    .setDescription("Get the Oxide.exe download link (Customer+ or after /redeem)"),
   new SlashCommandBuilder()
     .setName("key-create")
     .setDescription("Create license keys via gate API (Staff+ · needs ADMIN_SECRET)")
@@ -189,6 +268,18 @@ const commandData = [
     )
     .addIntegerOption((o) =>
       o.setName("days").setDescription("Validity days (omit for lifetime/default)").setMinValue(1).setMaxValue(3650)
+    ),
+  new SlashCommandBuilder()
+    .setName("key-revoke")
+    .setDescription("Revoke (ban) a license key (Staff+)")
+    .addStringOption((o) =>
+      o.setName("key").setDescription("OXIDE-… key to revoke").setRequired(true)
+    ),
+  new SlashCommandBuilder()
+    .setName("hwid-reset")
+    .setDescription("Clear HWID binding so a key can move machines (Staff+)")
+    .addStringOption((o) =>
+      o.setName("key").setDescription("OXIDE-… key").setRequired(true)
     ),
   new SlashCommandBuilder()
     .setName("role")
@@ -212,7 +303,7 @@ const commandData = [
         .setDescription("Role to assign")
         .setRequired(true)
         .addChoices(
-          { name: "Member", value: "Member" },
+          { name: "Citizen", value: "Citizen" },
           { name: "Customer", value: "Customer" },
           { name: "Reseller", value: "Reseller" },
           { name: "Staff", value: "Staff" },
@@ -223,6 +314,62 @@ const commandData = [
     .setName("help")
     .setDescription("List OXIDE bot commands"),
 ].map((c) => c.toJSON());
+
+/**
+ * Handle verify button + /verify
+ * @param {import('discord.js').ButtonInteraction|import('discord.js').ChatInputCommandInteraction} interaction
+ */
+async function grantCitizen(interaction) {
+  if (!interaction.guild) {
+    return interaction.reply({
+      content: "Use this inside the OXIDE Discord server.",
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  const deferred = interaction.deferred || interaction.replied;
+  if (!deferred) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  }
+
+  const role = findRole(interaction.guild, "Citizen");
+  if (!role) {
+    return interaction.editReply({
+      content: "Citizen role missing — an Admin must run `/setup-server` first.",
+    });
+  }
+
+  const member =
+    interaction.member?.roles?.cache != null
+      ? interaction.member
+      : await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+
+  if (!member) {
+    return interaction.editReply({ content: "Could not load your member profile." });
+  }
+
+  if (member.roles.cache.has(role.id)) {
+    return interaction.editReply({
+      content: "You're already verified as **Citizen**. Enjoy the server.",
+    });
+  }
+
+  try {
+    await member.roles.add(role, "OXIDE verify");
+  } catch (err) {
+    return interaction.editReply({
+      content:
+        `Could not assign Citizen (bot role must be above Citizen): \`${err.message}\``,
+    });
+  }
+
+  return interaction.editReply({
+    content:
+      "✅ Verified — you now have **Citizen**.\n" +
+      "You can see announcements, general, help, and status.\n" +
+      `Buy / redeem: ${config.siteUrl}/buy · Commands: \`/help\``,
+  });
+}
 
 /**
  * @param {import('discord.js').ChatInputCommandInteraction} interaction
@@ -237,25 +384,50 @@ async function handleCommand(interaction, client) {
       .setColor(0xe6852e)
       .setDescription(
         [
-          "`/setup` — Admin: roles + channel layout",
-          "`/roblox-version` — Latest Windows client version",
-          "`/status` — Gate API health",
-          "`/redeem` — Redeem a license key → DM + Customer role",
-          "`/mykey` · `/license` — Show your linked key",
-          "`/download` — Oxide.exe download link",
-          "`/key-create` — Staff+: create license keys",
-          "`/role` — Staff+: add/remove Member, Customer, Reseller, Staff, Admin",
+          "**Everyone / Citizen**",
+          "`/verify` — Unlock the server (Citizen role)",
+          "`/ping` — Bot latency",
+          "`/status` — Gate API + downloads + products",
+          "`/products` — Plans & gamepass links",
+          "`/download` — Oxide.exe link",
+          "`/key-redeem` — How to redeem a key",
+          "`/redeem` — Redeem `OXIDE-…` → DM + Customer",
+          "`/mykey` · `/license` — Your linked key",
+          "`/roblox-version` — Latest Windows client",
           "`/help` — This list",
           "",
+          "**Staff+ only**",
+          "`/key-create` — Mint license keys",
+          "`/key-revoke` — Ban a key",
+          "`/hwid-reset` — Clear machine bind",
+          "`/role` — Assign Citizen / Customer / …",
+          "`/setup-server` — Verify gate + pro layout (Admin)",
+          "",
           `Site: ${config.siteUrl}`,
+          `Status page: ${config.siteUrl}/status`,
           `Invite: ${config.discordInvite}`,
-          `API: \`${config.apiBaseUrl}\``,
         ].join("\n")
       );
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 
-  if (name === "setup") {
+  if (name === "ping") {
+    const sent = await interaction.reply({
+      content: "Pinging…",
+      flags: MessageFlags.Ephemeral,
+      fetchReply: true,
+    });
+    const roundtrip = sent.createdTimestamp - interaction.createdTimestamp;
+    return interaction.editReply({
+      content: `Pong — roundtrip **${roundtrip}ms** · websocket **${Math.round(client.ws.ping)}ms**`,
+    });
+  }
+
+  if (name === "verify") {
+    return grantCitizen(interaction);
+  }
+
+  if (name === "setup-server" || name === "setup") {
     if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
       return interaction.reply({
         content: "Administrator permission required.",
@@ -263,40 +435,144 @@ async function handleCommand(interaction, client) {
       });
     }
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    const summary = await setupGuild(interaction.guild);
+    const summary = await setupGuild(interaction.guild, {
+      siteUrl: config.siteUrl,
+      discordInvite: config.discordInvite,
+    });
+    try {
+      await syncStatusChannel(client, config.guildId);
+    } catch {
+      /* status channel may be empty until first poll */
+    }
     return interaction.editReply({
       content:
-        "**OXIDE layout ready** (idempotent — existing names reused).\n" +
+        "**OXIDE layout ready** (idempotent — existing names reused).\n\n" +
         `Roles created: ${summary.rolesCreated.join(", ") || "none"}\n` +
         `Roles existing: ${summary.rolesExisting.join(", ") || "none"}\n` +
         `Channels created: ${summary.channelsCreated.join(", ") || "none"}\n` +
-        `Channels existing: ${summary.channelsExisting.join(", ") || "none"}\n\n` +
-        "Upload **branding/oxide-icon.png** as the Discord server icon (Server Settings → Overview).",
+        `Channels existing: ${summary.channelsExisting.join(", ") || "none"}\n` +
+        (summary.notes?.length ? `\nNotes:\n• ${summary.notes.join("\n• ")}\n` : "") +
+        "\n**Next:** drag the bot role **above** Citizen in Server Settings → Roles.\n" +
+        "New members only see VERIFY until they click the button.\n" +
+        "Upload **branding/oxide-icon.png** as the server icon.",
     });
   }
 
   if (name === "status") {
     await interaction.deferReply();
     try {
-      const health = await fetchHealth(config.apiBaseUrl);
-      const embed = new EmbedBuilder()
-        .setTitle("Gate API status")
-        .setColor(health.ok ? 0x2ecc71 : 0xe74c3c)
-        .addFields(
-          { name: "URL", value: health.url, inline: false },
-          { name: "HTTP", value: String(health.status), inline: true },
-          { name: "Latency", value: `${health.ms}ms`, inline: true },
-          {
-            name: "Body",
-            value: "```json\n" + JSON.stringify(health.body ?? {}, null, 2).slice(0, 900) + "\n```",
-          }
-        );
+      const snap = await collectStatusSnapshot();
+      const embed = buildStatusEmbed(snap);
+      // Best-effort refresh of #status
+      syncStatusChannel(client, config.guildId).catch(() => {});
       return interaction.editReply({ embeds: [embed] });
     } catch (err) {
+      try {
+        const health = await fetchHealth(config.apiBaseUrl);
+        return interaction.editReply({
+          content: `Partial status — gate ${health.ok ? "ok" : "down"} (${health.ms}ms). Error: \`${err.message}\``,
+        });
+      } catch (err2) {
+        return interaction.editReply({
+          content: `Gate unreachable: \`${err2.message}\`\n\`${config.apiBaseUrl}/api/health\``,
+        });
+      }
+    }
+  }
+
+  if (name === "products") {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    try {
+      const result = await fetchProducts(config.apiBaseUrl);
+      if (!result.ok) {
+        return interaction.editReply({
+          content: `Could not load products (HTTP ${result.status}).`,
+        });
+      }
+      const list = result.body.products || [];
+      const embed = new EmbedBuilder()
+        .setTitle("OXIDE products")
+        .setColor(0xe6852e)
+        .setDescription(
+          list.length
+            ? list
+                .map((p) => {
+                  const flag = p.configured ? "✅" : "⚠️";
+                  const link = p.buyUrl ? `[Buy](${p.buyUrl})` : "_no buy URL_";
+                  return `${flag} **${p.name || p.plan}** — ${link}`;
+                })
+                .join("\n")
+            : "No products returned."
+        )
+        .addFields({
+          name: "Redeem",
+          value: `After purchase: ${config.siteUrl}/buy or \`/redeem\` here.`,
+        })
+        .setFooter({
+          text: result.body.demo ? "DEMO mode on gate-api" : "Live catalog",
+        });
+      return interaction.editReply({ embeds: [embed] });
+    } catch (err) {
+      return interaction.editReply({ content: `Failed: \`${err.message}\`` });
+    }
+  }
+
+  if (name === "key-redeem") {
+    const embed = new EmbedBuilder()
+      .setTitle("How to redeem an OXIDE key")
+      .setColor(0xe6852e)
+      .setDescription(
+        [
+          "1. Buy a plan on the site or Roblox gamepass.",
+          "2. Claim / receive your `OXIDE-…` key.",
+          "3. Run `/redeem key:OXIDE-…` in this server (or redeem on the site).",
+          "4. Download Oxide.exe and paste the key when asked.",
+          "",
+          `Site redeem: ${config.siteUrl}/key`,
+          `Buy: ${config.siteUrl}/buy`,
+          `Download: ${downloadUrl()}`,
+        ].join("\n")
+      );
+    return interaction.reply({
+      embeds: [embed],
+      components: [downloadRow()],
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  if (name === "download") {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const linked = getLicense(interaction.user.id);
+    const allowed =
+      Boolean(linked?.key) ||
+      hasCustomerAccess(interaction.member) ||
+      isCitizen(interaction.member);
+
+    // Citizens get the public download link; key paste still required in EXE
+    if (!allowed) {
       return interaction.editReply({
-        content: `Gate unreachable: \`${err.message}\`\n\`${config.apiBaseUrl}/api/health\``,
+        content:
+          "Verify first with `/verify` (or the button in #verify), then run `/download` again.\n" +
+          "Customers: `/redeem key:OXIDE-…` unlocks Customer chat.",
       });
     }
+
+    const dl = downloadUrl(linked?.downloadUrl);
+    const embed = new EmbedBuilder()
+      .setTitle("Download Oxide.exe")
+      .setColor(0xe6852e)
+      .setDescription(
+        "**Paste your key into Oxide.exe when it asks.**\n" +
+          (linked?.key
+            ? `Linked key: \`${linked.key}\``
+            : "No key linked yet — buy/claim then `/redeem`, or paste a key you already have.")
+      )
+      .addFields({ name: "Direct link", value: `[Oxide.exe](${dl})` });
+
+    return interaction.editReply({
+      embeds: [embed],
+      components: [downloadRow(dl)],
+    });
   }
 
   if (name === "redeem") {
@@ -342,6 +618,7 @@ async function handleCommand(interaction, client) {
       redeemedAt: new Date().toISOString(),
     });
 
+    await ensureCitizenRole(interaction);
     const roleResult = await assignCustomerRole(interaction);
     const embed = buildRedeemEmbed({
       key,
@@ -361,7 +638,7 @@ async function handleCommand(interaction, client) {
           ? "Customer role already assigned."
           : "Customer role assigned."
         : roleResult.reason === "missing_role"
-          ? "Customer role missing — run `/setup`."
+          ? "Customer role missing — run `/setup-server`."
           : roleResult.reason === "not_in_guild"
             ? "Redeemed (DM only — join the server for Customer role)."
             : `Could not assign Customer: ${roleResult.reason}`;
@@ -408,38 +685,6 @@ async function handleCommand(interaction, client) {
     });
   }
 
-  if (name === "download") {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    const linked = getLicense(interaction.user.id);
-    const allowed =
-      Boolean(linked?.key) || hasCustomerAccess(interaction.member);
-
-    if (!allowed) {
-      return interaction.editReply({
-        content:
-          "Download is for **Customer** (or Staff+) after redeem.\n" +
-          "Run `/redeem key:OXIDE-…` first, then try `/download` again.",
-      });
-    }
-
-    const dl = downloadUrl(linked?.downloadUrl);
-    const embed = new EmbedBuilder()
-      .setTitle("Download Oxide.exe")
-      .setColor(0xe6852e)
-      .setDescription(
-        "**Paste your key into Oxide.exe when it asks.**\n" +
-          (linked?.key
-            ? `Linked key: \`${linked.key}\``
-            : "Use `/mykey` if you redeemed earlier, or `/redeem` with your key.")
-      )
-      .addFields({ name: "Direct link", value: `[Oxide.exe](${dl})` });
-
-    return interaction.editReply({
-      embeds: [embed],
-      components: [downloadRow(dl)],
-    });
-  }
-
   if (name === "roblox-version") {
     await interaction.deferReply();
     try {
@@ -453,7 +698,6 @@ async function handleCommand(interaction, client) {
         embeds: [result.embed],
       });
     } catch (err) {
-      // Fallback: still show fetch without channel
       try {
         const remote = await fetchRobloxWindowsVersion();
         const embed = buildEmbed({
@@ -484,7 +728,6 @@ async function handleCommand(interaction, client) {
     const targetUser = interaction.options.getUser("user", true);
     const roleName = interaction.options.getString("role", true);
 
-    // Only Owner/Admin (or Discord Administrator) may assign Admin/Staff
     const elevated = ["Admin", "Staff"];
     if (elevated.includes(roleName)) {
       const isOwnerOrAdmin =
@@ -504,7 +747,7 @@ async function handleCommand(interaction, client) {
     const role = findRole(interaction.guild, roleName);
     if (!role) {
       return interaction.editReply({
-        content: `Role **${roleName}** not found — run \`/setup\` first.`,
+        content: `Role **${roleName}** not found — run \`/setup-server\` first.`,
       });
     }
     const member = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
@@ -530,7 +773,6 @@ async function handleCommand(interaction, client) {
   }
 
   if (name === "key-create") {
-    // ACK immediately — free Render + cold gate-api easily exceed Discord's ~3s window.
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     if (!isStaffPlus(interaction.member)) {
@@ -572,26 +814,13 @@ async function handleCommand(interaction, client) {
       }
       const keys = result.body.keys || [];
       const list = keys.map((k) => `\`${k}\``).join("\n") || "(none)";
-      // Also try to log to #key-logs without exposing in public
-      try {
-        const { findChannel } = require("./setup");
-        const logCh = findChannel(interaction.guild, "key-logs");
-        if (logCh?.isTextBased()) {
-          await logCh.send({
-            embeds: [
-              {
-                title: "Keys created",
-                color: 0xe6852e,
-                description: `By <@${interaction.user.id}> · plan \`${plan}\` · count ${keys.length}`,
-                fields: [{ name: "Keys", value: list.slice(0, 1000) }],
-                timestamp: new Date().toISOString(),
-              },
-            ],
-          });
-        }
-      } catch {
-        /* ignore log failures */
-      }
+      await logToKeyLogs(interaction.guild, {
+        title: "Keys created",
+        color: 0xe6852e,
+        description: `By <@${interaction.user.id}> · plan \`${plan}\` · count ${keys.length}`,
+        fields: [{ name: "Keys", value: list.slice(0, 1000) }],
+        timestamp: new Date().toISOString(),
+      });
       return interaction.editReply({
         content:
           `Created **${keys.length}** key(s) · plan \`${plan}\`${days ? ` · ${days}d` : ""}\n${list}\n\n` +
@@ -605,6 +834,103 @@ async function handleCommand(interaction, client) {
       });
     }
   }
+
+  if (name === "key-revoke") {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    if (!isStaffPlus(interaction.member)) {
+      return interaction.editReply({ content: "Staff+ only." });
+    }
+    if (!config.adminSecret) {
+      return interaction.editReply({
+        content: "`ADMIN_SECRET` is not set on this bot.",
+      });
+    }
+    const key = interaction.options.getString("key", true).trim();
+    try {
+      const result = await revokeKey({
+        apiBaseUrl: config.apiBaseUrl,
+        adminSecret: config.adminSecret,
+        key,
+      });
+      if (!result.ok) {
+        return interaction.editReply({
+          content:
+            result.body?.message ||
+            `Revoke failed (HTTP ${result.status}).`,
+        });
+      }
+      await logToKeyLogs(interaction.guild, {
+        title: "Key revoked",
+        color: 0xe74c3c,
+        description: `By <@${interaction.user.id}>`,
+        fields: [
+          { name: "Key", value: `\`${result.body.key || key}\`` },
+          { name: "Plan", value: result.body.plan || "—" },
+        ],
+        timestamp: new Date().toISOString(),
+      });
+      return interaction.editReply({
+        content: `Revoked \`${result.body.key || key}\` (banned).`,
+      });
+    } catch (err) {
+      return interaction.editReply({ content: `Failed: \`${err.message}\`` });
+    }
+  }
+
+  if (name === "hwid-reset") {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    if (!isStaffPlus(interaction.member)) {
+      return interaction.editReply({ content: "Staff+ only." });
+    }
+    if (!config.adminSecret) {
+      return interaction.editReply({
+        content: "`ADMIN_SECRET` is not set on this bot.",
+      });
+    }
+    const key = interaction.options.getString("key", true).trim();
+    try {
+      const result = await resetHwid({
+        apiBaseUrl: config.apiBaseUrl,
+        adminSecret: config.adminSecret,
+        key,
+      });
+      if (!result.ok) {
+        return interaction.editReply({
+          content:
+            result.body?.message ||
+            `HWID reset failed (HTTP ${result.status}).`,
+        });
+      }
+      await logToKeyLogs(interaction.guild, {
+        title: "HWID reset",
+        color: 0xe6852e,
+        description: `By <@${interaction.user.id}>`,
+        fields: [{ name: "Key", value: `\`${result.body.key || key}\`` }],
+        timestamp: new Date().toISOString(),
+      });
+      return interaction.editReply({
+        content: `HWID cleared for \`${result.body.key || key}\`. Next EXE launch binds a new machine.`,
+      });
+    } catch (err) {
+      return interaction.editReply({ content: `Failed: \`${err.message}\`` });
+    }
+  }
 }
 
-module.exports = { commandData, handleCommand, isStaffPlus };
+/**
+ * @param {import('discord.js').ButtonInteraction} interaction
+ */
+async function handleButton(interaction) {
+  if (interaction.customId === VERIFY_BUTTON_ID) {
+    return grantCitizen(interaction);
+  }
+}
+
+module.exports = {
+  commandData,
+  handleCommand,
+  handleButton,
+  isStaffPlus,
+  isCitizen,
+  grantCitizen,
+};

@@ -1,141 +1,116 @@
 # OXIDE Discord Bot
 
-Cloud worker that configures the Discord server, tracks Roblox client versions, checks the gate API, and creates keys. **Runs 24/7 on Render** — you do **not** need to keep it open on your PC.
+Cloud worker: verify gate, honeypot anti-spam, pro channel layout, Roblox version intel, gate status, and license tools. Runs 24/7 on Render.
 
 Invite: https://discord.gg/3PXJ8r56T  
 Site: https://oxide-gate-site.vercel.app  
+Status page: https://oxide-gate-site.vercel.app/status  
 API: https://oxide-gate-api.onrender.com
 
-## One-time cloud setup (recommended)
+## Deploy / update the bot
 
-### 1. Create the Discord application
-
-1. Open [Discord Developer Portal](https://discord.com/developers/applications) → **New Application** → name it `OXIDE`.
-2. **Bot** → **Add Bot** → **Reset Token** → copy the token (`DISCORD_TOKEN`).
-3. Enable **Server Members Intent** (Privileged Gateway Intents) — required for auto **Member** role on join.
-4. **OAuth2 → General** → copy **Application ID** (`CLIENT_ID`).
-5. **OAuth2 → URL Generator**:
-   - Scopes: `bot`, `applications.commands`
-   - Bot permissions: **Administrator**
-6. Invite the bot to your server.
-7. Developer Mode → right‑click server → **Copy Server ID** (`GUILD_ID`).
-
-### 2. Deploy on Render (always-on)
-
-The root [`render.yaml`](../render.yaml) already defines worker **`oxide-discord-bot`**.
-
-1. Push this repo (or sync Blueprint) so Render creates **oxide-discord-bot**.
-2. Render dashboard → **oxide-discord-bot-fra** → **Environment** → paste:
+1. Push this repo so Render **oxide-discord-bot-fra** rebuilds (or **Manual Deploy**).
+2. Confirm env on the service:
 
 | Variable | Value |
 |----------|--------|
-| `DISCORD_TOKEN` | Bot token (step 1) |
+| `DISCORD_TOKEN` | Bot token |
 | `CLIENT_ID` | Application ID |
 | `GUILD_ID` | Server ID |
-| `ADMIN_SECRET` | **Same value** as **oxide-gate-api** → `ADMIN_SECRET` (required for `/key-create`) |
-| `API_BASE_URL` | `https://oxide-gate-api.onrender.com` (default in Blueprint) |
+| `ADMIN_SECRET` | **Same** as oxide-gate-api |
+| `API_BASE_URL` | `https://oxide-gate-api.onrender.com` |
 
-3. **Manual Deploy** → wait until logs show `Logged in as …` and `ADMIN_SECRET=set`.
-4. In Discord run **`/setup`** once (Admin).
+3. Discord Developer Portal → Bot → enable **Server Members Intent** (and Message Content only if you need it; honeypot works without reading content).
+4. Wait for logs: `Logged in as …` and `Slash commands registered.`
+5. In Discord (as server Admin) run **`/setup-server` once**.
 
-### Keep the free bot awake (important)
+### After `/setup-server`
 
-Render **free** web services sleep after ~15 minutes with no HTTP traffic. While asleep the Discord gateway disconnects and **every** slash command returns **"The application did not respond"**.
+1. **Server Settings → Roles** — drag the bot’s role **above Citizen** (required for verify + kicks).
+2. Confirm sidebar looks like:
 
-Set up a free HTTP monitor (e.g. [UptimeRobot](https://uptimerobot.com/) or [cron-job.org](https://cron-job.org/)) every **5–10 minutes** on:
-
-- `https://oxide-discord-bot-fra.onrender.com/`
-- `https://oxide-gate-api.onrender.com/api/health`
-
-Optional: add a GitHub Action that curls those URLs on a schedule (needs `workflow` scope to push `.github/workflows/`). A sample file may exist locally as `.github/workflows/keep-alive.yml`.
-
-That’s the **only** secret you must paste once (`ADMIN_SECRET` must stay in sync with gate-api). After that the bot runs in the cloud (with keep-alive so it doesn’t sleep).
-
-### 3. Server icon (branding)
-
-Upload [`../branding/oxide-icon.png`](../branding/oxide-icon.png) as the Discord **server icon** (Server Settings → Overview).
-
----
-
-## Local run (optional — not required for production)
-
-```bash
-cd discord-bot
-cp .env.example .env
-# fill DISCORD_TOKEN, CLIENT_ID, GUILD_ID
-npm install
-npm start
+```
+━━ VERIFY ━━
+  ✅・verify          ← button unlocks Citizen
+  🚫・do-not-type     ← honeypot (typing = kick)
+━━ INFO ━━
+  📢・announcements
+  📜・rules
+  🟢・status          ← bot posts API status
+  🎮・roblox-versions
+━━ COMMUNITY ━━
+  💬・general
+  💡・feedback
+━━ SUPPORT ━━
+  🆘・help
+━━ CUSTOMERS ━━
+  🔒・customer-chat
+━━ STAFF ━━
+  🔒・staff-chat
+  🔒・key-logs
+━━ RESELLERS ━━
+  🔒・reseller
 ```
 
+3. New joins only see **VERIFY** until they click **Verify — unlock OXIDE** (or `/verify`).
+4. Existing Member/Customer/Staff are auto-granted **Citizen** so they are not locked out.
+5. Optional: upload `branding/oxide-icon.png` as the server icon.
+6. Keep the free bot awake — ping `https://oxide-discord-bot-fra.onrender.com/` every 5–10 min (UptimeRobot / cron).
+
+`/setup` is an alias of `/setup-server`. Both are idempotent.
+
 ---
 
-## What `/setup` creates
+## Verification + honeypot
 
-**Roles:** Owner, Admin, Staff, Reseller, Customer, Member
-
-**Channels**
-
-| Category | Channels | Access |
-|----------|----------|--------|
-| INFO | announcements, rules, status, roblox-versions | View for everyone; Staff+ can post |
-| SUPPORT | help | Everyone can view/send |
-| CUSTOMERS | customer-chat | Customer + Staff+ |
-| STAFF | staff-chat, key-logs | Staff+ only |
-| RESELLERS | reseller | Reseller + Staff+ |
-
-On join: auto **Member** role (+ optional welcome in `#announcements`).
+| Feature | Behavior |
+|---------|----------|
+| Verify gate | `@everyone` cannot see INFO/COMMUNITY/… until they have **Citizen** |
+| Button | Persistent button in `#verify` → grants Citizen |
+| `/verify` | Same as the button |
+| Honeypot | Anyone (except Staff+/Admin/bots) who messages `#do-not-type` is **kicked**; message deleted; logged to `#key-logs` |
 
 ---
 
 ## Commands
 
+### Public (after verify / everyone for verify+help)
+
 | Command | Who | What |
 |---------|-----|------|
-| `/setup` | Admin | Roles + channels |
+| `/verify` | Anyone | Get Citizen + unlock server |
+| `/ping` | Anyone | Bot latency |
+| `/status` | Anyone | API + downloads + products + bot |
+| `/products` | Anyone | Plans / gamepass links |
+| `/download` | Citizen+ | Oxide.exe link |
+| `/key-redeem` | Anyone | How to redeem |
+| `/redeem` | Anyone | Redeem key → DM + Customer |
+| `/mykey` · `/license` | Anyone | Linked key |
 | `/roblox-version` | Anyone | Refresh `#roblox-versions` |
-| `/status` | Anyone | Gate API health |
-| `/redeem` | Anyone | Redeem `OXIDE-…` key → DM + Customer role + download |
-| `/mykey` · `/license` | Anyone | Show linked license (after `/redeem`) |
-| `/download` | Customer+ / after redeem | Oxide.exe download link |
-| `/key-create` | Staff+ | Create license keys (DM buyers or have them `/redeem`) |
-| `/role` | Staff+ | Add/remove Member, Customer, Reseller, Staff, Admin |
 | `/help` | Anyone | Command list |
 
-### Owner / buyer redeem flow
+### Staff+ only
 
-1. Get a key (`/key-create` as Staff, SellApp, or Roblox claim on the site).
-2. In Discord: `/redeem key:OXIDE-XXXX-…`
-3. Bot DMs (or ephemeral) plan, expiry, key, and **Download Oxide.exe** button.
-4. Launch Oxide.exe → paste the same key when asked (HWID binds on first EXE launch).
-
-### Roblox update alerts
-
-- Polls every 15–30 min (`ROBLOX_POLL_MINUTES`)
-- On change: updates embed in `#roblox-versions` and posts **Roblox updated → `version-…`**
+| Command | What |
+|---------|------|
+| `/key-create` | Mint keys (`ADMIN_SECRET`) |
+| `/key-revoke` | Ban a key |
+| `/hwid-reset` | Clear HWID bind |
+| `/role` | Add/remove Citizen, Customer, Reseller, Staff, Admin |
+| `/setup-server` | Layout + verify + honeypot (Admin) |
 
 ---
 
-## Env reference
+## Local run (optional)
 
-| Variable | Required | Notes |
-|----------|----------|--------|
-| `DISCORD_TOKEN` | yes | Bot token |
-| `CLIENT_ID` | yes | Application ID |
-| `GUILD_ID` | yes | Server ID |
-| `API_BASE_URL` | no | Default `https://oxide-gate-api.onrender.com` |
-| `SITE_URL` | no | Default Vercel site |
-| `ADMIN_SECRET` | for `/key-create` | **Must match** gate-api production secret (not local `oxide-dev-admin-secret`) |
-| `WELCOME_MESSAGE` | no | `true`/`false` |
-| `AUTO_SETUP` | no | Auto layout if empty |
-| `ROBLOX_POLL_MINUTES` | no | 15–30 |
+```bash
+cd discord-bot
+cp .env.example .env
+# fill DISCORD_TOKEN, CLIENT_ID, GUILD_ID, ADMIN_SECRET
+npm install
+npm start
+```
+
+Slash commands re-register on bot startup (`register.js`).
 
 **Do not commit `.env` or tokens.**
-
-### `/key-create` troubleshooting
-
-| Symptom | Cause | Fix |
-|---------|--------|-----|
-| "The application did not respond" | Bot asleep / offline (free Render) | Ping health URL or wait for keep-alive; check Render logs for `Logged in as` |
-| Ephemeral error about `ADMIN_SECRET` | Missing on bot | Set on **oxide-discord-bot-fra** |
-| HTTP 401/403 from API | Secret mismatch | Copy gate-api `ADMIN_SECRET` → bot env, redeploy bot |
-| Timeout talking to API | gate-api cold start | Retry once; keep-alive pings API too |

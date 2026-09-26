@@ -16,6 +16,11 @@ export const config = {
   /** License API — production Render fallback so local misconfig still hits cloud */
   API_BASE_URL: (envApi || "https://oxide-gate-api.onrender.com").replace(/\/$/, ""),
 
+  /** Discord bot HTTP health (Render free web service) */
+  discordBotHealthUrl:
+    import.meta.env.VITE_DISCORD_BOT_HEALTH_URL ||
+    "https://oxide-discord-bot-fra.onrender.com/",
+
   payment: {
     provider: "roblox",
     checkoutUrl: "",

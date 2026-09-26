@@ -191,6 +191,63 @@ app.post("/api/admin/create-keys", async (req, res) => {
 });
 
 /**
+ * Admin: revoke (ban) a key.
+ * Header: X-Admin-Secret
+ * Body: { key }
+ */
+app.post("/api/admin/revoke-key", async (req, res) => {
+  const secret =
+    req.get("X-Admin-Secret") ||
+    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "") ||
+    (req.body && req.body.adminSecret);
+
+  if (!secret || secret !== ADMIN_SECRET) {
+    return res.status(401).json({ ok: false, error: "unauthorized", message: "Invalid admin secret." });
+  }
+
+  try {
+    const result = keys.revokeKey({ key: req.body?.key });
+    if (!result.ok) {
+      return res.status(400).json(result);
+    }
+    await dbModule.flushToPostgres().catch(() => {});
+    return res.json(result);
+  } catch (err) {
+    console.error("[revoke-key]", err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
+});
+
+/**
+ * Admin: clear HWID binding on a key.
+ * Header: X-Admin-Secret
+ * Body: { key }
+ */
+app.post("/api/admin/reset-hwid", async (req, res) => {
+  const secret =
+    req.get("X-Admin-Secret") ||
+    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "") ||
+    (req.body && req.body.adminSecret);
+
+  if (!secret || secret !== ADMIN_SECRET) {
+    return res.status(401).json({ ok: false, error: "unauthorized", message: "Invalid admin secret." });
+  }
+
+  try {
+    const result = keys.resetHwid({ key: req.body?.key });
+    if (!result.ok) {
+      const status = result.error === "banned" ? 403 : 400;
+      return res.status(status).json(result);
+    }
+    await dbModule.flushToPostgres().catch(() => {});
+    return res.json(result);
+  } catch (err) {
+    console.error("[reset-hwid]", err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
+});
+
+/**
  * Stub: SellApp (or similar) webhook — future auto-insert of keys after checkout.
  * Does not process payments yet; returns 501 with instructions.
  */

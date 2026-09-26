@@ -6,6 +6,7 @@ import Buy from "./pages/Buy";
 import Key from "./pages/Key";
 import Account from "./pages/Account";
 import Features from "./pages/Features";
+import Status from "./pages/Status";
 
 export default function App() {
   const location = useLocation();
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/key" element={<Key />} />
           <Route path="/account" element={<Account />} />
           <Route path="/features" element={<Features />} />
+          <Route path="/status" element={<Status />} />
         </Routes>
       </AnimatePresence>
     </Layout>

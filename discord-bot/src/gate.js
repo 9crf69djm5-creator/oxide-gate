@@ -8,7 +8,6 @@ async function fetchHealth(apiBaseUrl) {
   const started = Date.now();
   const res = await fetch(url, {
     headers: { Accept: "application/json", "User-Agent": "OXIDE-DiscordBot/1.0" },
-    // Free Render cold starts often exceed 10s; interaction is already deferred.
     signal: AbortSignal.timeout(45000),
   });
   const ms = Date.now() - started;
@@ -19,6 +18,56 @@ async function fetchHealth(apiBaseUrl) {
     body = null;
   }
   return { ok: res.ok, status: res.status, ms, body, url };
+}
+
+/**
+ * @param {string} apiBaseUrl
+ */
+async function fetchProducts(apiBaseUrl) {
+  const url = `${apiBaseUrl.replace(/\/$/, "")}/api/products`;
+  const started = Date.now();
+  const res = await fetch(url, {
+    headers: { Accept: "application/json", "User-Agent": "OXIDE-DiscordBot/1.0" },
+    signal: AbortSignal.timeout(45000),
+  });
+  const ms = Date.now() - started;
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok && body.ok !== false, status: res.status, ms, body, url };
+}
+
+/**
+ * @param {string} downloadUrl
+ */
+async function probeDownload(downloadUrl) {
+  const started = Date.now();
+  try {
+    let res = await fetch(downloadUrl, {
+      method: "HEAD",
+      headers: { "User-Agent": "OXIDE-DiscordBot/1.0" },
+      signal: AbortSignal.timeout(25000),
+    });
+    if (res.status === 405 || res.status === 501) {
+      res = await fetch(downloadUrl, {
+        method: "GET",
+        headers: {
+          Range: "bytes=0-0",
+          "User-Agent": "OXIDE-DiscordBot/1.0",
+        },
+        signal: AbortSignal.timeout(25000),
+      });
+    }
+    const ms = Date.now() - started;
+    const ok = res.ok || res.status === 206;
+    return { ok, status: res.status, ms, url: downloadUrl };
+  } catch (err) {
+    return {
+      ok: false,
+      status: 0,
+      ms: Date.now() - started,
+      url: downloadUrl,
+      error: err.message,
+    };
+  }
 }
 
 /**
@@ -51,6 +100,52 @@ async function createKeys(opts) {
 }
 
 /**
+ * @param {object} opts
+ * @param {string} opts.apiBaseUrl
+ * @param {string} opts.adminSecret
+ * @param {string} opts.key
+ */
+async function revokeKey(opts) {
+  const url = `${opts.apiBaseUrl.replace(/\/$/, "")}/api/admin/revoke-key`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-Admin-Secret": opts.adminSecret,
+      "User-Agent": "OXIDE-DiscordBot/1.0",
+    },
+    body: JSON.stringify({ key: opts.key }),
+    signal: AbortSignal.timeout(45000),
+  });
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok && body.ok !== false, status: res.status, body };
+}
+
+/**
+ * @param {object} opts
+ * @param {string} opts.apiBaseUrl
+ * @param {string} opts.adminSecret
+ * @param {string} opts.key
+ */
+async function resetHwid(opts) {
+  const url = `${opts.apiBaseUrl.replace(/\/$/, "")}/api/admin/reset-hwid`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-Admin-Secret": opts.adminSecret,
+      "User-Agent": "OXIDE-DiscordBot/1.0",
+    },
+    body: JSON.stringify({ key: opts.key }),
+    signal: AbortSignal.timeout(45000),
+  });
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok && body.ok !== false, status: res.status, body };
+}
+
+/**
  * Redeem / activate a license key (HWID optional — EXE binds later).
  * @param {object} opts
  * @param {string} opts.apiBaseUrl
@@ -76,4 +171,12 @@ async function redeemKey(opts) {
   return { ok: res.ok && body.ok !== false, status: res.status, body };
 }
 
-module.exports = { fetchHealth, createKeys, redeemKey };
+module.exports = {
+  fetchHealth,
+  fetchProducts,
+  probeDownload,
+  createKeys,
+  revokeKey,
+  resetHwid,
+  redeemKey,
+};
