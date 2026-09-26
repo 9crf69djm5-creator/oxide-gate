@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchOffsets, fetchSystemStatus } from "../lib/api";
+import { apiBase, fetchOffsets, fetchSystemStatus } from "../lib/api";
 import { PageMotion, Reveal } from "../components/Layout";
 
 function toRows(namespaces) {
@@ -24,6 +24,15 @@ function toRows(namespaces) {
   return rows;
 }
 
+const DOWNLOADS = [
+  { id: "json", label: "offsets.json", path: "/api/offsets", hint: "OXIDE API shape" },
+  { id: "raw", label: "offsets.raw.json", path: "/api/offsets/raw", hint: "decimal map" },
+  { id: "hex", label: "offsets.hex.json", path: "/api/offsets/hex", hint: "hex map" },
+  { id: "hpp", label: "offsets.hpp", path: "/api/offsets.hpp", hint: "C++ header" },
+  { id: "cs", label: "offsets.cs", path: "/api/offsets.cs", hint: "C#" },
+  { id: "txt", label: "offsets.txt", path: "/api/offsets.txt", hint: "plain text" },
+];
+
 export default function Offsets() {
   const [dump, setDump] = useState(null);
   const [external, setExternal] = useState(null);
@@ -32,6 +41,7 @@ export default function Offsets() {
   const [query, setQuery] = useState("");
   const [nsFilter, setNsFilter] = useState("all");
   const [copied, setCopied] = useState("");
+  const base = apiBase();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -83,27 +93,14 @@ export default function Offsets() {
   const updateNeeded = external?.updateNeeded === true;
   const matched = external?.updateNeeded === false;
 
-  async function copyHex(row) {
+  async function copyText(id, text) {
     try {
-      await navigator.clipboard.writeText(row.hex);
-      setCopied(row.id);
+      await navigator.clipboard.writeText(text);
+      setCopied(id);
       setTimeout(() => setCopied(""), 1200);
     } catch {
       /* ignore */
     }
-  }
-
-  function downloadJson() {
-    if (!dump) return;
-    const blob = new Blob([JSON.stringify(dump, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `oxide-offsets-${dump.robloxVersion || "dump"}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
   }
 
   return (
@@ -111,15 +108,15 @@ export default function Offsets() {
       <section className="section section-dark offsets-page" style={{ paddingTop: "3rem" }}>
         <div className="wrap">
           <Reveal>
-            <p className="section-kicker">Offsets</p>
-            <h2>Roblox client offsets</h2>
+            <p className="section-kicker">Public offsets</p>
+            <h2>OXIDE offsets</h2>
             <p className="section-lead">
-              Browse OXIDE&apos;s current offset set (exported from the project
-              headers). This is a static dump viewer — not a live memory dumper.
+              Live Roblox client offsets dumped by OXIDE and served for free use.
+              Copy hex values below, or pull JSON / headers from the public API.
             </p>
           </Reveal>
 
-          <Reveal delay={0.05}>
+          <Reveal delay={0.04}>
             <div
               className={`sys-status-banner ${
                 updateNeeded ? "degraded" : matched ? "online" : "unknown"
@@ -133,20 +130,16 @@ export default function Offsets() {
               />
               <div>
                 <strong>
-                  {updateNeeded
-                    ? "External update needed"
-                    : matched
-                      ? "External up to date"
-                      : "Version check pending"}
+                  {dump?.robloxVersion || external?.hostedClientVersion || "Loading version…"}
                 </strong>
                 <p>
-                  Target{" "}
-                  <code>{dump?.robloxVersion || external?.hostedClientVersion || "—"}</code>
-                  {" · "}
-                  Live{" "}
-                  <code>{external?.liveRobloxVersion || "—"}</code>
-                  {dump?.totalOffsets != null
-                    ? ` · ${dump.totalOffsets} offsets`
+                  {dump?.totalOffsets != null ? `${dump.totalOffsets} offsets` : "—"}
+                  {dump?.source ? ` · ${dump.source}` : ""}
+                  {dump?.generatedAt
+                    ? ` · ${new Date(dump.generatedAt).toLocaleString()}`
+                    : ""}
+                  {external?.liveRobloxVersion
+                    ? ` · live client ${external.liveRobloxVersion}`
                     : ""}
                 </p>
               </div>
@@ -164,12 +157,40 @@ export default function Offsets() {
                   type="button"
                   className="btn btn-accent"
                   style={{ height: 40, padding: "0 1rem" }}
-                  onClick={downloadJson}
-                  disabled={!dump}
+                  onClick={() =>
+                    copyText("api", `${base}/api/offsets`)
+                  }
                 >
-                  Download JSON
+                  {copied === "api" ? "Copied API" : "Copy API URL"}
                 </button>
               </div>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.06}>
+            <div className="offsets-downloads">
+              <p className="offsets-downloads-label">Downloads</p>
+              <div className="offsets-download-grid">
+                {DOWNLOADS.map((d) => (
+                  <a
+                    key={d.id}
+                    className="offsets-download-chip"
+                    href={`${base}${d.path}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <strong>{d.label}</strong>
+                    <span>{d.hint}</span>
+                  </a>
+                ))}
+              </div>
+              <p className="offsets-api-hint">
+                Developers:{" "}
+                <code>{base}/api/offsets</code>
+                {" · "}
+                <code>{base}/api/offsets/raw</code>
+                {" · CORS open on GET"}
+              </p>
             </div>
           </Reveal>
 
@@ -201,12 +222,7 @@ export default function Offsets() {
                   </option>
                 ))}
               </select>
-              <span className="offsets-count">
-                {filtered.length} shown
-                {dump?.generatedAt
-                  ? ` · exported ${new Date(dump.generatedAt).toLocaleDateString()}`
-                  : ""}
-              </span>
+              <span className="offsets-count">{filtered.length} shown</span>
             </div>
           </Reveal>
 
@@ -252,7 +268,7 @@ export default function Offsets() {
                           <button
                             type="button"
                             className="offsets-copy"
-                            onClick={() => copyHex(row)}
+                            onClick={() => copyText(row.id, row.hex)}
                           >
                             {copied === row.id ? "Copied" : "Copy"}
                           </button>
@@ -267,10 +283,9 @@ export default function Offsets() {
 
           <Reveal delay={0.15}>
             <p className="offsets-footnote">
-              Sourced from OXIDE&apos;s committed offset headers via{" "}
-              <code>/api/offsets</code>. Staff refresh with{" "}
-              <code>node gate-api/scripts/export-offsets.js</code> after updating{" "}
-              <code>offsets.h</code>.{" "}
+              Values come from OXIDE&apos;s Roblox dumper (client memory), then{" "}
+              <code>POST /api/admin/offsets</code> (admin secret). Public read is{" "}
+              <code>GET /api/offsets</code>.{" "}
               <Link to="/status">System status</Link>
             </p>
           </Reveal>

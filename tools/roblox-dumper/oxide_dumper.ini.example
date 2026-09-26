@@ -1,0 +1,5 @@
+# OXIDE Roblox dumper — upload config (place next to OxideDumper.exe)
+# After a dump, offsets.json is POSTed to gate-api and shown on /offsets.
+
+api=https://oxide-gate-api.onrender.com
+adminSecret=REPLACE_WITH_RENDER_ADMIN_SECRET

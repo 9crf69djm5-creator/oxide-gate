@@ -133,7 +133,7 @@ function formatDate(iso) {
 }
 
 /**
- * Public offsets dump from gate-api (static JSON from offsets.h — not a live dumper).
+ * Public offsets dump from gate-api (live dumper upload or exported offsets.h).
  */
 export async function fetchOffsets() {
   const base = apiBase();
@@ -151,6 +151,7 @@ export async function fetchOffsets() {
         generatedAt: body.generatedAt || null,
         totalOffsets: body.totalOffsets || 0,
         namespaces: body.namespaces || {},
+        dumpedWith: body.dumpedWith || null,
       };
     }
   } catch {
@@ -171,6 +172,7 @@ export async function fetchOffsets() {
         generatedAt: body.generatedAt || null,
         totalOffsets: body.totalOffsets || 0,
         namespaces: body.namespaces || {},
+        dumpedWith: body.dumpedWith || null,
       };
     }
   } catch (err) {

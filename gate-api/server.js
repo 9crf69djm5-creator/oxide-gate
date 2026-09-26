@@ -79,16 +79,22 @@ const corsOrigins = (process.env.CORS_ORIGINS || "")
   .filter(Boolean);
 
 const app = express();
-app.use(express.json({ limit: "64kb" }));
+// Dumper uploads can be ~100KB–1MB of JSON.
+app.use(express.json({ limit: "2mb" }));
 
 app.use(
   cors({
     origin(origin, cb) {
-      // Allow file:// (null), local gate servers, and configured list
+      // Public offsets API: allow any origin (theo-style open dump).
+      // Other routes still permit configured gate-site / localhost.
       if (!origin || origin === "null" || corsOrigins.includes(origin) || corsOrigins.includes("*")) {
         return cb(null, true);
       }
       if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) {
+        return cb(null, true);
+      }
+      // Allow vercel / oxide production frontends by default
+      if (/^https:\/\/([a-z0-9-]+\.)?(oxide-gate-site\.vercel\.app|vercel\.app)$/i.test(origin)) {
         return cb(null, true);
       }
       return cb(null, false);
@@ -97,6 +103,15 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization", "X-Admin-Secret"],
   })
 );
+
+/** Open CORS for public offset downloads (developers embedding the API). */
+function publicOffsetsCors(_req, res, next) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (_req.method === "OPTIONS") return res.sendStatus(204);
+  return next();
+}
 
 /**
  * Public health — no DB paths, secrets, tokens, or internal env.
@@ -229,14 +244,122 @@ app.get("/api/status", async (_req, res) => {
 });
 
 /**
- * Public Roblox offset dump (from exported offsets.h). No secrets.
+ * Public Roblox offset dump (live dumper upload or exported headers). No secrets.
+ * Open CORS — developers may fetch from any origin (theo-style public dump).
  */
-app.get("/api/offsets", (_req, res) => {
+app.options(["/api/offsets", "/api/offsets/raw", "/api/offsets/hex", "/api/offsets.hpp", "/api/offsets.cs", "/api/offsets.txt", "/offsets.json", "/offsets.hpp", "/offsets.cs", "/offsets.txt"], publicOffsetsCors);
+
+app.get("/api/offsets", publicOffsetsCors, (_req, res) => {
   const payload = offsetsLib.publicOffsetsPayload();
   if (!payload.ok) {
     return res.status(503).json(payload);
   }
   return res.json(payload);
+});
+
+/** Decimal-only map (theo Offsets.json shape). */
+app.get(["/api/offsets/raw", "/offsets.json"], publicOffsetsCors, (_req, res) => {
+  const payload = offsetsLib.rawOffsetsPayload();
+  if (!payload) {
+    return res.status(503).json({
+      ok: false,
+      error: "missing_offsets",
+      message: "Offsets dump not found.",
+    });
+  }
+  res.setHeader("Content-Disposition", 'inline; filename="offsets.json"');
+  return res.json(payload);
+});
+
+/** Hex-string map. */
+app.get("/api/offsets/hex", publicOffsetsCors, (_req, res) => {
+  const payload = offsetsLib.hexOffsetsPayload();
+  if (!payload) {
+    return res.status(503).json({ ok: false, error: "missing_offsets" });
+  }
+  return res.json(payload);
+});
+
+app.get(["/api/offsets.hpp", "/offsets.hpp"], publicOffsetsCors, (_req, res) => {
+  const body = offsetsLib.offsetsHpp();
+  if (!body) return res.status(503).type("text/plain").send("Offsets dump not found.");
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.setHeader("Content-Disposition", 'attachment; filename="offsets.hpp"');
+  return res.send(body);
+});
+
+app.get(["/api/offsets.cs", "/offsets.cs"], publicOffsetsCors, (_req, res) => {
+  const body = offsetsLib.offsetsCs();
+  if (!body) return res.status(503).type("text/plain").send("Offsets dump not found.");
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.setHeader("Content-Disposition", 'attachment; filename="offsets.cs"');
+  return res.send(body);
+});
+
+app.get(["/api/offsets.txt", "/offsets.txt"], publicOffsetsCors, (_req, res) => {
+  const body = offsetsLib.offsetsTxt();
+  if (!body) return res.status(503).type("text/plain").send("Offsets dump not found.");
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.setHeader("Content-Disposition", 'attachment; filename="offsets.txt"');
+  return res.send(body);
+});
+
+/**
+ * Admin: upload a fresh Roblox offset dump from the OXIDE dumper.
+ * Header: X-Admin-Secret (or Authorization: Bearer / body.adminSecret)
+ * Body: jonah dumper JSON ({ metadata, offsets }) or OXIDE namespaces shape.
+ */
+app.post("/api/admin/offsets", (req, res) => {
+  const secret =
+    req.get("X-Admin-Secret") ||
+    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "") ||
+    (req.body && req.body.adminSecret);
+  if (!secret || secret !== ADMIN_SECRET) {
+    return res.status(401).json({
+      ok: false,
+      error: "unauthorized",
+      message: "Invalid admin secret.",
+    });
+  }
+
+  try {
+    const body = { ...(req.body || {}) };
+    delete body.adminSecret;
+    const normalized = offsetsLib.normalizeDumperPayload(body);
+    if (!normalized.ok) {
+      return res.status(400).json(normalized);
+    }
+    const saved = offsetsLib.saveOffsetsDump(normalized);
+    if (!saved.ok) {
+      return res.status(500).json(saved);
+    }
+    console.log(
+      `[offsets] uploaded ${saved.totalOffsets} fields for ${saved.robloxVersion || "unknown"}`
+    );
+    return res.json({
+      ok: true,
+      message: "Offsets updated.",
+      robloxVersion: saved.robloxVersion,
+      totalOffsets: saved.totalOffsets,
+      generatedAt: saved.generatedAt,
+      publicUrl: "/api/offsets",
+      downloads: {
+        json: "/api/offsets",
+        raw: "/api/offsets/raw",
+        hex: "/api/offsets/hex",
+        hpp: "/api/offsets.hpp",
+        cs: "/api/offsets.cs",
+        txt: "/api/offsets.txt",
+      },
+    });
+  } catch (err) {
+    console.error("[admin/offsets]", err);
+    return res.status(500).json({
+      ok: false,
+      error: "server_error",
+      message: "Could not save offsets dump.",
+    });
+  }
 });
 
 /**
@@ -497,8 +620,14 @@ async function main() {
   if (typeof keys.repairLifetimeKeys === "function") {
     keys.repairLifetimeKeys();
   }
-  const seeded = keys.seedDemoKeys();
-  // Ensure demo seed (and any boot writes) hit Postgres blob before traffic.
+  // Demo keys only when explicitly enabled (local/staging). Production uses
+  // Roblox claim or POST /api/admin/create-keys — never auto-seed OXIDE-DEMO-*.
+  const seedDemos =
+    String(process.env.SEED_DEMO_KEYS || "").toLowerCase() === "1" ||
+    String(process.env.SEED_DEMO_KEYS || "").toLowerCase() === "true" ||
+    roblox.isDemoMode();
+  const seeded = seedDemos ? keys.seedDemoKeys() : [];
+  // Ensure boot writes hit Postgres blob before traffic.
   if (typeof dbModule.flushToPostgres === "function") {
     await dbModule.flushToPostgres().catch(() => {});
   }
@@ -507,7 +636,9 @@ async function main() {
     console.log(`OXIDE gate-api listening on http://127.0.0.1:${PORT}`);
     console.log(`  DB: ${dbModule.dbPath} (${dbModule.dbBackend}, ephemeral=${dbModule.dbEphemeral})`);
     console.log(`  DOWNLOAD_URL: ${DOWNLOAD_URL || "(not set)"}`);
-    console.log(`  Demo keys ready: ${seeded.join(", ")}`);
+    if (seeded.length) {
+      console.log(`  Demo keys ready: ${seeded.join(", ")}`);
+    }
     console.log(`  Roblox demo mode: ${roblox.isDemoMode() ? "ON" : "off"}`);
     console.log(
       `  Roblox products: ${claims

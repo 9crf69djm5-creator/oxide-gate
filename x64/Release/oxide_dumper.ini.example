@@ -1,0 +1,5 @@
+# OXIDE dumper upload config — place next to OxideDumper.exe
+# WRITE only: POST /api/admin/offsets (reads stay public)
+
+api=https://oxide-gate-api.onrender.com
+adminSecret=REPLACE_WITH_RENDER_ADMIN_SECRET

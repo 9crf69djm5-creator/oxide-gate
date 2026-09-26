@@ -349,6 +349,90 @@ input {
   pointer-events: none;
 }
 
+.hero-product {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 540px);
+  margin: 0 0 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(245, 240, 224, 0.16);
+  border-radius: 14px;
+  background: #111213;
+  box-shadow:
+    0 32px 90px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(230, 133, 46, 0.12),
+    0 0 56px rgba(230, 133, 46, 0.12);
+}
+
+.hero-product::after {
+  content: "";
+  position: absolute;
+  inset: 35px 0 36px;
+  pointer-events: none;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.2);
+}
+
+.hero-product-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 35px;
+  padding: 0 0.85rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8, 9, 10, 0.96);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hero-product-live {
+  margin-left: auto;
+  color: var(--accent-hot);
+}
+
+.hero-product img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 847 / 672;
+  object-fit: cover;
+}
+
+.hero-product figcaption {
+  min-height: 36px;
+  padding: 0.65rem 0.85rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 959px) {
+  .hero-stage {
+    min-height: 0;
+  }
+
+  .hero-product {
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-product {
+    border-radius: 10px;
+  }
+
+  .hero-product-bar,
+  .hero-product figcaption {
+    font-size: 0.56rem;
+    letter-spacing: 0.06em;
+  }
+}
+
 .hero-viewport {
   position: relative;
   z-index: 1;
@@ -1672,6 +1756,64 @@ input {
   max-height: min(70vh, 720px);
 }
 
+.offsets-downloads {
+  margin-top: 1.25rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, rgba(232, 93, 38, 0.08), rgba(12, 12, 12, 0.9));
+}
+
+.offsets-downloads-label {
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.offsets-download-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.65rem;
+}
+
+.offsets-download-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.offsets-download-chip:hover {
+  border-color: var(--accent, #e85d26);
+  background: rgba(232, 93, 38, 0.12);
+}
+
+.offsets-download-chip strong {
+  font-size: 0.86rem;
+  font-family: var(--font-mono);
+}
+
+.offsets-download-chip span {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.offsets-api-hint {
+  margin: 0.85rem 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  word-break: break-all;
+}
+
 .offsets-table {
   width: 100%;
   border-collapse: collapse;
@@ -1771,4 +1913,171 @@ input {
   .offsets-banner-actions {
     width: 100%;
   }
+}
+
+/* —— Premium black + orange system —— */
+:root {
+  --bg: #050505;
+  --bg-elevated: #090909;
+  --panel: #0c0c0c;
+  --control: #121212;
+  --border: rgba(255, 149, 0, 0.16);
+  --accent: #ff9500;
+  --accent-hot: #ffae2b;
+  --accent-ink: #080500;
+  --accent-soft: rgba(255, 149, 0, 0.12);
+  --text: #a3a3a3;
+  --text-bright: #f5f5f3;
+  --muted: #626262;
+  --radius: 10px;
+}
+
+body,
+.hero,
+.section-dark,
+.gate-page {
+  background: var(--bg);
+}
+
+.hero-topo,
+.gate-topo,
+.hero-stage-glow {
+  display: none;
+}
+
+.site-nav {
+  background: rgba(5, 5, 5, 0.94);
+  border-bottom-color: var(--border);
+}
+
+.site-nav.on-hero {
+  background: rgba(5, 5, 5, 0.82);
+  border-bottom: 1px solid rgba(255, 149, 0, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--accent-hot);
+  background: rgba(255, 149, 0, 0.08);
+}
+
+.btn-light,
+.btn-accent {
+  background: var(--accent);
+  color: #090500;
+  box-shadow: 0 0 0 1px rgba(255, 183, 76, 0.12);
+}
+
+.btn-light:hover:not(:disabled),
+.btn-accent:hover:not(:disabled) {
+  background: var(--accent-hot);
+  box-shadow: 0 8px 30px rgba(255, 149, 0, 0.2);
+}
+
+.btn-ghost {
+  border-color: rgba(255, 149, 0, 0.22);
+  background: #080808;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  border-color: rgba(255, 149, 0, 0.52);
+  background: rgba(255, 149, 0, 0.07);
+  color: var(--accent-hot);
+}
+
+.hero-brand-logo {
+  filter: none;
+}
+
+.hero-product {
+  border-color: rgba(255, 149, 0, 0.28);
+  background: #080808;
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(255, 149, 0, 0.08);
+}
+
+.hero-product-bar,
+.hero-product figcaption {
+  background: #080808;
+  border-color: rgba(255, 149, 0, 0.14);
+}
+
+.hero-trust,
+.section-strip,
+.status-strip,
+.cta-band,
+.site-footer {
+  border-color: var(--border);
+}
+
+.section-strip,
+.status-strip,
+.cta-band {
+  background: #080808;
+}
+
+.strip-chip,
+.status-pill,
+.chip {
+  background: #090909;
+  border-color: rgba(255, 149, 0, 0.16);
+}
+
+.section-kicker {
+  font-weight: 600;
+}
+
+.feature-card,
+.tour-card,
+.why-card,
+.game-col,
+.plan-card,
+.catalog-group,
+.plan,
+.roblox-card,
+.roblox-claim,
+.account-panel,
+.sys-status-banner,
+.sys-status-card,
+.offsets-table-wrap {
+  background: #0a0a0a;
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.feature-card:hover,
+.tour-card:hover,
+.why-card:hover,
+.game-col:hover,
+.plan-card:hover,
+.catalog-group:hover,
+.plan:hover,
+.roblox-card:hover {
+  background: #0d0d0d;
+  border-color: rgba(255, 149, 0, 0.48);
+}
+
+.plan.is-selected,
+.roblox-card.is-selected {
+  background: #0d0b07;
+  border-color: rgba(255, 149, 0, 0.72);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.field input,
+.roblox-key-value,
+.offsets-search,
+.offsets-select {
+  background: #0e0e0e;
+  border-color: rgba(255, 149, 0, 0.18);
+}
+
+.offsets-table th {
+  background: #0d0d0d;
+}
+
+.offsets-table tr:hover td {
+  background: rgba(255, 149, 0, 0.045);
 }

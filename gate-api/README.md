@@ -13,18 +13,14 @@ npm start
 
 API listens on `http://127.0.0.1:8787` by default.
 
-Demo keys are seeded automatically on boot:
-
-- `OXIDE-DEMO-WEEK` (week / 7 days)
-- `OXIDE-DEMO-MONTH` (month / 30 days)
-- `OXIDE-DEMO-LIFE` (lifetime)
+**Production keys:** Roblox claim (`POST /api/roblox/claim`) or admin mint (`POST /api/admin/create-keys`). Optional local-only demo seed: set `SEED_DEMO_KEYS=1` (or `DEMO_ROBLOX=1`) before boot — not enabled in production by default.
 
 ## Environment (`.env`)
 
 | Variable | Purpose |
 |----------|---------|
 | `PORT` | HTTP port (default `8787`) |
-| `ADMIN_SECRET` | Required for `POST /api/admin/create-keys` |
+| `ADMIN_SECRET` | Required for `POST /api/admin/create-keys` and `POST /api/admin/offsets` |
 | `DOWNLOAD_URL` | Returned after redeem (CDN or local path URL) |
 | `CORS_ORIGINS` | Comma-separated allowed origins for the gate site |
 | `DB_PATH` | Optional SQLite path (default `./data/keys.db`; on Render use `/data/keys.db`) |
@@ -102,6 +98,35 @@ Oxide.exe launch check. Body: `{ "key", "hwid", "token?" }`
 - Rejects banned / expired / wrong HWID
 - Binds HWID on first use
 - Activates unused keys on first EXE validate (same as redeem+bind)
+
+### `GET /api/offsets` (public)
+
+Structured OXIDE dump (`namespaces` with `{ hex, decimal }`). Open CORS.
+
+### `GET /api/offsets/raw` · `/offsets.json` (public)
+
+Decimal-only map (theo-style `Offsets` JSON). Open CORS.
+
+### `GET /api/offsets/hex` · `/api/offsets.hpp` · `/api/offsets.cs` · `/api/offsets.txt` (public)
+
+Alternate download formats for externals.
+
+### `POST /api/admin/offsets`
+
+Header: `X-Admin-Secret: <ADMIN_SECRET>`  
+Body: dumper JSON (`{ metadata, offsets }`) or OXIDE `{ namespaces }` shape.  
+Used by `OxideDumper.exe` after a successful dump to refresh the public set.
+
+Example:
+
+```bash
+curl https://oxide-gate-api.onrender.com/api/offsets
+curl https://oxide-gate-api.onrender.com/api/offsets/raw
+curl -X POST https://oxide-gate-api.onrender.com/api/admin/offsets ^
+  -H "Content-Type: application/json" ^
+  -H "X-Admin-Secret: YOUR_SECRET" ^
+  -d @offsets.json
+```
 
 ### `POST /api/admin/create-keys`
 
