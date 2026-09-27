@@ -21,22 +21,26 @@ function normalize(list) {
  * release.ps1 writes into gate-site/public/releases.json.
  */
 export async function fetchReleases() {
+  // Always try API first with no cache
   try {
     const res = await fetch(`${apiBase()}/api/releases`, {
-      headers: { Accept: "application/json" },
+      headers: { Accept: "application/json", "Cache-Control": "no-cache" },
       signal: AbortSignal.timeout(30000),
     });
     const body = await res.json().catch(() => null);
     if (res.ok && body?.ok) {
+      console.log("Using API releases:", body.releases[0]?.version);
       return { ok: true, releases: normalize(body.releases) };
     }
-  } catch {
-    /* fall through to static copy */
+  } catch (err) {
+    console.warn("API fetch failed, falling back to static:", err.message);
   }
+  // Fallback to static copy
   try {
     const res = await fetch("/releases.json", { cache: "no-cache" });
     const body = await res.json().catch(() => null);
     if (res.ok && Array.isArray(body?.releases)) {
+      console.log("Using static releases:", body.releases[0]?.version);
       return { ok: true, releases: normalize(body.releases) };
     }
   } catch {
