@@ -2,9 +2,9 @@
   "product": "Oxide",
   "releases": [
     {
-      "version": "1.1.1",
+      "version": "1.1.2",
       "title": "Attach fix",
-      "date": "2026-09-27T18:01:00.000Z",
+      "date": "2026-09-27T18:30:00.000Z",
       "clientVersion": "version-2366ba214ec740ca",
       "changes": [
         "Fixed datamodel pointer null crash - now waits for Roblox DataModel before starting",
@@ -16,7 +16,10 @@
           "sha256": "F011044A21B7DD4F7943019135FFCCBB18A0BC88007CF54F55020B2E0F8F9AA9",
           "sizeBytes": 1550336
         }
-      }
+      },
+      "downloadUrl": "https://oxide-gate-api.onrender.com/downloads/Oxide.exe?v=1.1.2",
+      "siteDownloadUrl": "https://oxide-gate-site.vercel.app/downloads/Oxide.exe?v=1.1.2",
+      "changelogUrl": "https://oxide-gate-site.vercel.app/changelog#v1.1.2"
     },
     {
       "version": "1.1.0",
