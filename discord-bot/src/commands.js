@@ -42,6 +42,7 @@ const {
   fetchReleases,
   buildReleaseEmbed,
   releaseRows,
+  fetchReleaseAttachment,
   announceLatestRelease,
 } = require("./releases");
 
@@ -807,7 +808,13 @@ async function handleCommand(interaction, client) {
           .slice(0, 1024),
       });
     }
-    return interaction.editReply({ embeds: [embed], components: releaseRows(release) });
+    const latest = name === "update" || !want;
+    const file = latest ? await fetchReleaseAttachment(release) : null;
+    return interaction.editReply({
+      embeds: [embed],
+      components: releaseRows(release),
+      files: file ? [file] : [],
+    });
   }
 
   if (name === "release-announce") {
@@ -1035,10 +1042,18 @@ async function handleCommand(interaction, client) {
         value: `\`v${release.version}\`${release.title ? ` — ${release.title}` : ""} · \`/changelog\``,
       });
     }
+    const file = release ? await fetchReleaseAttachment(release) : null;
+    if (file) {
+      embed.addFields({
+        name: "Attached",
+        value: `\`Oxide.exe\` v${release.version} · sha256 \`${String(release.sha256).slice(0, 12)}\` (verified)`,
+      });
+    }
 
     return interaction.editReply({
       embeds: [embed],
       components: [downloadRow(dl)],
+      files: file ? [file] : [],
     });
   }
 

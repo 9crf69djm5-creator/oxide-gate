@@ -84,7 +84,7 @@ API: https://oxide-gate-api.onrender.com
 | `/status` | Anyone | API + downloads + products + bot |
 | `/products` | Anyone | Plans / gamepass links |
 | `/download` | Citizen+ | Oxide.exe link (latest version, cache-busted) |
-| `/update` · `/changelog [version]` | Anyone | Latest Oxide.exe version, what changed, download button |
+| `/update` · `/changelog [version]` | Anyone | Latest Oxide.exe version, what changed, download button + attached EXE |
 | `/key-redeem` | Anyone | How to redeem |
 | `/redeem` · `/bind` | Anyone | Redeem/link key → saved on Discord + API |
 | `/mykey` · `/license` | Anyone | Masked key + plan + days left (Reveal button) |
@@ -115,6 +115,9 @@ Publishing is one command from the repo root: `.\release.ps1 -Title "..." -Notes
 - Idempotent: before posting it looks for its own embed with footer `OXIDE release v<version>` in the channel,
   so restarts / redeploys never re-announce.
 - It will not announce while the hosted Oxide.exe hash differs from the release (deploy still rolling out).
+- The post attaches `Oxide.exe` itself, downloaded from the API (site as fallback) and checked against the release SHA256.
+  If the fetch or hash check fails it posts with links only and logs why. An existing post for the same version
+  that has no EXE gets the file added by editing it (never reposted). `/download` and `/update` attach the verified EXE too.
 - `release.ps1` triggers it instantly via `POST /internal/announce-release` (header `X-Admin-Secret` = `ADMIN_SECRET`).
 
 | Env | Default | Purpose |

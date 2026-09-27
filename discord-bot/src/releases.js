@@ -1,11 +1,13 @@
 "use strict";
 
+const crypto = require("crypto");
 const {
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
   ChannelType,
+  AttachmentBuilder,
 } = require("discord.js");
 const { config } = require("./config");
 const { readJson, writeJson } = require("./store");
@@ -15,7 +17,12 @@ const STORE_FILE = "release-announce.json";
 /** Footer marker — the announcement channel itself is the durable "already posted" record. */
 const FOOTER_PREFIX = "OXIDE release v";
 
+/** Stay well under Discord's default 10 MB bot upload limit. */
+const MAX_ATTACH_BYTES = 9.5 * 1024 * 1024;
+
 let announceChain = Promise.resolve();
+/** @type {{ version: string, sha256: string, buffer: Buffer } | null} */
+let exeCache = null;
 
 async function fetchJson(pathname) {
   const url = `${config.apiBaseUrl}${pathname}`;
@@ -37,6 +44,53 @@ async function fetchLatestRelease() {
 async function fetchReleases() {
   const r = await fetchJson("/api/releases");
   return r.ok ? r.body.releases || [] : [];
+}
+
+/**
+ * Download the hosted Oxide.exe for a release and verify it against the release SHA256.
+ * Returns null (with a logged reason) instead of throwing, so callers can fall back to links.
+ * @param {object} release from /api/releases/latest
+ * @returns {Promise<AttachmentBuilder|null>}
+ */
+async function fetchReleaseAttachment(release) {
+  const want = String(release?.sha256 || "").toLowerCase();
+  if (!want) {
+    console.warn(`[release] no sha256 for v${release?.version} — not attaching EXE`);
+    return null;
+  }
+  const toAttachment = (buffer) =>
+    new AttachmentBuilder(buffer, {
+      name: "Oxide.exe",
+      description: `Oxide v${release.version} · sha256 ${want.slice(0, 12)}`,
+    });
+  if (exeCache && exeCache.version === release.version && exeCache.sha256 === want) {
+    return toAttachment(exeCache.buffer);
+  }
+
+  const urls = [release.downloadUrl, release.siteDownloadUrl].filter(Boolean);
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {
+        headers: { "User-Agent": "OXIDE-DiscordBot/1.0", "Cache-Control": "no-cache" },
+        signal: AbortSignal.timeout(60000),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const buffer = Buffer.from(await res.arrayBuffer());
+      if (buffer.length > MAX_ATTACH_BYTES) throw new Error(`too large (${buffer.length} bytes)`);
+      const got = crypto.createHash("sha256").update(buffer).digest("hex");
+      if (got !== want) throw new Error(`sha256 mismatch (got ${got.slice(0, 12)}, want ${want.slice(0, 12)})`);
+      exeCache = { version: release.version, sha256: want, buffer };
+      return toAttachment(buffer);
+    } catch (err) {
+      console.warn(`[release] EXE fetch ${url} failed: ${err.message}`);
+    }
+  }
+  console.warn(`[release] posting v${release.version} without EXE attachment`);
+  return null;
+}
+
+function hasExeAttachment(message) {
+  return [...(message.attachments?.values?.() || [])].some((a) => /\.exe$/i.test(a.name || ""));
 }
 
 function formatBytes(n) {
@@ -152,9 +206,22 @@ async function announceLatestRelease(client, opts = {}) {
       };
     }
 
-    const store = readJson(STORE_FILE, { version: null, messageId: null, channelId: null });
-    if (!opts.force && store.version === release.version && store.messageId) {
-      return { ok: true, announced: false, version: release.version, reason: "already_announced" };
+    const store = readJson(STORE_FILE, {
+      version: null,
+      messageId: null,
+      channelId: null,
+      attached: false,
+    });
+    if (!opts.force && store.version === release.version && store.messageId && store.attached) {
+      return {
+        ok: true,
+        announced: false,
+        attached: true,
+        version: release.version,
+        channelId: store.channelId,
+        messageId: store.messageId,
+        reason: "already_announced",
+      };
     }
 
     const guild = await client.guilds.fetch(config.guildId);
@@ -163,12 +230,40 @@ async function announceLatestRelease(client, opts = {}) {
     if (!opts.force) {
       const existing = await findExistingAnnouncement(channel, client.user.id, release.version);
       if (existing) {
-        writeJson(STORE_FILE, { version: release.version, messageId: existing.id, channelId: channel.id });
+        let attached = hasExeAttachment(existing);
+        let backfilled = false;
+        if (!attached) {
+          // Older announcement without the EXE: add it in place rather than reposting.
+          const file = await fetchReleaseAttachment(release);
+          if (file) {
+            try {
+              await existing.edit({
+                embeds: [buildReleaseEmbed(release, { announcement: true })],
+                components: releaseRows(release),
+                files: [file],
+              });
+              attached = true;
+              backfilled = true;
+              console.log(`[release] attached Oxide.exe to existing v${release.version} post`);
+            } catch (err) {
+              console.warn(`[release] could not edit v${release.version} post with EXE: ${err.message}`);
+            }
+          }
+        }
+        writeJson(STORE_FILE, {
+          version: release.version,
+          messageId: existing.id,
+          channelId: channel.id,
+          attached,
+        });
         return {
           ok: true,
           announced: false,
+          attached,
+          backfilled,
           version: release.version,
           channelId: channel.id,
+          channelName: channel.name,
           messageId: existing.id,
           reason: "already_announced",
         };
@@ -176,20 +271,30 @@ async function announceLatestRelease(client, opts = {}) {
     }
 
     const ping = config.updatesPing;
+    const file = await fetchReleaseAttachment(release);
     const sent = await channel.send({
       content: ping || undefined,
       embeds: [buildReleaseEmbed(release, { announcement: true })],
       components: releaseRows(release),
+      files: file ? [file] : [],
       allowedMentions: ping ? { parse: ["everyone", "roles"] } : { parse: [] },
     });
     if (channel.type === ChannelType.GuildAnnouncement) {
       await sent.crosspost().catch(() => {});
     }
-    writeJson(STORE_FILE, { version: release.version, messageId: sent.id, channelId: channel.id });
-    console.log(`[release] announced v${release.version} in #${channel.name}`);
+    writeJson(STORE_FILE, {
+      version: release.version,
+      messageId: sent.id,
+      channelId: channel.id,
+      attached: Boolean(file),
+    });
+    console.log(
+      `[release] announced v${release.version} in #${channel.name}${file ? " with Oxide.exe" : " (no attachment)"}`
+    );
     return {
       ok: true,
       announced: true,
+      attached: Boolean(file),
       version: release.version,
       channelId: channel.id,
       channelName: channel.name,
@@ -211,6 +316,7 @@ module.exports = {
   fetchReleases,
   buildReleaseEmbed,
   releaseRows,
+  fetchReleaseAttachment,
   announceLatestRelease,
   lastAnnounced,
 };
