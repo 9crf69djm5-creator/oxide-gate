@@ -3,18 +3,22 @@
   "releases": [
     {
       "version": "1.1.5",
-      "title": "Keybinding improvements",
+      "title": "Keybinding & Gameplay fixes",
       "date": "2026-09-27T20:00:00.000Z",
       "clientVersion": "version-2366ba214ec740ca",
       "changes": [
         "Enhanced keybinding system - now supports letters (A-Z) properly",
         "Improved key detection for better letter keybind support",
         "Added lowercase letter support for keybinds",
-        "Better key name display for letter keys"
+        "Better key name display for letter keys",
+        "Fixed noclip - now properly disables collision on all body parts",
+        "Fixed murderer ESP - now always shows murderers regardless of weapon state",
+        "Improved role detection with persistent caching for murderers/sheriffs",
+        "Enhanced collision disabling with double-check for reliability"
       ],
       "files": {
         "Oxide.exe": {
-          "sha256": "2baeff717cc6c71022f5fcc53f282df714a0c8f9e3655bab89142a3d06618853",
+          "sha256": "e9927e4b4f4b8fdd2e7b34be9abdbb7ee0c2fd9de6477d90943d478cecf86721",
           "sizeBytes": 1552384
         }
       },
