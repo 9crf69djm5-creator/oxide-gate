@@ -1,7 +1,8 @@
 <#
 .SYNOPSIS
   Publish a new Oxide.exe release: version bump -> build -> site/API downloads ->
-  releases.json -> git push (Vercel + Render redeploy) -> verify -> Discord announcement.
+  releases.json -> git push (Render redeploys gate-api) -> Vercel CLI deploy (gate-site) ->
+  verify live hashes -> Discord announcement.
 
 .EXAMPLE
   .\release.ps1 -Title "3D chams" -NotesFile .\release-notes.txt
@@ -22,6 +23,7 @@ param(
   [switch]$SkipBuild,
   [switch]$NoPush,
   [switch]$NoAnnounce,
+  [switch]$SkipVercel,
   [switch]$Force,
   [int]$DeployTimeoutMinutes = 20
 )
@@ -200,15 +202,45 @@ if ($NoPush) {
 Step "Committing and pushing"
 # git writes progress to stderr; keep that from tripping ErrorActionPreference=Stop.
 $ErrorActionPreference = "Continue"
-git add -- $Paths
+git add -- $Paths 2>&1 | Where-Object { "$_" -notmatch "LF will be replaced" } | ForEach-Object { Write-Host "    $_" }
 if ($LASTEXITCODE -ne 0) { throw "git add failed" }
-git commit -m $commitMsg -- $Paths
+git commit -m $commitMsg -- $Paths 2>&1 | Where-Object { "$_" -notmatch "LF will be replaced" } | ForEach-Object { Write-Host "    $_" }
 if ($LASTEXITCODE -ne 0) { throw "git commit failed" }
 $branch = (git rev-parse --abbrev-ref HEAD).Trim()
 git push origin "HEAD:main" 2>&1 | ForEach-Object { Write-Host "    $_" }
 if ($LASTEXITCODE -ne 0) { throw "git push failed (branch $branch)" }
+Ok "Pushed $commitMsg - Render redeploys gate-api (and discord-bot when it changed) from origin/main"
+
 $ErrorActionPreference = "Stop"
-Ok "Pushed $commitMsg - Render (gate-api) and Vercel (gate-site) redeploy from origin/main"
+
+# gate-site is deployed with the Vercel CLI (gate-site/.vercel link); git pushes do not deploy it.
+# Deploy from a copy outside the repo: Vercel blocks CLI deploys that carry this repo's git
+# commit-author metadata ("commit author doesn't have permission").
+if (-not $SkipVercel) {
+  Step "Deploying gate-site to Vercel (production)"
+  $siteSrc = Join-Path $Root "gate-site"
+  if (-not (Test-Path (Join-Path $siteSrc ".vercel\project.json"))) {
+    throw "gate-site is not linked to Vercel (run 'vercel link' in gate-site once)."
+  }
+  $siteTmp = Join-Path $env:TEMP "oxide-site-deploy"
+  if (Test-Path $siteTmp) { Remove-Item $siteTmp -Recurse -Force }
+  robocopy $siteSrc $siteTmp /E /XD node_modules dist /XF .env.local /NFL /NDL /NJH /NJS /NP | Out-Null
+  if ($LASTEXITCODE -ge 8) { throw "robocopy failed copying gate-site ($LASTEXITCODE)" }
+  Push-Location $siteTmp
+  $ErrorActionPreference = "Continue"
+  try {
+    $vercelLog = Join-Path $env:TEMP "oxide-vercel-deploy.log"
+    vercel deploy --prod --yes *> $vercelLog
+    $vercelCode = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = "Stop"
+    Pop-Location
+  }
+  if ($vercelCode -ne 0 -or (Select-String -Path $vercelLog -Pattern "blocked" -Quiet)) {
+    throw "vercel deploy failed - release is pushed; see $vercelLog (run 'vercel login' if needed)."
+  }
+  Ok "Vercel production deploy done (log: $vercelLog)"
+}
 
 # ---- 7. Verify live -----------------------------------------------------------
 Step "Verifying live deploys (up to $DeployTimeoutMinutes min each)"
