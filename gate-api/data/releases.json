@@ -2,25 +2,25 @@
   "product": "Oxide",
   "releases": [
     {
-      "version": "1.1.4",
-      "title": "Noclip & ESP fixes",
-      "date": "2026-09-27T19:45:00.000Z",
+      "version": "1.1.5",
+      "title": "Keybinding improvements",
+      "date": "2026-09-27T20:00:00.000Z",
       "clientVersion": "version-2366ba214ec740ca",
       "changes": [
-        "Fixed noclip - now properly disables collision on all body parts",
-        "Fixed murderer ESP - now always shows murderers regardless of weapon state",
-        "Improved role detection with persistent caching for murderers/sheriffs",
-        "Enhanced collision disabling with double-check for reliability"
+        "Enhanced keybinding system - now supports letters (A-Z) properly",
+        "Improved key detection for better letter keybind support",
+        "Added lowercase letter support for keybinds",
+        "Better key name display for letter keys"
       ],
       "files": {
         "Oxide.exe": {
-          "sha256": "3d539e18ced7a33eaba29471d9de6a32576390a381f82feeca298bd466d7d903",
+          "sha256": "2baeff717cc6c71022f5fcc53f282df714a0c8f9e3655bab89142a3d06618853",
           "sizeBytes": 1552384
         }
       },
-      "downloadUrl": "https://oxide-gate-api.onrender.com/downloads/Oxide.exe?v=1.1.4",
-      "siteDownloadUrl": "https://oxide-gate-site.vercel.app/downloads/Oxide.exe?v=1.1.4",
-      "changelogUrl": "https://oxide-gate-site.vercel.app/changelog#v1.1.4"
+      "downloadUrl": "https://oxide-gate-api.onrender.com/downloads/Oxide.exe?v=1.1.5",
+      "siteDownloadUrl": "https://oxide-gate-site.vercel.app/downloads/Oxide.exe?v=1.1.5",
+      "changelogUrl": "https://oxide-gate-site.vercel.app/changelog#v1.1.5"
     },
     {
       "version": "1.1.0",
