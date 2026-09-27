@@ -55,6 +55,22 @@ const config = {
   get siteUrl() {
     return optional("SITE_URL", "https://oxide-gate-site.vercel.app").replace(/\/$/, "");
   },
+  /** Optional override; default posts release announcements in #announcements. */
+  get updatesChannelId() {
+    return optional("UPDATES_CHANNEL_ID");
+  },
+  /** Optional text prepended to announcements, e.g. "@everyone" or "<@&roleId>". */
+  get updatesPing() {
+    return optional("UPDATES_PING");
+  },
+  get releaseAnnounceEnabled() {
+    return String(process.env.RELEASE_ANNOUNCE || "true").toLowerCase() !== "false";
+  },
+  get releasePollMs() {
+    const raw = Number(process.env.RELEASE_POLL_MINUTES || 5);
+    const minutes = Number.isFinite(raw) ? Math.min(60, Math.max(1, raw)) : 5;
+    return minutes * 60 * 1000;
+  },
 };
 
 module.exports = { config };

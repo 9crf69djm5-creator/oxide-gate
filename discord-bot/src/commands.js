@@ -37,6 +37,13 @@ const {
 const { collectStatusSnapshot, buildStatusEmbed, syncStatusChannel } = require("./status");
 const { getLicense, setLicense } = require("./licenses");
 const { config } = require("./config");
+const {
+  fetchLatestRelease,
+  fetchReleases,
+  buildReleaseEmbed,
+  releaseRows,
+  announceLatestRelease,
+} = require("./releases");
 
 const DEFAULT_DOWNLOAD =
   "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
@@ -678,6 +685,21 @@ const commandData = [
     .setName("web")
     .setDescription("Share the OXIDE website (alias of /website)"),
   new SlashCommandBuilder()
+    .setName("update")
+    .setDescription("Latest Oxide.exe version, what changed, and download"),
+  new SlashCommandBuilder()
+    .setName("changelog")
+    .setDescription("Oxide.exe changelog (latest, or a specific version)")
+    .addStringOption((o) =>
+      o.setName("version").setDescription("e.g. 1.1.0 (omit for latest)").setRequired(false)
+    ),
+  new SlashCommandBuilder()
+    .setName("release-announce")
+    .setDescription("Post the latest Oxide release in the updates channel (Staff+)")
+    .addBooleanOption((o) =>
+      o.setName("force").setDescription("Re-post even if already announced").setRequired(false)
+    ),
+  new SlashCommandBuilder()
     .setName("help")
     .setDescription("List OXIDE bot commands"),
 ].map((c) => c.toJSON());
@@ -752,6 +774,60 @@ async function handleCommand(interaction, client) {
     });
   }
 
+  if (name === "update" || name === "changelog") {
+    await interaction.deferReply();
+    const want = name === "changelog" ? interaction.options.getString("version") : null;
+    let release = null;
+    let history = [];
+    if (want) {
+      history = await fetchReleases();
+      release = history.find((r) => r.version === want.replace(/^v/i, "").trim()) || null;
+      if (!release) {
+        return interaction.editReply({
+          content: `No release \`${want}\`. Known: ${history.map((r) => `\`${r.version}\``).join(", ") || "none"}`,
+        });
+      }
+    } else {
+      release = await fetchLatestRelease();
+      if (name === "changelog") history = await fetchReleases();
+    }
+    if (!release) {
+      return interaction.editReply({
+        content: `Could not load releases from the API. Changelog: ${config.siteUrl}/changelog`,
+      });
+    }
+    const embed = buildReleaseEmbed(release);
+    const older = history.filter((r) => r.version !== release.version).slice(0, 5);
+    if (older.length) {
+      embed.addFields({
+        name: "Earlier versions",
+        value: older
+          .map((r) => `\`v${r.version}\`${r.title ? ` — ${r.title}` : ""}`)
+          .join("\n")
+          .slice(0, 1024),
+      });
+    }
+    return interaction.editReply({ embeds: [embed], components: releaseRows(release) });
+  }
+
+  if (name === "release-announce") {
+    if (!isStaffPlus(interaction.member)) {
+      return interaction.reply({ content: "Staff+ only.", flags: MessageFlags.Ephemeral });
+    }
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const result = await announceLatestRelease(client, {
+      force: interaction.options.getBoolean("force") === true,
+    });
+    if (!result.ok) {
+      return interaction.editReply({ content: `Not announced: ${result.message || result.error}` });
+    }
+    return interaction.editReply({
+      content: result.announced
+        ? `Announced **v${result.version}** in <#${result.channelId}>.`
+        : `**v${result.version}** was already announced${result.channelId ? ` in <#${result.channelId}>` : ""}. Use \`force:true\` to re-post.`,
+    });
+  }
+
   if (name === "help") {
     const embed = new EmbedBuilder()
       .setTitle("OXIDE Bot")
@@ -765,6 +841,7 @@ async function handleCommand(interaction, client) {
           "`/status` — Gate API + downloads + products",
           "`/products` — Plans & gamepass links",
           "`/download` — Oxide.exe link",
+          "`/update` · `/changelog` — Latest Oxide version + what changed",
           "`/key-redeem` — How to redeem a key",
           "`/redeem` · `/bind` — Redeem/link `OXIDE-…`",
           "`/link-roblox` — Link Roblox username (recovers claimed keys)",
@@ -778,6 +855,7 @@ async function handleCommand(interaction, client) {
           "`/hwid-reset` — Clear machine bind",
           "`/key-recover` — Recover by Roblox / Discord",
           "`/role` — Assign Citizen / Customer / …",
+          "`/release-announce` — Post latest release in the updates channel",
           "`/setup-server` — Verify gate + pro layout (Admin)",
           "",
           `Site: ${config.siteUrl}`,
@@ -939,9 +1017,10 @@ async function handleCommand(interaction, client) {
       });
     }
 
-    const dl = downloadUrl(linked?.downloadUrl);
+    const release = await fetchLatestRelease().catch(() => null);
+    const dl = release?.downloadUrl || downloadUrl(linked?.downloadUrl);
     const embed = new EmbedBuilder()
-      .setTitle("Download Oxide.exe")
+      .setTitle(release ? `Download Oxide.exe v${release.version}` : "Download Oxide.exe")
       .setColor(0xe6852e)
       .setDescription(
         "**Paste your key into Oxide.exe when it asks.**\n" +
@@ -950,6 +1029,12 @@ async function handleCommand(interaction, client) {
             : "No key linked yet — buy/claim then `/redeem`, or paste a key you already have.")
       )
       .addFields({ name: "Direct link", value: `[Oxide.exe](${dl})` });
+    if (release) {
+      embed.addFields({
+        name: "Latest update",
+        value: `\`v${release.version}\`${release.title ? ` — ${release.title}` : ""} · \`/changelog\``,
+      });
+    }
 
     return interaction.editReply({
       embeds: [embed],

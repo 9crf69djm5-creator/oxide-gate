@@ -1,0 +1,20 @@
+{
+  "product": "Oxide",
+  "releases": [
+    {
+      "version": "1.0.0",
+      "title": "Baseline build",
+      "date": "2026-09-26T16:21:11.000Z",
+      "clientVersion": "version-2366ba214ec740ca",
+      "changes": [
+        "Public Oxide.exe build published before release tracking was added"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "31d56c8a3c80fdd2bfa2e346cb4ab85d2af6a7a951e9d090eba5fa1fb404f6f5",
+          "sizeBytes": 1273344
+        }
+      }
+    }
+  ]
+}

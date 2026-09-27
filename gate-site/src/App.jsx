@@ -8,6 +8,7 @@ import Account from "./pages/Account";
 import Features from "./pages/Features";
 import Status from "./pages/Status";
 import Offsets from "./pages/Offsets";
+import Changelog from "./pages/Changelog";
 
 export default function App() {
   const location = useLocation();
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/features" element={<Features />} />
           <Route path="/status" element={<Status />} />
           <Route path="/offsets" element={<Offsets />} />
+          <Route path="/changelog" element={<Changelog />} />
         </Routes>
       </AnimatePresence>
     </Layout>

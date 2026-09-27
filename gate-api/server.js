@@ -10,6 +10,7 @@ const roblox = require("./lib/roblox");
 const identity = require("./lib/identity");
 const externalVersion = require("./lib/external-version");
 const offsetsLib = require("./lib/offsets");
+const releasesLib = require("./lib/releases");
 
 const PORT = Number(process.env.PORT) || 8787;
 const ADMIN_SECRET = process.env.ADMIN_SECRET || "change-me-to-a-long-random-string";
@@ -20,6 +21,30 @@ const DISCORD_BOT_HEALTH_URL = (
   process.env.DISCORD_BOT_HEALTH_URL || "https://oxide-discord-bot-fra.onrender.com/"
 ).replace(/\/?$/, "/");
 const downloadsDir = path.join(__dirname, "public", "downloads");
+const PUBLIC_API_BASE = (
+  process.env.PUBLIC_API_BASE_URL || "https://oxide-gate-api.onrender.com"
+).replace(/\/$/, "");
+const SITE_URL = (process.env.SITE_URL || "https://oxide-gate-site.vercel.app").replace(/\/$/, "");
+const releaseCtx = { apiBase: PUBLIC_API_BASE, siteUrl: SITE_URL, downloadsDir };
+
+/** Current release summary for health/status payloads. */
+function releaseSummary() {
+  const latest = releasesLib.latestRelease(releaseCtx);
+  if (!latest) return null;
+  return {
+    version: latest.version,
+    title: latest.title,
+    date: latest.date,
+    sha256: latest.sha256,
+    hashMatches: latest.hosted?.matches ?? null,
+    downloadUrl: latest.downloadUrl,
+  };
+}
+
+/** EXE downloads must never be served stale after a release. */
+function noStoreExe(res) {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+}
 
 /** Server-side Discord bot health probe (avoids browser CORS on the bot host). */
 async function probeDiscordBotHealth() {
@@ -130,9 +155,37 @@ app.get("/api/health", (_req, res) => {
     downloadSizeBytes: exeMeta.sizeBytes ?? null,
     downloadModifiedAt: exeMeta.modifiedAt || null,
     hostedClientVersion: hosted.version,
+    oxideVersion: releaseSummary()?.version || null,
     robloxDemo: roblox.isDemoMode(),
     robloxProductsConfigured: claims.listProducts().filter((p) => p.configured).length,
   });
+});
+
+/**
+ * Public Oxide.exe release history (newest first) from data/releases.json.
+ */
+app.get("/api/releases", (_req, res) => {
+  res.setHeader("Cache-Control", "no-cache");
+  const releases = releasesLib.listReleases(releaseCtx);
+  return res.json({ ok: true, latest: releases[0] || null, releases });
+});
+
+app.get("/api/releases/latest", (_req, res) => {
+  res.setHeader("Cache-Control", "no-cache");
+  const latest = releasesLib.latestRelease(releaseCtx);
+  if (!latest) {
+    return res.status(404).json({ ok: false, error: "no_releases", message: "No releases published yet." });
+  }
+  return res.json({ ok: true, release: latest });
+});
+
+app.get("/api/releases/:version", (req, res) => {
+  res.setHeader("Cache-Control", "no-cache");
+  const release = releasesLib.findRelease(req.params.version, releaseCtx);
+  if (!release) {
+    return res.status(404).json({ ok: false, error: "not_found", message: "Unknown release version." });
+  }
+  return res.json({ ok: true, release });
 });
 
 /**
@@ -232,6 +285,7 @@ app.get("/api/status", async (_req, res) => {
         liveRobloxVersion: external.liveRobloxVersion,
         liveNumericVersion: external.liveNumericVersion,
       },
+      release: releaseSummary(),
       bot,
     });
   } catch (err) {
@@ -803,6 +857,7 @@ app.post("/api/webhooks/sellapp", (req, res) => {
 /** Direct Oxide.exe download — never point buyers at the GitHub source repo. */
 app.get(["/downloads/Oxide.exe", "/download/Oxide.exe", "/Oxide.exe"], (req, res) => {
   const file = path.join(downloadsDir, "Oxide.exe");
+  noStoreExe(res);
   res.download(file, "Oxide.exe", (err) => {
     if (err && !res.headersSent) {
       console.error("[download]", err.message);
@@ -816,6 +871,7 @@ app.get(
   ["/downloads/OxideDumper.exe", "/download/OxideDumper.exe", "/OxideDumper.exe"],
   (req, res) => {
     const file = path.join(downloadsDir, "OxideDumper.exe");
+    noStoreExe(res);
     res.download(file, "OxideDumper.exe", (err) => {
       if (err && !res.headersSent) {
         console.error("[download dumper]", err.message);
@@ -838,6 +894,7 @@ app.use(
         const base = path.basename(filePath);
         res.setHeader("Content-Type", "application/octet-stream");
         res.setHeader("Content-Disposition", `attachment; filename="${base}"`);
+        noStoreExe(res);
       }
     },
   })

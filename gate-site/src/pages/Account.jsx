@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { config } from "../config";
 import { apiBase } from "../lib/api";
+import { fetchReleases } from "../lib/releases";
 import { clearSession, loadSession } from "../lib/session";
 import { PageMotion } from "../components/Layout";
 import { Topography } from "../components/Topography";
@@ -10,6 +12,17 @@ export default function Account() {
   const navigate = useNavigate();
   const session = loadSession();
   const discord = config.discordInvite;
+  const [release, setRelease] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetchReleases().then((r) => {
+      if (alive && r.ok) setRelease(r.releases[0] || null);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   if (!session || !session.key) {
     return (
@@ -58,7 +71,7 @@ export default function Account() {
     return url;
   }
 
-  const downloadUrl = resolveDownloadUrl(session.downloadUrl || siteExeUrl);
+  const downloadUrl = release?.downloadUrl || resolveDownloadUrl(session.downloadUrl || siteExeUrl);
 
   function onDownload(e) {
     if (!downloadUrl || downloadUrl === "#download-placeholder") {
@@ -110,9 +123,16 @@ export default function Account() {
               download={config.download?.filename || "Oxide.exe"}
               onClick={onDownload}
             >
-              Download Oxide.exe
+              {release ? `Download Oxide.exe v${release.version}` : "Download Oxide.exe"}
             </a>
             <p className="hint">{config.download?.note || "Direct EXE download — no source code."}</p>
+            {release && (
+              <p className="release-inline">
+                Latest: v{release.version}
+                {release.title ? ` — ${release.title}` : ""} ·{" "}
+                <Link to={`/changelog#v${release.version}`}>What changed</Link>
+              </p>
+            )}
             <button
               type="button"
               className="btn btn-ghost btn-block"

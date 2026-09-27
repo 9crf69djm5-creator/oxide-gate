@@ -28,6 +28,9 @@ export function Nav({ onHero = false }) {
         <NavLink className="nav-link hide-sm" to="/offsets">
           Offsets
         </NavLink>
+        <NavLink className="nav-link hide-sm" to="/changelog">
+          Changelog
+        </NavLink>
         <a className="nav-link hide-sm" href={discord} target="_blank" rel="noreferrer">
           Discord
         </a>
@@ -54,6 +57,7 @@ export function Footer() {
         <Link to="/features">Features</Link>
         <Link to="/status">Status</Link>
         <Link to="/offsets">Offsets</Link>
+        <Link to="/changelog">Changelog</Link>
         <a href={discord} target="_blank" rel="noreferrer">
           Discord
         </a>

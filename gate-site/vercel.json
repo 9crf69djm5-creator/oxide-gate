@@ -1,8 +1,18 @@
 {
   "rewrites": [
     {
-      "source": "/((?!downloads/).*)",
+      "source": "/((?!downloads/|releases\\.json|offsets\\.json).*)",
       "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/downloads/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+    },
+    {
+      "source": "/releases.json",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
     }
   ]
 }

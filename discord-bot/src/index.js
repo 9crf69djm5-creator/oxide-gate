@@ -23,6 +23,7 @@ const {
 const { syncRobloxVersion } = require("./roblox");
 const { syncStatusChannel } = require("./status");
 const { deliverKeyDm } = require("./deliver");
+const { announceLatestRelease, lastAnnounced } = require("./releases");
 
 const client = new Client({
   intents: [
@@ -35,6 +36,17 @@ const client = new Client({
 
 let robloxTimer = null;
 let statusTimer = null;
+let releaseTimer = null;
+
+async function runReleaseJob(reason) {
+  try {
+    const result = await announceLatestRelease(client);
+    const tag = result.announced ? "ANNOUNCED" : result.reason || result.error || "ok";
+    console.log(`[release] ${reason}: ${tag} ${result.version || ""}`);
+  } catch (err) {
+    console.warn(`[release] ${reason} failed:`, err.message);
+  }
+}
 
 async function runRobloxJob(reason) {
   try {
@@ -163,6 +175,14 @@ client.once(Events.ClientReady, async (c) => {
   statusTimer = setInterval(() => runStatusJob("poll"), 10 * 60 * 1000);
   if (statusTimer.unref) statusTimer.unref();
   console.log("Status channel poll every 10 min");
+
+  if (config.releaseAnnounceEnabled) {
+    await runReleaseJob("startup");
+    if (releaseTimer) clearInterval(releaseTimer);
+    releaseTimer = setInterval(() => runReleaseJob("poll"), config.releasePollMs);
+    if (releaseTimer.unref) releaseTimer.unref();
+    console.log(`Release announce poll every ${config.releasePollMs / 60000} min`);
+  }
 });
 
 client.on(Events.GuildMemberAdd, async (member) => {
@@ -310,6 +330,32 @@ if (Number.isFinite(port) && port > 0) {
         return;
       }
 
+      if (req.method === "POST" && urlPath === "/internal/announce-release") {
+        const secret = req.headers["x-admin-secret"];
+        if (!config.adminSecret || secret !== config.adminSecret) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ ok: false, error: "unauthorized" }));
+          return;
+        }
+        try {
+          const body = await readBody(req).catch(() => ({}));
+          if (!client.isReady()) {
+            res.writeHead(503, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ ok: false, error: "bot_not_ready" }));
+            return;
+          }
+          const result = await announceLatestRelease(client, { force: body?.force === true });
+          res.writeHead(result.ok ? 200 : 409, { "Content-Type": "application/json" });
+          res.end(JSON.stringify(result));
+        } catch (err) {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(
+            JSON.stringify({ ok: false, error: "announce_failed", message: err.message })
+          );
+        }
+        return;
+      }
+
       res.writeHead(200, {
         "Content-Type": "application/json",
         ...healthCors,
@@ -321,6 +367,8 @@ if (Number.isFinite(port) && port > 0) {
           ready: Boolean(client.isReady()),
           user: client.user?.tag || null,
           adminSecretConfigured: Boolean(config.adminSecret),
+          releaseAnnouncer: config.releaseAnnounceEnabled,
+          announcedVersion: lastAnnounced().version,
         })
       );
     })

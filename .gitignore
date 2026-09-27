@@ -21,6 +21,7 @@ gate-api/data/*
 !gate-api/data/.gitkeep
 !gate-api/data/offsets.json
 !gate-api/data/client-version.txt
+!gate-api/data/releases.json
 *.db
 *.db-*
 *.log

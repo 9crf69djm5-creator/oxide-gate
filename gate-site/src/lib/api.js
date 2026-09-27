@@ -258,6 +258,7 @@ export async function fetchSystemStatus() {
   const download = snap.download || {};
   const products = snap.products || {};
   const external = snap.external || {};
+  const release = snap.release || {};
 
   // Prefer server-side bot probe from gate-api (no browser CORS on bot host).
   // Fall back to direct health fetch when aggregate has no bot field.
@@ -345,11 +346,19 @@ export async function fetchSystemStatus() {
     {
       id: "downloads",
       name: "Oxide.exe download",
-      detail: "Hosted binary for buyers",
-      state: dlState,
+      detail: release.version
+        ? `v${release.version}${release.title ? ` — ${release.title}` : ""}`
+        : "Hosted binary for buyers",
+      state: dlState === "online" && release.hashMatches === false ? "degraded" : dlState,
       latency: null,
       fields: [
         { label: "Available", value: dlAvailable ? "Yes" : "No" },
+        { label: "Version", value: release.version ? `v${release.version}` : "—" },
+        {
+          label: "Hash check",
+          value:
+            release.hashMatches === true ? "OK" : release.hashMatches === false ? "Mismatch" : "—",
+        },
         { label: "Size", value: sizeLabel || "—" },
         { label: "Updated", value: modifiedLabel || "—" },
       ],
