@@ -2,6 +2,32 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.8",
+      "title": "Parry click timing fix, live Auto Ping, realistic skies",
+      "date": "2026-09-29T22:31:39.939Z",
+      "clientVersion": "version-2366ba214ec740ca",
+      "changes": [
+        "Blade Ball click timing fixed for long shots, short clashes and fast clashes. It still does not click early: a normal approach clicks once, when time to impact enters the click window",
+        "Short clashes: a fast rally with a nearby opponent counts as a clash from the first bounce (it no longer waits for two retargets) and stays covered while the ball is on the opponent's side, so the return is not late",
+        "Fast clashes and reflects: right after a reflect the parry uses the ball's real velocity on that same frame instead of a slow half-frame reading, so fast returns are no longer timed late",
+        "One click per approach: a ball only counts as deflected after it has moved away for about two frames, so a curving ball can't trigger a second click",
+        "Live Auto Ping: with Auto Ping on, the click lead follows your current ping (1-second median, updated continuously). Higher ping clicks a bit earlier, lower ping clicks closer to impact, and the status line shows the ping in use. With Auto Ping off, the manual ping sliders work as before",
+        "Parry input stays left click: a memory-based parry was not added because Oxide has no proven way to write Roblox mouse or key input in memory",
+        "Realistic sky presets: Clear Day, Sunset, Overcast, Stormy Sea, Moonlit Night, Harvest Moon, Deep Space, Purple Galaxy",
+        "Match Lighting (on by default): a sky preset also sets time of day and ambient light to fit it, and restores them when the sky is turned off. Clear Haze now thins the atmosphere instead of removing it. Custom six-ID skyboxes still override presets"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "c00c4f1f8f91d46c3d1b397627fc81419cdeec1a66f28bff5f43853ee563580e",
+          "sizeBytes": 2049024
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.7",
       "title": "Blade Ball parry tracks movement, faster reaction",
       "date": "2026-09-29T22:16:06.894Z",
