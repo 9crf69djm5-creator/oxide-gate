@@ -2,6 +2,29 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.2",
+      "title": "Blade Ball left-click parry + auto ping",
+      "date": "2026-09-29T18:57:46.565Z",
+      "clientVersion": "version-2366ba214ec740ca",
+      "changes": [
+        "Blade Ball auto parry now left-clicks only. F is removed and old configs cannot turn F back on",
+        "Auto ping is on by default: it smooths Data Ping and clicks earlier by that amount. Bad reads under 20 ms are ignored",
+        "Parry timing clicks slightly early, with one follow-up click if the ball is still coming, and clash spam uses left click",
+        "Ball detection uses the working scanner (workspace.Balls, realBall or fastest part). The broken multi-part tracker is not in this build",
+        "Sniper Duels skin changer can now swap the skin on your live holster, not just the template"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "c1e7049a3765f8e366e5a0c0df088d1ccfb669ead31444ed8a8ca4ba91feb099",
+          "sizeBytes": 1797120
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.1",
       "title": "Sniper Duels skin visibility",
       "date": "2026-09-29T17:59:06.185Z",
