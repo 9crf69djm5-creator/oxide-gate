@@ -1133,26 +1133,37 @@ async function handleCommand(interaction, client) {
       redeemedAt: new Date().toISOString(),
     });
 
+    const release = await fetchLatestRelease().catch(() => null);
+    const dl = release?.downloadUrl || downloadUrl(license.downloadUrl);
+
     const embed = buildRedeemEmbed({
       title: "Your OXIDE license",
       key: license.key,
       plan: license.plan,
       expires: license.expires,
-      downloadUrl: license.downloadUrl,
+      downloadUrl: dl,
       alreadyActive: true,
       status: license.status,
       remainingLabel: license.remainingLabel,
       daysRemaining: license.daysRemaining,
       reveal: false,
     });
+    if (release) {
+      embed.addFields({
+        name: "Latest build",
+        value: `\`v${release.version}\`${release.title ? ` — ${release.title}` : ""} · sha256 \`${String(release.sha256 || "").slice(0, 12)}\``,
+      });
+    }
+    const file = release ? await fetchReleaseAttachment(release) : null;
 
     const reply = {
       embeds: [embed],
       components: licenseRows({
-        download: license.downloadUrl,
+        download: dl,
         discordUserId: interaction.user.id,
         reveal: false,
       }),
+      files: file ? [file] : [],
     };
     if (!fromApi) {
       reply.content =
