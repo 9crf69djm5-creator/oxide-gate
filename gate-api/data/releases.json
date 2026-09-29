@@ -2,6 +2,32 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.6",
+      "title": "Steal An Egg egg picker",
+      "date": "2026-09-29T22:06:10.347Z",
+      "clientVersion": "version-2366ba214ec740ca",
+      "changes": [
+        "Steal An Egg egg picker: pick a specific egg from the list and Oxide teleports you on top of it, holds E to grab it, teleports you back to your base and left-clicks to place it on your farm. With nothing picked it keeps looping through the other eggs",
+        "Steal An Egg tab: egg ESP, auto steal and egg lock, now using the game's real object names from a live tree dump",
+        "Blade Ball curved prediction: auto parry follows the ball's curved path to your contact circle and times the click from that. Straight shots time exactly as before, and it falls back to the old estimate when it can't lock. Curve Aware turns it on or off",
+        "Blade Ball AI Follow: walks you to the nearest living player, stays on them until they're out, then moves to the next. WASD pauses it",
+        "Custom Skybox fix: preset and custom skies now actually show in Roblox. Oxide makes Roblox reload the sky after swapping the textures",
+        "Rain and Snow: weather effects around your camera, on your screen only. Turning one on turns the other off",
+        "Dump tree: button in the General tab or the Steal An Egg tab that saves the current game's object tree to %AppData%\\OXIDE\\cache\\tree.txt, for support and bug reports",
+        "This build replaces v1.2.5, which shipped before the egg picker was finished"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "32df0df027638616c114ea7665607153841f31c955b209f331a3d88d45bf433b",
+          "sizeBytes": 2041344
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.5",
       "title": "Curved parry, Steal An Egg, skybox fix",
       "date": "2026-09-29T21:53:35.556Z",
