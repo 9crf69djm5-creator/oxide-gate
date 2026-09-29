@@ -2,6 +2,26 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.3",
+      "title": "Latest Release build",
+      "date": "2026-09-29T20:01:43.229Z",
+      "clientVersion": "version-2366ba214ec740ca",
+      "changes": [
+        "Published the newest local Release",
+        "x64 Oxide.exe build,Includes Blade Ball left-click parry, auto ping, and Sniper Duels holster skin swap from the v1.2.2 feature set"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "5e826f5f875e6c944330796f4de5966d175f456c6f7a3adabcd03cc7e135c7c3",
+          "sizeBytes": 1843200
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.2",
       "title": "Blade Ball left-click parry + auto ping",
       "date": "2026-09-29T18:57:46.565Z",
