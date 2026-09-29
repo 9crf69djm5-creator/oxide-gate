@@ -12,6 +12,7 @@ const {
 const { config } = require("./config");
 const { readJson, writeJson } = require("./store");
 const { findChannel, CHANNELS } = require("./setup");
+const { COLORS } = require("./brand");
 
 const STORE_FILE = "release-announce.json";
 /** Footer marker — the announcement channel itself is the durable "already posted" record. */
@@ -109,13 +110,13 @@ function footerMarker(version) {
  */
 function buildReleaseEmbed(release, opts = {}) {
   const changes = (release.changes || []).map((c) => `• ${c}`).join("\n") || "• Maintenance update";
-  const heading = opts.announcement ? "**A new Oxide update is out.**\n\n" : "";
+  const heading = opts.announcement ? "### New Oxide update\n**What changed**\n" : "**What changed**\n";
   const title = `Oxide v${release.version}${release.title ? ` — ${release.title}` : ""}`;
   const released = release.date ? Math.floor(new Date(release.date).getTime() / 1000) : null;
 
   const embed = new EmbedBuilder()
     .setTitle(title.slice(0, 256))
-    .setColor(0xe6852e)
+    .setColor(COLORS.brand)
     .setURL(release.changelogUrl || `${config.siteUrl}/changelog`)
     .setDescription(`${heading}${changes}`.slice(0, 4000))
     .addFields(
@@ -128,6 +129,15 @@ function buildReleaseEmbed(release, opts = {}) {
     });
   if (release.clientVersion) {
     embed.addFields({ name: "Roblox build", value: `\`${release.clientVersion}\``, inline: false });
+  }
+  if (opts.announcement) {
+    embed.addFields({
+      name: "How to update",
+      value:
+        "Download below, close the old build, then launch the new one and paste your key.\n" +
+        "Lost your key? Run `/mykey`.",
+      inline: false,
+    });
   }
   if (release.date) embed.setTimestamp(new Date(release.date));
   return embed;

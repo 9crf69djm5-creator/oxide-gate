@@ -4,6 +4,7 @@ const { EmbedBuilder, ChannelType } = require("discord.js");
 const { fetchHealth, fetchProducts, probeDownload } = require("./gate");
 const { findChannel, CHANNELS } = require("./setup");
 const { config } = require("./config");
+const { COLORS } = require("./brand");
 
 const DEFAULT_DOWNLOAD =
   "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
@@ -79,13 +80,14 @@ async function collectStatusSnapshot() {
 function buildStatusEmbed(snap) {
   const allOk =
     snap.health.ok && snap.download.ok && snap.products.ok && snap.configured > 0;
-  const color = allOk ? 0x2ecc71 : snap.health.ok ? 0xe6852e : 0xe74c3c;
+  const color = allOk ? COLORS.ok : snap.health.ok ? COLORS.warn : COLORS.danger;
 
   const line = (ok, label, extra) =>
     `${ok ? "✅" : "❌"} **${label}**${extra ? ` — ${extra}` : ""}`;
 
   return new EmbedBuilder()
     .setTitle("OXIDE system status")
+    .setURL(`${config.siteUrl}/status`)
     .setColor(color)
     .setDescription(
       [
@@ -132,7 +134,7 @@ function buildStatusEmbed(snap) {
       }
     )
     .setTimestamp(snap.checkedAt)
-    .setFooter({ text: "Auto-updated · /status for a live ping" });
+    .setFooter({ text: "OXIDE · Auto-updated every 10 min · /status for a live check" });
 }
 
 /**

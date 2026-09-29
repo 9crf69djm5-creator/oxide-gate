@@ -24,6 +24,7 @@ const { syncRobloxVersion } = require("./roblox");
 const { syncStatusChannel } = require("./status");
 const { deliverKeyDm } = require("./deliver");
 const { announceLatestRelease, lastAnnounced } = require("./releases");
+const { brandEmbed, COLORS } = require("./brand");
 
 const client = new Client({
   intents: [
@@ -235,12 +236,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
       );
       return;
     }
+    const ref = Math.random().toString(36).slice(2, 8).toUpperCase();
     console.error(
-      `[interaction ${interaction.commandName || interaction.customId}]`,
+      `[interaction ${interaction.commandName || interaction.customId}] ref=${ref}`,
       err
     );
     const payload = {
-      content: `Error: \`${err.message}\``,
+      embeds: [
+        brandEmbed({
+          title: "Something went wrong",
+          color: COLORS.danger,
+          footer: `ref ${ref}`,
+          description:
+            "That command hit an unexpected error. Try again in a moment.\n" +
+            `If it keeps happening, post in the help channel with reference \`${ref}\`.`,
+        }),
+      ],
       flags: MessageFlags.Ephemeral,
     };
     if (interaction.deferred || interaction.replied) {

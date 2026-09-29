@@ -45,9 +45,12 @@ const {
   fetchReleaseAttachment,
   announceLatestRelease,
 } = require("./releases");
+const { COLORS, brandEmbed, linkRow, unreachableEmbed } = require("./brand");
 
 const DEFAULT_DOWNLOAD =
   "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
+
+const STAFF_ONLY = "This command is limited to Staff and above.";
 
 /** Button customId prefix: license_reveal:<discordUserId> */
 const LICENSE_REVEAL_PREFIX = "license_reveal:";
@@ -210,71 +213,98 @@ function buildRedeemEmbed(opts) {
     { name: "Expires", value: formatExpiry(expires), inline: false },
     { name: "Download", value: `[Oxide.exe](${dl})`, inline: false },
   ];
-  return new EmbedBuilder()
-    .setTitle(title)
-    .setColor(rem.expired ? 0xe74c3c : 0xe6852e)
-    .setDescription(
-      reveal
-        ? "**Paste this key into Oxide.exe when it asks.**\n" +
-            "Download the EXE, launch it, and enter the key below."
-        : "**Your license is linked to this Discord.**\n" +
-            "Key is masked — tap **Reveal key** if you need the full string."
-    )
-    .addFields(fields)
-    .setFooter({ text: "Keep this key private — do not share it publicly." });
+  return brandEmbed({
+    title,
+    color: rem.expired ? COLORS.danger : COLORS.brand,
+    footer: "Keep this key private — staff will never ask for it.",
+    description: reveal
+      ? "**Paste this key into Oxide.exe when it asks.**\n" +
+        "Download the EXE, launch it, and enter the key below."
+      : "**Your license is linked to this Discord.**\n" +
+        "Key is masked — tap **Reveal key** if you need the full string.",
+  }).addFields(fields);
 }
 
 function downloadRow(url) {
-  return new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setLabel("Download Oxide.exe")
-      .setStyle(ButtonStyle.Link)
-      .setURL(downloadUrl(url))
-  );
+  return linkRow([
+    ["Download Oxide.exe", downloadUrl(url)],
+    ["Changelog", `${config.siteUrl}/changelog`],
+    ["Status", `${config.siteUrl}/status`],
+  ]);
 }
 
-/** Public site link buttons: Buy / Get key / Status / Offsets */
+/** Public site link buttons: Buy / Get key / Status / Offsets / Changelog */
 function websiteRows() {
   const base = config.siteUrl;
   return [
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setLabel("Buy")
-        .setStyle(ButtonStyle.Link)
-        .setURL(`${base}/buy`),
-      new ButtonBuilder()
-        .setLabel("Get key")
-        .setStyle(ButtonStyle.Link)
-        .setURL(`${base}/key`),
-      new ButtonBuilder()
-        .setLabel("Status")
-        .setStyle(ButtonStyle.Link)
-        .setURL(`${base}/status`),
-      new ButtonBuilder()
-        .setLabel("Offsets")
-        .setStyle(ButtonStyle.Link)
-        .setURL(`${base}/offsets`)
-    ),
+    linkRow([
+      ["Buy", `${base}/buy`],
+      ["Get key", `${base}/key`],
+      ["Status", `${base}/status`],
+      ["Offsets", `${base}/offsets`],
+      ["Changelog", `${base}/changelog`],
+    ]),
   ];
 }
 
 function buildWebsiteEmbed() {
   const base = config.siteUrl;
-  return new EmbedBuilder()
-    .setTitle("OXIDE website")
-    .setColor(0xe6852e)
-    .setURL(base)
-    .setDescription(
+  return brandEmbed({
+    title: "OXIDE website",
+    footer: "Aliases: /website · /site · /web",
+    description:
       `Official site: **[${base.replace(/^https?:\/\//, "")}](${base})**\n` +
-        "Buy a plan, claim your key, check status, or grab offsets."
-    )
+      "Buy a plan, claim your key, check live status, or pull the public offsets.",
+  })
+    .setURL(base)
     .addFields(
-      { name: "Buy", value: `[Open](${base}/buy)`, inline: true },
-      { name: "Get key", value: `[Open](${base}/key)`, inline: true },
-      { name: "Status", value: `[Open](${base}/status)`, inline: true },
-      { name: "Offsets", value: `[Open](${base}/offsets)`, inline: true }
-    )
-    .setFooter({ text: "Aliases: /website · /site · /web" });
+      { name: "Buy", value: `[Plans & pricing](${base}/buy)`, inline: true },
+      { name: "Get a key", value: `[Redeem](${base}/key)`, inline: true },
+      { name: "Status", value: `[Live health](${base}/status)`, inline: true },
+      { name: "Offsets", value: `[Public API](${base}/offsets)`, inline: true },
+      { name: "Changelog", value: `[Releases](${base}/changelog)`, inline: true },
+      { name: "Features", value: `[Full list](${base}/features)`, inline: true }
+    );
+}
+
+/** Public offsets API links (mirrors the site's Offsets page downloads). */
+function buildOffsetsPayload() {
+  const api = config.apiBaseUrl;
+  const embed = brandEmbed({
+    title: "OXIDE public offsets",
+    footer: "Free to use · CORS open on GET",
+    description:
+      "Live Roblox client offsets from the OXIDE dumper, served as a public API.\n" +
+      `Browse and search them on the site: ${config.siteUrl}/offsets`,
+  })
+    .setURL(`${config.siteUrl}/offsets`)
+    .addFields(
+      {
+        name: "Downloads",
+        value: [
+          `[offsets.json](${api}/api/offsets) — OXIDE API shape`,
+          `[offsets.raw.json](${api}/api/offsets/raw) — decimal map`,
+          `[offsets.hex.json](${api}/api/offsets/hex) — hex map`,
+          `[offsets.hpp](${api}/api/offsets.hpp) — C++ header`,
+          `[offsets.cs](${api}/api/offsets.cs) — C#`,
+          `[offsets.txt](${api}/api/offsets.txt) — plain text`,
+        ].join("\n"),
+      },
+      {
+        name: "Developer API",
+        value: `\`GET ${api}/api/offsets\`\n\`GET ${api}/api/offsets/raw\``,
+      }
+    );
+  return {
+    embeds: [embed],
+    components: [
+      linkRow([
+        ["Browse offsets", `${config.siteUrl}/offsets`],
+        ["offsets.hpp", `${api}/api/offsets.hpp`],
+        ["offsets.json", `${api}/api/offsets`],
+      ]),
+    ],
+  };
 }
 
 function licenseRows(opts) {
@@ -296,9 +326,7 @@ function licenseRows(opts) {
 /** Ephemeral “no Discord link yet” embed + actions. */
 function noKeyLinkedPayload() {
   const siteKey = `${config.siteUrl}/key`;
-  const embed = new EmbedBuilder()
-    .setTitle("No OXIDE key linked to Discord")
-    .setColor(0xe6852e)
+  const embed = brandEmbed({ title: "No OXIDE key linked to Discord", footer: false })
     .setDescription(
       "This Discord account is not linked to a license yet.\n\n" +
         "**Already claimed on Roblox?** Run `/link-roblox username:YourRobloxName` — that recovers keys saved under your Roblox forever.\n\n" +
@@ -320,7 +348,7 @@ function noKeyLinkedPayload() {
         inline: false,
       }
     )
-    .setFooter({ text: "Linking is private (ephemeral) — only you see it." });
+    .setFooter({ text: "OXIDE · Linking is private — only you see this." });
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
@@ -367,7 +395,7 @@ async function runRedeemFlow(interaction, rawKey) {
   const keyInput = String(rawKey || "").trim();
   if (!keyInput) {
     return interaction.editReply({
-      content: "Provide a license key (OXIDE-…).",
+      content: "Paste your full license key — it starts with `OXIDE-`.",
     });
   }
 
@@ -379,9 +407,7 @@ async function runRedeemFlow(interaction, rawKey) {
       discordUserId: interaction.user.id,
     });
   } catch (err) {
-    return interaction.editReply({
-      content: `Gate unreachable: \`${err.message}\``,
-    });
+    return interaction.editReply({ embeds: [unreachableEmbed("redeem that key", err)] });
   }
 
   if (!result.ok) {
@@ -390,9 +416,17 @@ async function runRedeemFlow(interaction, rawKey) {
       result.body?.error ||
       `Redeem failed (HTTP ${result.status})`;
     return interaction.editReply({
-      content:
-        `❌ ${msg}\n` +
-        "If this key is already active on the site, `/redeem` still links it to Discord — double-check the full key.",
+      embeds: [
+        brandEmbed({
+          title: "Could not redeem that key",
+          color: COLORS.danger,
+          description:
+            `${msg}\n\n` +
+            "• Check you pasted the **full** key, including `OXIDE-`.\n" +
+            "• Keys already active on the site still link here with `/redeem`.\n" +
+            "• Claimed on Roblox? Try `/link-roblox` instead.",
+        }),
+      ],
     });
   }
 
@@ -447,19 +481,15 @@ async function runRedeemFlow(interaction, rawKey) {
   if (delivered === "dm") {
     return interaction.editReply({
       content:
-        "✅ Key linked to your Discord (saved on the API for `/mykey`).\n" +
-        "Check your **DMs** for the key, plan, and download.\n" +
-        `${roleNote}\n` +
-        "Later: `/mykey` or `/license` to recover the key + days left.\n" +
-        "Paste the key into **Oxide.exe** when it asks.",
+        "✅ **Key linked to your Discord.** Check your DMs for the key, plan, and download.\n" +
+        `-# ${roleNote} · Recover anytime with \`/mykey\` · Paste the key into Oxide.exe when it asks.`,
     });
   }
 
   return interaction.editReply({
     content:
-      "✅ Key linked to your Discord (could not DM you — enable DMs from server members, or use this reply).\n" +
-      `${roleNote}\n` +
-      "Use `/mykey` anytime to recover your key.",
+      "✅ **Key linked to your Discord.** Your DMs are closed, so here it is privately instead.\n" +
+      `-# ${roleNote} · Recover anytime with \`/mykey\`.`,
     embeds: [embed],
     components: [row],
   });
@@ -686,6 +716,9 @@ const commandData = [
     .setName("web")
     .setDescription("Share the OXIDE website (alias of /website)"),
   new SlashCommandBuilder()
+    .setName("offsets")
+    .setDescription("Public Roblox offsets: JSON, C++ header, C#, and API links"),
+  new SlashCommandBuilder()
     .setName("update")
     .setDescription("Latest Oxide.exe version, what changed, and download"),
   new SlashCommandBuilder()
@@ -819,7 +852,7 @@ async function handleCommand(interaction, client) {
 
   if (name === "release-announce") {
     if (!isStaffPlus(interaction.member)) {
-      return interaction.reply({ content: "Staff+ only.", flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: STAFF_ONLY, flags: MessageFlags.Ephemeral });
     }
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const result = await announceLatestRelease(client, {
@@ -835,42 +868,70 @@ async function handleCommand(interaction, client) {
     });
   }
 
+  if (name === "offsets") {
+    return interaction.reply(buildOffsetsPayload());
+  }
+
   if (name === "help") {
-    const embed = new EmbedBuilder()
-      .setTitle("OXIDE Bot")
-      .setColor(0xe6852e)
-      .setDescription(
-        [
-          "**Everyone / Citizen**",
+    const embed = brandEmbed({
+      title: "OXIDE bot commands",
+      description: "Most replies are private — only you see them.",
+    }).addFields(
+      {
+        name: "Get started",
+        value: [
           "`/verify` — Unlock the server (Citizen role)",
+          "`/products` — Plans and Roblox gamepass links",
+          "`/key-redeem` — How redeeming works, step by step",
+        ].join("\n"),
+      },
+      {
+        name: "Your license",
+        value: [
+          "`/redeem` · `/bind` — Link an `OXIDE-…` key to Discord",
+          "`/link-roblox` — Link your Roblox name (recovers claimed keys)",
+          "`/mykey` · `/license` · `/recover` — Show or recover your key",
+          "`/download` — Latest Oxide.exe",
+        ].join("\n"),
+      },
+      {
+        name: "Info",
+        value: [
+          "`/update` · `/changelog` — What changed in each version",
+          "`/status` — Live API, download, and bot health",
+          "`/offsets` — Public offsets API and file downloads",
+          "`/roblox-version` — Latest Roblox Windows client",
+          "`/website` · `/site` · `/web` — Site quick links",
           "`/ping` — Bot latency",
-          "`/website` · `/site` · `/web` — Official site + quick links",
-          "`/status` — Gate API + downloads + products",
-          "`/products` — Plans & gamepass links",
-          "`/download` — Oxide.exe link",
-          "`/update` · `/changelog` — Latest Oxide version + what changed",
-          "`/key-redeem` — How to redeem a key",
-          "`/redeem` · `/bind` — Redeem/link `OXIDE-…`",
-          "`/link-roblox` — Link Roblox username (recovers claimed keys)",
-          "`/mykey` · `/license` · `/recover` — Show / recover saved key",
-          "`/roblox-version` — Latest Windows client",
-          "`/help` — This list",
-          "",
-          "**Staff+ only**",
+        ].join("\n"),
+      }
+    );
+    if (isStaffPlus(interaction.member)) {
+      embed.addFields({
+        name: "Staff",
+        value: [
           "`/key-create` — Mint license keys",
           "`/key-revoke` — Ban a key",
-          "`/hwid-reset` — Clear machine bind",
-          "`/key-recover` — Recover by Roblox / Discord",
-          "`/role` — Assign Citizen / Customer / …",
-          "`/release-announce` — Post latest release in the updates channel",
-          "`/setup-server` — Verify gate + pro layout (Admin)",
-          "",
-          `Site: ${config.siteUrl}`,
-          `Status page: ${config.siteUrl}/status`,
-          `Invite: ${config.discordInvite}`,
-        ].join("\n")
-      );
-    return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+          "`/hwid-reset` — Clear machine binding",
+          "`/key-recover` — Look up by Roblox / Discord",
+          "`/role` — Add or remove OXIDE roles",
+          "`/release-announce` — Post the latest release",
+          "`/setup-server` — Rebuild roles and channels (Admin)",
+        ].join("\n"),
+      });
+    }
+    return interaction.reply({
+      embeds: [embed],
+      components: [
+        linkRow([
+          ["Website", config.siteUrl],
+          ["Get a key", `${config.siteUrl}/key`],
+          ["Status", `${config.siteUrl}/status`],
+          ["Invite", config.discordInvite],
+        ]),
+      ],
+      flags: MessageFlags.Ephemeral,
+    });
   }
 
   if (name === "ping") {
@@ -935,9 +996,7 @@ async function handleCommand(interaction, client) {
           content: `Partial status — gate ${health.ok ? "ok" : "down"} (${health.ms}ms). Error: \`${err.message}\``,
         });
       } catch (err2) {
-        return interaction.editReply({
-          content: `Gate unreachable: \`${err2.message}\`\n\`${config.apiBaseUrl}/api/health\``,
-        });
+        return interaction.editReply({ embeds: [unreachableEmbed("load system status", err2)] });
       }
     }
   }
@@ -948,58 +1007,66 @@ async function handleCommand(interaction, client) {
       const result = await fetchProducts(config.apiBaseUrl);
       if (!result.ok) {
         return interaction.editReply({
-          content: `Could not load products (HTTP ${result.status}).`,
+          embeds: [unreachableEmbed("load the product list", `HTTP ${result.status}`)],
         });
       }
       const list = result.body.products || [];
-      const embed = new EmbedBuilder()
-        .setTitle("OXIDE products")
-        .setColor(0xe6852e)
-        .setDescription(
+      const embed = brandEmbed({
+        title: "OXIDE plans",
+        footer: result.body.demo ? "Demo catalog" : "Live catalog",
+        description:
           list.length
             ? list
                 .map((p) => {
                   const flag = p.configured ? "✅" : "⚠️";
-                  const link = p.buyUrl ? `[Buy](${p.buyUrl})` : "_no buy URL_";
+                  const link = p.buyUrl ? `[Buy on Roblox](${p.buyUrl})` : "_not available yet_";
                   return `${flag} **${p.name || p.plan}** — ${link}`;
                 })
                 .join("\n")
-            : "No products returned."
-        )
+            : "No plans are listed right now — check back shortly.",
+      })
+        .setURL(`${config.siteUrl}/buy`)
         .addFields({
-          name: "Redeem",
-          value: `After purchase: ${config.siteUrl}/buy or \`/redeem\` here.`,
-        })
-        .setFooter({
-          text: result.body.demo ? "DEMO mode on gate-api" : "Live catalog",
+          name: "After you buy",
+          value:
+            `1. Claim your key at ${config.siteUrl}/buy with your Roblox username\n` +
+            "2. Run `/link-roblox` or `/redeem` here so `/mykey` can recover it",
         });
-      return interaction.editReply({ embeds: [embed] });
+      return interaction.editReply({
+        embeds: [embed],
+        components: [linkRow([["Compare plans", `${config.siteUrl}/buy`]])],
+      });
     } catch (err) {
-      return interaction.editReply({ content: `Failed: \`${err.message}\`` });
+      return interaction.editReply({ embeds: [unreachableEmbed("load the product list", err)] });
     }
   }
 
   if (name === "key-redeem") {
-    const embed = new EmbedBuilder()
-      .setTitle("How to redeem an OXIDE key")
-      .setColor(0xe6852e)
-      .setDescription(
-        [
-          "**Already have a key?** Run `/redeem` or `/bind` (or `/mykey` → **Link my key**).",
-          "",
-          "1. Buy a plan on the site or Roblox gamepass (if you need a new key).",
-          "2. Claim / receive your `OXIDE-…` key.",
-          "3. Run `/redeem key:OXIDE-…` **in Discord** (this links the key).",
-          "4. Later: `/mykey` or `/license` shows your saved key + time left.",
-          "5. Download Oxide.exe and paste the key when asked.",
-          "",
-          "⚠️ Redeeming only on the website does **not** auto-link Discord — you still need one `/redeem` here.",
-          "",
-          `Site redeem: ${config.siteUrl}/key`,
-          `Buy: ${config.siteUrl}/buy`,
-          `Download: ${downloadUrl()}`,
-        ].join("\n")
-      );
+    const embed = brandEmbed({
+      title: "How to redeem an OXIDE key",
+      description:
+        "**Already have a key?** Run `/redeem` or `/bind` (or `/mykey` → **Link my key**).",
+    }).addFields(
+      {
+        name: "Steps",
+        value: [
+          "1. Buy a plan on the site or via Roblox gamepass.",
+          "2. Claim your `OXIDE-…` key.",
+          "3. Run `/redeem key:OXIDE-…` **here** — this links it to Discord.",
+          "4. Download Oxide.exe and paste the key when asked.",
+          "5. Later: `/mykey` shows your saved key and time left.",
+        ].join("\n"),
+      },
+      {
+        name: "Heads up",
+        value:
+          "Redeeming only on the website does **not** link Discord — run `/redeem` here once.",
+      },
+      {
+        name: "Links",
+        value: `[Redeem on site](${config.siteUrl}/key) · [Buy](${config.siteUrl}/buy) · [Download](${downloadUrl()})`,
+      }
+    );
     return interaction.reply({
       embeds: [embed],
       components: [downloadRow()],
@@ -1018,28 +1085,41 @@ async function handleCommand(interaction, client) {
     // Citizens get the public download link; key paste still required in EXE
     if (!allowed) {
       return interaction.editReply({
-        content:
-          "Verify first with `/verify` (or the button in #verify), then run `/download` again.\n" +
-          "Customers: `/redeem key:OXIDE-…` unlocks Customer chat.",
+        embeds: [
+          brandEmbed({
+            title: "Verify to download",
+            description:
+              "Click **Verify** in #verify (or run `/verify`), then run `/download` again.\n" +
+              "Already bought? `/redeem key:OXIDE-…` also unlocks Customer chat.",
+          }),
+        ],
       });
     }
 
     const release = await fetchLatestRelease().catch(() => null);
     const dl = release?.downloadUrl || downloadUrl(linked?.downloadUrl);
-    const embed = new EmbedBuilder()
-      .setTitle(release ? `Download Oxide.exe v${release.version}` : "Download Oxide.exe")
-      .setColor(0xe6852e)
-      .setDescription(
-        "**Paste your key into Oxide.exe when it asks.**\n" +
-          (linked?.key
-            ? `Linked key: \`${linked.key}\``
-            : "No key linked yet — buy/claim then `/redeem`, or paste a key you already have.")
-      )
-      .addFields({ name: "Direct link", value: `[Oxide.exe](${dl})` });
+    const embed = brandEmbed({
+      title: release ? `Oxide.exe v${release.version}` : "Download Oxide.exe",
+      description:
+        "1. Download the EXE below.\n" +
+        "2. Close any older build that is still running.\n" +
+        "3. Launch it and paste your key when it asks.",
+    })
+      .setURL(`${config.siteUrl}/changelog`)
+      .addFields(
+        {
+          name: "Your key",
+          value: linked?.key
+            ? `\`${maskKey(linked.key)}\` · \`/mykey\` to reveal`
+            : "Not linked yet — `/redeem` a key or `/link-roblox`",
+          inline: true,
+        },
+        { name: "Direct link", value: `[Oxide.exe](${dl})`, inline: true }
+      );
     if (release) {
       embed.addFields({
-        name: "Latest update",
-        value: `\`v${release.version}\`${release.title ? ` — ${release.title}` : ""} · \`/changelog\``,
+        name: "What's new",
+        value: `\`v${release.version}\`${release.title ? ` — ${release.title}` : ""} · \`/changelog\` for details`,
       });
     }
     const file = release ? await fetchReleaseAttachment(release) : null;
@@ -1167,9 +1247,9 @@ async function handleCommand(interaction, client) {
     };
     if (!fromApi) {
       reply.content =
-        "_Showing cached link — API lookup unavailable; key still on this bot._";
+        "-# Showing the copy saved on this bot — the license server did not answer, so time left may be out of date.";
     } else if (license.recoveryPath === "roblox_link" || license.robloxUsername) {
-      reply.content = `Recovered via Roblox @${license.robloxUsername || "linked"} · saved on Discord.`;
+      reply.content = `-# Recovered via Roblox @${license.robloxUsername || "linked"} · saved to this Discord.`;
     }
     return interaction.editReply(reply);
   }
@@ -1247,9 +1327,7 @@ async function handleCommand(interaction, client) {
               "After you claim, the key auto-attaches and we try to DM you."),
       });
     } catch (err) {
-      return interaction.editReply({
-        content: `Gate unreachable: \`${err.message}\``,
-      });
+      return interaction.editReply({ embeds: [unreachableEmbed("link your Roblox account", err)] });
     }
   }
 
@@ -1332,9 +1410,7 @@ async function handleCommand(interaction, client) {
           "Nothing to recover yet — link Roblox or paste your key.",
       });
     } catch (err) {
-      return interaction.editReply({
-        content: `Gate unreachable: \`${err.message}\``,
-      });
+      return interaction.editReply({ embeds: [unreachableEmbed("recover your license", err)] });
     }
   }
 
@@ -1373,7 +1449,7 @@ async function handleCommand(interaction, client) {
   if (name === "role") {
     if (!isStaffPlus(interaction.member)) {
       return interaction.reply({
-        content: "Staff+ only.",
+        content: STAFF_ONLY,
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -1429,7 +1505,7 @@ async function handleCommand(interaction, client) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     if (!isStaffPlus(interaction.member)) {
-      return interaction.editReply({ content: "Staff+ only." });
+      return interaction.editReply({ content: STAFF_ONLY });
     }
     if (!config.adminSecret) {
       return interaction.editReply({
@@ -1469,7 +1545,7 @@ async function handleCommand(interaction, client) {
       const list = keys.map((k) => `\`${k}\``).join("\n") || "(none)";
       await logToKeyLogs(interaction.guild, {
         title: "Keys created",
-        color: 0xe6852e,
+        color: COLORS.brand,
         description: `By <@${interaction.user.id}> · plan \`${plan}\` · count ${keys.length}`,
         fields: [{ name: "Keys", value: list.slice(0, 1000) }],
         timestamp: new Date().toISOString(),
@@ -1491,7 +1567,7 @@ async function handleCommand(interaction, client) {
   if (name === "key-revoke") {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (!isStaffPlus(interaction.member)) {
-      return interaction.editReply({ content: "Staff+ only." });
+      return interaction.editReply({ content: STAFF_ONLY });
     }
     if (!config.adminSecret) {
       return interaction.editReply({
@@ -1514,7 +1590,7 @@ async function handleCommand(interaction, client) {
       }
       await logToKeyLogs(interaction.guild, {
         title: "Key revoked",
-        color: 0xe74c3c,
+        color: COLORS.danger,
         description: `By <@${interaction.user.id}>`,
         fields: [
           { name: "Key", value: `\`${result.body.key || key}\`` },
@@ -1533,7 +1609,7 @@ async function handleCommand(interaction, client) {
   if (name === "hwid-reset") {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (!isStaffPlus(interaction.member)) {
-      return interaction.editReply({ content: "Staff+ only." });
+      return interaction.editReply({ content: STAFF_ONLY });
     }
     if (!config.adminSecret) {
       return interaction.editReply({
@@ -1556,7 +1632,7 @@ async function handleCommand(interaction, client) {
       }
       await logToKeyLogs(interaction.guild, {
         title: "HWID reset",
-        color: 0xe6852e,
+        color: COLORS.brand,
         description: `By <@${interaction.user.id}>`,
         fields: [{ name: "Key", value: `\`${result.body.key || key}\`` }],
         timestamp: new Date().toISOString(),
@@ -1572,7 +1648,7 @@ async function handleCommand(interaction, client) {
   if (name === "key-recover") {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (!isStaffPlus(interaction.member)) {
-      return interaction.editReply({ content: "Staff+ only." });
+      return interaction.editReply({ content: STAFF_ONLY });
     }
     if (!config.adminSecret) {
       return interaction.editReply({

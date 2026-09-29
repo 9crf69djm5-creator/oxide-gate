@@ -3,7 +3,16 @@
 /**
  * Shared helpers to DM a user their license key (claim notify + commands).
  */
-const { EmbedBuilder } = require("discord.js");
+const { brandEmbed, linkRow } = require("./brand");
+const { config } = require("./config");
+
+function formatExpires(expires) {
+  if (!expires) return "Lifetime";
+  const t = Date.parse(expires);
+  if (!Number.isFinite(t)) return String(expires);
+  const s = Math.floor(t / 1000);
+  return `<t:${s}:D> (<t:${s}:R>)`;
+}
 
 function maskKey(key) {
   const k = String(key || "");
@@ -45,31 +54,27 @@ async function deliverKeyDm(client, payload) {
     downloadUrl ||
     "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
 
-  const embed = new EmbedBuilder()
-    .setTitle(
-      alreadyClaimed ? "Your OXIDE key (recovered)" : "Your OXIDE key is ready"
-    )
-    .setColor(0xe6852e)
-    .setDescription(
+  const embed = brandEmbed({
+    title: alreadyClaimed ? "Your OXIDE key (recovered)" : "Your OXIDE key is ready",
+    footer: "Keep this key private — staff will never ask for it.",
+    description:
       "**Saved forever** under your Roblox" +
-        (robloxUsername ? ` (\`@${robloxUsername}\`)` : "") +
-        " and this Discord.\n" +
-        "Paste the key into **Oxide.exe**. Recover anytime with `/mykey` or `/recover`."
-    )
-    .addFields(
-      { name: "Key", value: `\`${key}\``, inline: false },
-      { name: "Plan", value: plan || "—", inline: true },
-      {
-        name: "Expires",
-        value: expires ? String(expires) : "Lifetime",
-        inline: true,
-      },
-      { name: "Download", value: `[Oxide.exe](${dl})`, inline: false }
-    )
-    .setFooter({ text: "Keep this key private." });
+      (robloxUsername ? ` (\`@${robloxUsername}\`)` : "") +
+      " and this Discord.\n" +
+      "Paste the key into **Oxide.exe**. Recover anytime with `/mykey` or `/recover`.",
+  }).addFields(
+    { name: "Key", value: `\`${key}\``, inline: false },
+    { name: "Plan", value: plan || "—", inline: true },
+    { name: "Expires", value: formatExpires(expires), inline: true },
+    { name: "Download", value: `[Oxide.exe](${dl})`, inline: false }
+  );
+  const row = linkRow([
+    ["Download Oxide.exe", dl],
+    ["Changelog", `${config.siteUrl}/changelog`],
+  ]);
 
   try {
-    await user.send({ embeds: [embed] });
+    await user.send({ embeds: [embed], components: [row] });
     return { ok: true, delivered: "dm", masked: maskKey(key) };
   } catch (err) {
     return {
