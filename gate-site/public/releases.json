@@ -2,6 +2,33 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.4",
+      "title": "Auto parry timing rework",
+      "date": "2026-09-29T20:46:07.854Z",
+      "clientVersion": "version-2366ba214ec740ca",
+      "changes": [
+        "Blade Ball auto parry: now tracks the real ball (the physics part in workspace.Balls) instead of the visual copy",
+        "Blade Ball auto parry: uses the ball's live physics velocity, including right after a reflect or freeze",
+        "Blade Ball auto parry: long-range shots only click once the predicted time-to-impact is inside your lead window, not as soon as the ball starts far away",
+        "Blade Ball auto parry: fast clashes start from the nearest opponent's distance and the rally round-trip, with the lead scaled to ball speed",
+        "Blade Ball auto parry: slow balls close to you are no longer clicked early",
+        "Blade Ball auto parry: input delay always accounts for at least one frame, so low FPS is less late",
+        "Da Hood auto parry: replaced the flat 180 ms click timer with arrival prediction",
+        "Da Hood auto parry: clicks once when a melee player facing you is predicted to reach you (uses both your velocity and theirs). Someone standing still at range is ignored",
+        "Toggles, keybinds, and existing sliders are unchanged"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "36616ae2431b2f59d0fc1c1b9ea09e50d1e2a8040e6f35d713a25e0742c56e59",
+          "sizeBytes": 1849856
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.3",
       "title": "Latest Release build",
       "date": "2026-09-29T20:01:43.229Z",
