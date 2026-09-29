@@ -47,21 +47,60 @@ export function Nav({ onHero = false }) {
 
 export function Footer() {
   const discord = config.discordInvite;
+  const year = new Date().getFullYear();
   return (
     <footer className="site-footer">
-      <span>© OXIDE — ink + copper.</span>
-      <nav>
-        <Link to="/buy">Buy</Link>
-        <Link to="/key">Key</Link>
-        <Link to="/account">Account</Link>
-        <Link to="/features">Features</Link>
-        <Link to="/status">Status</Link>
-        <Link to="/offsets">Offsets</Link>
-        <Link to="/changelog">Changelog</Link>
-        <a href={discord} target="_blank" rel="noreferrer">
-          Discord
-        </a>
-      </nav>
+      <div className="footer-inner">
+        <div className="footer-brand">
+          <Link className="brand" to="/">
+            <img
+              className="brand-logo"
+              src="/oxide-app-icon.png"
+              alt=""
+              width={28}
+              height={28}
+              decoding="async"
+            />
+            OXIDE
+          </Link>
+          <p>
+            External Roblox tooling that reads memory from its own process. Nothing
+            injected, nothing inside the client.
+          </p>
+          <Link className="footer-status" to="/status">
+            <span className="footer-status-dot" aria-hidden="true" />
+            System status
+          </Link>
+        </div>
+        <nav className="footer-cols" aria-label="Footer">
+          <div>
+            <h4>Product</h4>
+            <Link to="/features">Features</Link>
+            <Link to="/buy">Pricing</Link>
+            <Link to="/changelog">Changelog</Link>
+          </div>
+          <div>
+            <h4>Account</h4>
+            <Link to="/key">Get a key</Link>
+            <Link to="/account">Account</Link>
+            <a href={discord} target="_blank" rel="noreferrer">
+              Support
+            </a>
+          </div>
+          <div>
+            <h4>Developers</h4>
+            <Link to="/offsets">Offsets</Link>
+            <Link to="/status">Status</Link>
+            <a href={discord} target="_blank" rel="noreferrer">
+              Discord
+            </a>
+          </div>
+        </nav>
+      </div>
+      <div className="footer-base">
+        <span>© {year} OXIDE. All rights reserved.</span>
+        <span>Not affiliated with Roblox Corporation.</span>
+      </div>
     </footer>
   );
 }

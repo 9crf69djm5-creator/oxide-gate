@@ -7,7 +7,7 @@ import { HeroShowcase } from "../components/HeroShowcase";
 import { StatusStrip } from "../components/StatusStrip";
 
 const trust = [
-  { k: "0", label: "Injected code" },
+  { k: "Zero", label: "Injected code" },
   { k: "External", label: "Memory + input" },
   { k: "Same-day", label: "Offset healing" },
   { k: "Cloud", label: "Shared configs" },
@@ -108,33 +108,11 @@ export default function Home() {
             <p className="section-lead">A walk through the parts you will actually use.</p>
           </Reveal>
 
-          <Reveal delay={0.08}>
-            <div className="tour-visual">
-              <motion.div
-                className="menu-mock"
-                aria-hidden="true"
-                whileHover={{ y: -6, rotate: -0.5 }}
-                transition={{ type: "spring", stiffness: 260, damping: 18 }}
-              >
-                <div className="menu-rail">
-                  <span /><span /><span /><span /><span /><span />
-                </div>
-                <div className="menu-body">
-                  <strong>OXIDE // AIM</strong>
-                  <div className="menu-row accent" />
-                  <div className="menu-row" />
-                  <div className="menu-row short" />
-                  <div className="menu-row" />
-                  <div className="menu-row short" />
-                </div>
-              </motion.div>
-            </div>
-          </Reveal>
-
           <div className="tour-grid">
             {tour.map((t, i) => (
               <Reveal key={t.title} delay={0.06 * i}>
                 <article className="tour-card">
+                  <span className="card-index">{String(i + 1).padStart(2, "0")}</span>
                   <h3>{t.title}</h3>
                   <p>{t.body}</p>
                 </article>
@@ -192,6 +170,46 @@ export default function Home() {
                 Full feature list
               </Link>
             </p>
+          </Reveal>
+        </div>
+      </section>
+
+      <section className="section section-dark" id="developers">
+        <div className="wrap">
+          <Reveal>
+            <div className="dev-band">
+              <div>
+                <p className="section-kicker">Developers</p>
+                <h2>Free offsets, every build.</h2>
+                <p className="section-lead">
+                  The same dump OXIDE runs on, published as a public API. Pull JSON, a
+                  C++ header, C#, or plain text.
+                </p>
+                <div className="hero-ctas">
+                  <Link className="btn btn-accent" to="/offsets">
+                    Browse offsets
+                  </Link>
+                  <Link className="btn btn-ghost" to="/status">
+                    System status
+                  </Link>
+                </div>
+              </div>
+              <ul className="dev-formats" aria-label="Available formats">
+                {[
+                  ["JSON", "offsets.json"],
+                  ["JSON", "offsets.raw.json"],
+                  ["JSON", "offsets.hex.json"],
+                  ["HPP", "offsets.hpp"],
+                  ["CS", "offsets.cs"],
+                  ["TXT", "offsets.txt"],
+                ].map(([fmt, file]) => (
+                  <li key={file}>
+                    <span className={`dl-badge dl-badge-${fmt.toLowerCase()}`}>{fmt}</span>
+                    <code>{file}</code>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </Reveal>
         </div>
       </section>
