@@ -2,6 +2,30 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.5",
+      "title": "Curved parry, Steal An Egg, skybox fix",
+      "date": "2026-09-29T21:53:35.556Z",
+      "clientVersion": "version-2366ba214ec740ca",
+      "changes": [
+        "Blade Ball curved prediction: auto parry now follows the ball's curved path to your contact circle and times the click from that, so curve shots stop dying late or clicking early. Straight shots time exactly as before, and it falls back to the old estimate when it can't lock. Curve Aware turns it on or off",
+        "Blade Ball AI Follow: new toggle that walks you to the nearest living player, stays on them until they're out, then moves to the next. WASD pauses it",
+        "Custom Skybox fix: preset and custom skies now actually show in Roblox. Oxide now makes Roblox reload the sky after swapping the textures",
+        "Rain and Snow: new weather effects around your camera, on your screen only. Turning one on turns the other off",
+        "Steal An Egg: new game tab with player and egg ESP, auto steal, egg lock (closest egg) and a speed boost",
+        "Dump tree: new button in the General tab or the Steal An Egg tab that saves the current game's object tree to %AppData%\\OXIDE\\cache\\tree.txt, for support and bug reports"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "0fd2548fd49fc8db17264409ca21324e28a95bacc45d1661ccb33432f7b37ad8",
+          "sizeBytes": 2039296
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.4",
       "title": "Auto parry timing rework",
       "date": "2026-09-29T20:46:07.854Z",
