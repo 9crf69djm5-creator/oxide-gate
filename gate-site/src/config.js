@@ -72,12 +72,6 @@ export const config = {
     },
   ],
 
-  demoKeys: {
-    "OXIDE-DEMO-WEEK": { plan: "Week", expiresInDays: 7 },
-    "OXIDE-DEMO-MONTH": { plan: "Month", expiresInDays: 30 },
-    "OXIDE-DEMO-LIFE": { plan: "Lifetime", expiresInDays: null },
-  },
-
   features: {
     tour: [
       {
