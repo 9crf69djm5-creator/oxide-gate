@@ -36,7 +36,7 @@ export default function Admin() {
         pendingExchange = null;
         if (!ex.ok) return hide();
       }
-      const s = await fetchAdminSession();
+      const s = await fetchAdminSession({ retryTransient: true });
       if (!alive) return;
       if (!s.ok) return hide();
       setSession(s);

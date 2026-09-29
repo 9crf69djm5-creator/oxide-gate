@@ -1,9 +1,11 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { config } from "../config";
+import { useOwnerSession } from "../lib/admin";
 
 export function Nav({ onHero = false }) {
   const discord = config.discordInvite;
+  const owner = useOwnerSession();
 
   return (
     <nav className={`site-nav${onHero ? " on-hero" : ""}`}>
@@ -34,6 +36,11 @@ export function Nav({ onHero = false }) {
         <a className="nav-link hide-sm" href={discord} target="_blank" rel="noreferrer">
           Discord
         </a>
+        {owner && (
+          <NavLink className="nav-link" to="/admin">
+            Admin
+          </NavLink>
+        )}
         <NavLink className="nav-link" to="/buy">
           Buy
         </NavLink>

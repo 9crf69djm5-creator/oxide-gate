@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { config } from "../config";
 import { apiBase } from "../lib/api";
-import { fetchAdminSession } from "../lib/admin";
+import { fetchAdminSession, ownerHinted } from "../lib/admin";
 import { fetchReleases } from "../lib/releases";
 import { clearSession, loadSession } from "../lib/session";
 import { PageMotion } from "../components/Layout";
@@ -42,7 +42,7 @@ export default function Account() {
     fetchReleases().then((r) => {
       if (alive && r.ok) setRelease(r.releases[0] || null);
     });
-    if (!hasLicense) {
+    if (!hasLicense || ownerHinted()) {
       fetchAdminSession().then((s) => {
         if (alive) setOwner(s.ok ? s : false);
       });
@@ -213,6 +213,11 @@ export default function Account() {
             </dl>
 
             {downloadBlock}
+            {owner && (
+              <Link className="btn btn-ghost btn-block" style={{ marginTop: "0.75rem" }} to="/admin">
+                License admin
+              </Link>
+            )}
             <button
               type="button"
               className="btn btn-ghost btn-block"
