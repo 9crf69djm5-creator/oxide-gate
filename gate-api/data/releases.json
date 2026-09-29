@@ -2,6 +2,30 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.0",
+      "title": "Blade Ball + Sniper Duels",
+      "date": "2026-09-29T17:53:11.634Z",
+      "clientVersion": "version-2366ba214ec740ca",
+      "changes": [
+        "Blade Ball auto parry rework: high-rate ball tracking, ping-aware timing (ping compensation, timing and offset sliders), curve-aware prediction, target check and parry input options",
+        "Blade Ball clash spam: Spam On Clash with clash distance and max spam rate, plus a Visualize overlay",
+        "Sniper Duels skin changer in the GAMES tab (client-side only, your picks are saved)",
+        "Rivals skin changer in the GAMES tab (client-side only)",
+        "Custom skyboxes with presets, plus lighting tweaks: ambient, outdoor ambient, fog, time of day and hide atmosphere",
+        "Menu hover animations with a feature hint panel"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "22db41ab00835a7dc6b8d58639046268a41d5c7a3822bb60ec4f136affe06fe4",
+          "sizeBytes": 1699840
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.1.5",
       "title": "Keybinding & Gameplay fixes",
       "date": "2026-09-27T20:00:00.000Z",
