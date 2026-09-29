@@ -341,6 +341,40 @@ if (Number.isFinite(port) && port > 0) {
         return;
       }
 
+      if (req.method === "POST" && urlPath === "/internal/resolve-users") {
+        const secret = req.headers["x-admin-secret"];
+        if (!config.adminSecret || secret !== config.adminSecret) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ ok: false, error: "unauthorized" }));
+          return;
+        }
+        try {
+          const body = await readBody(req).catch(() => ({}));
+          if (!client.isReady()) {
+            res.writeHead(503, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ ok: false, error: "bot_not_ready" }));
+            return;
+          }
+          const ids = (Array.isArray(body?.ids) ? body.ids : [])
+            .map((s) => String(s || "").trim())
+            .filter((s) => /^\d{5,32}$/.test(s))
+            .slice(0, 200);
+          const users = {};
+          await Promise.all(
+            ids.map(async (id) => {
+              const u = await client.users.fetch(id).catch(() => null);
+              if (u) users[id] = { username: u.username, globalName: u.globalName || null };
+            })
+          );
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ ok: true, users }));
+        } catch (err) {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ ok: false, error: "resolve_failed", message: err.message }));
+        }
+        return;
+      }
+
       if (req.method === "POST" && urlPath === "/internal/announce-release") {
         const secret = req.headers["x-admin-secret"];
         if (!config.adminSecret || secret !== config.adminSecret) {

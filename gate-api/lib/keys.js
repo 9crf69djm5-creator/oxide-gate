@@ -667,6 +667,50 @@ function resetHwid({ key: rawKey }) {
   };
 }
 
+/**
+ * Detach the Discord account from a key. Also drops that account's
+ * Discord↔Roblox link when it points at the key's Roblox owner, otherwise
+ * /mykey would silently re-attach the key through the Roblox link.
+ */
+function unlinkDiscord({ key: rawKey }) {
+  const key = normalizeKey(rawKey);
+  if (!key) return { ok: false, error: "missing_key", message: "Enter a license key." };
+  const row = getKey(key);
+  if (!row) return { ok: false, error: "invalid_key", message: "Invalid license key." };
+  if (!row.discord_user_id) {
+    return { ok: false, error: "not_linked", message: "This key has no Discord link." };
+  }
+  getDb().prepare("UPDATE keys SET discord_user_id = NULL WHERE key = ?").run(key);
+  let robloxLinkRemoved = false;
+  if (row.roblox_user_id) {
+    const info = getDb()
+      .prepare("DELETE FROM discord_roblox_links WHERE discord_user_id = ? AND roblox_user_id = ?")
+      .run(row.discord_user_id, row.roblox_user_id);
+    robloxLinkRemoved = info.changes > 0;
+  }
+  return {
+    ok: true,
+    key,
+    previousDiscordUserId: row.discord_user_id,
+    robloxLinkRemoved,
+    message: "Discord link cleared.",
+  };
+}
+
+/** Undo a revoke: banned → active (if it was ever activated) or unused. */
+function reactivateKey({ key: rawKey }) {
+  const key = normalizeKey(rawKey);
+  if (!key) return { ok: false, error: "missing_key", message: "Enter a license key." };
+  const row = getKey(key);
+  if (!row) return { ok: false, error: "invalid_key", message: "Invalid license key." };
+  if (row.status !== "banned") {
+    return { ok: false, error: "not_banned", message: "Only revoked keys can be reactivated." };
+  }
+  const next = row.activated_at ? (isExpired(row) ? "expired" : "active") : "unused";
+  getDb().prepare("UPDATE keys SET status = ? WHERE key = ?").run(next, key);
+  return { ok: true, key, status: next, message: `Key reactivated (${next}).` };
+}
+
 function seedDemoKeys() {
   const demos = [
     { key: "OXIDE-DEMO-WEEK", plan: "week" },
@@ -706,6 +750,8 @@ module.exports = {
   validateOrActivate,
   revokeKey,
   resetHwid,
+  unlinkDiscord,
+  reactivateKey,
   seedDemoKeys,
   repairLifetimeKeys,
   resolveDurationDays,

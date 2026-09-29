@@ -11,6 +11,7 @@ const identity = require("./lib/identity");
 const externalVersion = require("./lib/external-version");
 const offsetsLib = require("./lib/offsets");
 const releasesLib = require("./lib/releases");
+const admin = require("./lib/admin");
 
 const PORT = Number(process.env.PORT) || 8787;
 const ADMIN_SECRET = process.env.ADMIN_SECRET || "change-me-to-a-long-random-string";
@@ -581,6 +582,7 @@ app.post("/api/validate", async (req, res) => {
       const status = result.error === "hwid_mismatch" || result.error === "banned" ? 403 : 400;
       return res.status(status).json(result);
     }
+    admin.touchLastSeen(result.key || key);
     await dbModule.flushToPostgres().catch(() => {});
     return res.json(result);
   } catch (err) {
@@ -841,6 +843,120 @@ app.post("/api/admin/recover", async (req, res) => {
 });
 
 /**
+ * Owner site sign-in, step 1 (Discord bot only, ADMIN_SECRET).
+ * Body: { discordUserId, discordUsername } → one-time code valid 5 minutes.
+ */
+app.post("/api/admin/session/issue", admin.requireAdmin({ secretOnly: true }), async (req, res) => {
+  try {
+    const result = admin.issueLoginCode({
+      discordUserId: req.body?.discordUserId,
+      discordUsername: req.body?.discordUsername,
+    });
+    if (!result.ok) {
+      return res.status(result.error === "not_owner" ? 403 : 400).json(result);
+    }
+    await dbModule.flushToPostgres().catch(() => {});
+    return res.json({
+      ...result,
+      loginUrl: `${SITE_URL}/admin#code=${encodeURIComponent(result.code)}`,
+    });
+  } catch (err) {
+    console.error("[admin/session/issue]", err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
+});
+
+/** Owner site sign-in, step 2: trade the one-time code for an HttpOnly session cookie. */
+app.post("/api/admin/session/exchange", async (req, res) => {
+  try {
+    if (!admin.csrfOk(req)) return admin.notFound(req, res);
+    const result = admin.exchangeLoginCode(req.body?.code);
+    if (!result.ok) return admin.notFound(req, res);
+    admin.setSessionCookie(req, res, result.token);
+    await dbModule.flushToPostgres().catch(() => {});
+    return res.json({
+      ok: true,
+      expiresAt: result.expiresAt,
+      discordUserId: result.discordUserId,
+      discordUsername: result.discordUsername,
+    });
+  } catch (err) {
+    console.error("[admin/session/exchange]", err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
+});
+
+app.get("/api/admin/session", admin.requireAdmin({ sessionOnly: true }), (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  return res.json({
+    ok: true,
+    discordUserId: req.admin.discordUserId,
+    discordUsername: req.admin.discordUsername,
+    expiresAt: req.admin.expiresAt,
+  });
+});
+
+app.post("/api/admin/session/logout", admin.requireAdmin({ sessionOnly: true }), async (req, res) => {
+  admin.endSession(req.admin.token);
+  admin.clearSessionCookie(req, res);
+  await dbModule.flushToPostgres().catch(() => {});
+  return res.json({ ok: true });
+});
+
+/** Owner dashboard: every key with HWID, Discord, Roblox, claim and last-seen binds. */
+app.get("/api/admin/keys", admin.requireAdmin(), async (req, res) => {
+  try {
+    res.setHeader("Cache-Control", "no-store");
+    const items = await admin.listAllKeys({ resolveNames: req.query.names !== "0" });
+    await dbModule.flushToPostgres().catch(() => {});
+    return res.json({
+      ok: true,
+      count: items.length,
+      keys: items,
+      audit: admin.recentAudit(30),
+      ownerAllowListActive: admin.ownerAllowList().length > 0,
+    });
+  } catch (err) {
+    console.error("[admin/keys]", err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
+});
+
+const ADMIN_KEY_ACTIONS = {
+  "reset-hwid": (key) => keys.resetHwid({ key }),
+  "unlink-discord": (key) => keys.unlinkDiscord({ key }),
+  revoke: (key) => keys.revokeKey({ key }),
+  reactivate: (key) => keys.reactivateKey({ key }),
+};
+
+app.post("/api/admin/keys/:action", admin.requireAdmin(), async (req, res) => {
+  const run = ADMIN_KEY_ACTIONS[req.params.action];
+  if (!run) {
+    return res.status(404).json({ ok: false, error: "unknown_action", message: "Unknown admin action." });
+  }
+  try {
+    const key = req.body?.key;
+    const result = run(key);
+    if (!result.ok) {
+      const status = result.error === "invalid_key" ? 404 : result.error === "banned" ? 403 : 400;
+      return res.status(status).json(result);
+    }
+    admin.audit(
+      req.admin.actor,
+      req.params.action,
+      result.key,
+      result.previousHwid || result.previousDiscordUserId || result.status || null
+    );
+    console.log(`[admin] ${req.params.action} ${result.key} by ${req.admin.actor}`);
+    await dbModule.flushToPostgres().catch(() => {});
+    return res.json(result);
+  } catch (err) {
+    console.error(`[admin/keys/${req.params.action}]`, err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
+});
+
+/**
  * Stub: SellApp (or similar) webhook — future auto-insert of keys after checkout.
  * Does not process payments yet; returns 501 with instructions.
  */
@@ -939,6 +1055,10 @@ function startKeepAlivePings() {
 
 async function main() {
   await dbModule.initDb();
+  admin.ensureTables();
+  if (!admin.secretUsable()) {
+    console.warn("  ADMIN_SECRET is unset or the public placeholder — owner admin routes will not accept it.");
+  }
   if (typeof keys.repairLifetimeKeys === "function") {
     keys.repairLifetimeKeys();
   }

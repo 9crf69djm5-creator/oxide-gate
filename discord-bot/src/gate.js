@@ -289,7 +289,32 @@ async function adminRecover(opts) {
   return { ok: res.ok && body.ok !== false, status: res.status, body };
 }
 
+/**
+ * Owner-only: mint a one-time website admin login code (ADMIN_SECRET).
+ * @param {object} opts
+ */
+async function issueAdminLogin(opts) {
+  const url = `${opts.apiBaseUrl.replace(/\/$/, "")}/api/admin/session/issue`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-Admin-Secret": opts.adminSecret,
+      "User-Agent": "OXIDE-DiscordBot/1.0",
+    },
+    body: JSON.stringify({
+      discordUserId: String(opts.discordUserId || ""),
+      discordUsername: String(opts.discordUsername || ""),
+    }),
+    signal: AbortSignal.timeout(45000),
+  });
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok && body.ok !== false, status: res.status, body };
+}
+
 module.exports = {
+  issueAdminLogin,
   fetchHealth,
   fetchProducts,
   probeDownload,

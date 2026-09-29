@@ -9,6 +9,8 @@ import Features from "./pages/Features";
 import Status from "./pages/Status";
 import Offsets from "./pages/Offsets";
 import Changelog from "./pages/Changelog";
+import Admin from "./pages/Admin";
+import NotFound from "./pages/NotFound";
 
 export default function App() {
   const location = useLocation();
@@ -25,6 +27,8 @@ export default function App() {
           <Route path="/status" element={<Status />} />
           <Route path="/offsets" element={<Offsets />} />
           <Route path="/changelog" element={<Changelog />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </AnimatePresence>
     </Layout>

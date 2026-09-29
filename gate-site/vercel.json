@@ -1,7 +1,11 @@
 {
   "rewrites": [
     {
-      "source": "/((?!downloads/|releases\\.json|offsets\\.json).*)",
+      "source": "/api/admin/:path*",
+      "destination": "https://oxide-gate-api.onrender.com/api/admin/:path*"
+    },
+    {
+      "source": "/((?!downloads/|releases\\.json|offsets\\.json|api/).*)",
       "destination": "/index.html"
     }
   ],
@@ -13,6 +17,10 @@
     {
       "source": "/releases.json",
       "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+    },
+    {
+      "source": "/api/admin/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
     },
     {
       "source": "/(.*)",

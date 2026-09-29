@@ -37,6 +37,13 @@ const config = {
   get adminSecret() {
     return optional("ADMIN_SECRET");
   },
+  /** Extra Discord ids allowed to use /admin-login besides the guild owner. */
+  get ownerDiscordIds() {
+    return optional("OWNER_DISCORD_IDS")
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => /^\d{5,32}$/.test(s));
+  },
   get apiBaseUrl() {
     return optional("API_BASE_URL", "https://oxide-gate-api.onrender.com").replace(/\/$/, "");
   },

@@ -33,6 +33,7 @@ const {
   linkRobloxIdentity,
   fetchLicenseByRoblox,
   adminRecover,
+  issueAdminLogin,
 } = require("./gate");
 const { collectStatusSnapshot, buildStatusEmbed, syncStatusChannel } = require("./status");
 const { getLicense, setLicense } = require("./licenses");
@@ -77,6 +78,19 @@ function isStaffPlus(member) {
     const role = findRole(guild, name);
     return role && cache.has(role.id);
   });
+}
+
+/**
+ * Website owner access: the Discord guild owner, or an id listed in
+ * OWNER_DISCORD_IDS. Roles are deliberately ignored — they can be assigned.
+ * @param {import('discord.js').ChatInputCommandInteraction} interaction
+ */
+function isSiteOwner(interaction) {
+  const id = interaction.user?.id;
+  if (!id || !interaction.guild) return false;
+  if (interaction.guildId !== config.guildId) return false;
+  if (interaction.guild.ownerId === id) return true;
+  return config.ownerDiscordIds.includes(id);
 }
 
 /**
@@ -734,6 +748,10 @@ const commandData = [
       o.setName("force").setDescription("Re-post even if already announced").setRequired(false)
     ),
   new SlashCommandBuilder()
+    .setName("admin-login")
+    .setDescription("Owner only: one-time sign-in link for the website admin panel")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder()
     .setName("help")
     .setDescription("List OXIDE bot commands"),
 ].map((c) => c.toJSON());
@@ -872,6 +890,43 @@ async function handleCommand(interaction, client) {
     return interaction.reply(buildOffsetsPayload());
   }
 
+  if (name === "admin-login") {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    if (!isSiteOwner(interaction)) {
+      console.warn(`[admin-login] refused ${interaction.user.tag} (${interaction.user.id})`);
+      return interaction.editReply({ content: "This command is limited to the server owner." });
+    }
+    if (!config.adminSecret) {
+      return interaction.editReply({ content: "`ADMIN_SECRET` is not set on this bot." });
+    }
+    try {
+      const result = await issueAdminLogin({
+        apiBaseUrl: config.apiBaseUrl,
+        adminSecret: config.adminSecret,
+        discordUserId: interaction.user.id,
+        discordUsername: interaction.user.username,
+      });
+      if (!result.ok || !result.body?.code) {
+        return interaction.editReply({
+          content: `Could not create a login link (HTTP ${result.status}): \`${String(
+            result.body?.message || result.body?.error || "unknown"
+          ).slice(0, 300)}\``,
+        });
+      }
+      const loginUrl = `${config.siteUrl}/admin#code=${encodeURIComponent(result.body.code)}`;
+      return interaction.editReply({
+        content:
+          "One-time admin sign-in link — expires in **5 minutes** and works once. " +
+          "Do not share it.",
+        components: [linkRow([["Open admin panel", loginUrl]])],
+      });
+    } catch (err) {
+      return interaction.editReply({
+        content: `Failed: \`${err.message}\` — gate-api may be waking up, try again in a minute.`,
+      });
+    }
+  }
+
   if (name === "help") {
     const embed = brandEmbed({
       title: "OXIDE bot commands",
@@ -917,6 +972,7 @@ async function handleCommand(interaction, client) {
           "`/role` — Add or remove OXIDE roles",
           "`/release-announce` — Post the latest release",
           "`/setup-server` — Rebuild roles and channels (Admin)",
+          "`/admin-login` — Website license admin (server owner only)",
         ].join("\n"),
       });
     }
