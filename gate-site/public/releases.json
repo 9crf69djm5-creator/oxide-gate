@@ -2,6 +2,30 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.7",
+      "title": "Blade Ball parry tracks movement, faster reaction",
+      "date": "2026-09-29T22:16:06.894Z",
+      "clientVersion": "version-2366ba214ec740ca",
+      "changes": [
+        "Blade Ball auto parry now recalculates every tick while you move, strafe, jump or turn, so the click stays on your contact circle. The circle is centered on your character, so turning never shifts it",
+        "It does not click early: it clicks when time to impact enters the click window (speed lead + ping + input delay)",
+        "Faster reaction: when a ball gets close to your click window, the parry loop checks about 4 times per millisecond instead of once, so the click goes out the moment the window opens. Targeting is re-checked every 5 ms and a new ball is picked up within 50 ms",
+        "If the curved path would miss only because you stepped aside, it re-aims at where you are now instead of dropping the lock. If it still can't lock, it uses the old time-to-impact timing. Straight shots time exactly as before",
+        "Late backstop: if the ball would reach you before the next frame plus input delay and no click has gone out yet, it clicks once. It never clicks at a ball that is leaving",
+        "Visualize shows LOCK or fallback next to tti and window"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "2e97a45c7f4322aa428e8f392f8df918b2e4f0b364da898c13179d521a7ccd72",
+          "sizeBytes": 2044928
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.6",
       "title": "Steal An Egg egg picker",
       "date": "2026-09-29T22:06:10.347Z",
