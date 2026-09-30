@@ -2,6 +2,26 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.9",
+      "title": "Offsets for Roblox version-02c37bc51a384b8f",
+      "date": "2026-09-30T17:51:03.978Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Offsets refreshed for the new Roblox version: version-02c37bc51a384b8f (0.741.0.7411058), dumped live with OxideDumper",
+        "Public offsets (JSON, raw, hex, HPP, C#, TXT) updated to the same Roblox build"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "99c462b06b2fbf829935497e1859cb00e37d1cd21851debc822336527c1c7163",
+          "sizeBytes": 2049024
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.8",
       "title": "Parry click timing fix, live Auto Ping, realistic skies",
       "date": "2026-09-29T22:31:39.939Z",
