@@ -2,6 +2,32 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.15",
+      "title": "Parry: one on-time click per clash return",
+      "date": "2026-09-30T19:29:28.448Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Clashes of any range get one on-time click per return; normal balls stay one click and not early",
+        "Clash is detected on the first rally half from the nearest opponent's distance and the ball's trip back at its current speed; no waiting for retargets",
+        "In a clash the click for each return is timed through the opponent: time for the ball to reach them plus the trip back, against live ping + delivery + margin, so fast returns are no longer clicked too late",
+        "Each return is its own approach: the reflect away from you re-arms on that tick (velocity flip or a receding frame), and one arrival can never get two clicks",
+        "A return heading back at you counts as yours right away, even before the ball's target updates",
+        "Spam Rate still caps clash clicks but never holds back a real return",
+        "Long balls that aren't clashes keep the same single on-time click",
+        "Overlay shows CLASH with the return time next to the window"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "a181245a81fceda3f4b2ca4dcc3d9c21a1125ab7732a906709640821f8872f64",
+          "sizeBytes": 2055168
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.14",
       "title": "Parry: tracking and one on-time click together",
       "date": "2026-09-30T19:03:00.643Z",
