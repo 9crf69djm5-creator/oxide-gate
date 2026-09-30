@@ -2,6 +2,27 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.10",
+      "title": "Offsets synced with theo's dump",
+      "date": "2026-09-30T18:03:21.490Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Offsets synced with theo's dump for the Roblox version: version-02c37bc51a384b8f (0.741.0.7411058)",
+        "RunService.HeartbeatFPS and LruNode.CachedItem now match theo's values for this build",
+        "Public offsets (JSON, raw, hex, HPP, C#, TXT) updated to the same merged set"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "b628b43e4693e7b351be4cc5367e298179b65088ab571f3a329e93655b6b7e7d",
+          "sizeBytes": 2049024
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.9",
       "title": "Offsets for Roblox version-02c37bc51a384b8f",
       "date": "2026-09-30T17:51:03.978Z",
