@@ -2,6 +2,27 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.17",
+      "title": "Exact timing, no spam, one click per arrival",
+      "date": "2026-09-30T19:53:12.489Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Removed clash ahead prediction to prevent pre-fires and double clicks",
+        "Ensures exactly one click is sent precisely on time per approach or clash return",
+        "Prevents swinging early on far balls"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "62142986ae2312478c6ec023f7c59a292a2618c9215c6548644cae7f8681f45d",
+          "sizeBytes": 2054144
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.16",
       "title": "Parry: roster check, no wasted clash clicks, walk-in",
       "date": "2026-09-30T19:33:19.440Z",
