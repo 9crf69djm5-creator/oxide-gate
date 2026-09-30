@@ -2,6 +2,31 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.11",
+      "title": "Parry timing: no early clicks, no missed windows",
+      "date": "2026-09-30T18:35:13.387Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Parry no longer clicks early and no longer misses the window on long shots, clashes, and curves",
+        "Every click waits until the predicted time-to-impact is inside the parry window, clash mode included",
+        "Clash no longer spams while the ball is on the opponent's side: one click per approach, paced by Spam Rate",
+        "Ping lead is capped at 300 ms and mis-read ping values are ignored, so Auto Ping can't fire while the ball is still far",
+        "The speed jump from a hit or reflect no longer counts as acceleration, which made the prediction click early",
+        "A ball that reaches you before the next frame plus input delay gets one click on that tick; a leaving ball is never clicked",
+        "If a click could not have landed and the ball is still coming, one rescue click follows (never a second click on a curve)"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "c47699518fe3f2a9195804b70191e358b6134a6d31ca773632a645374a572039",
+          "sizeBytes": 2048512
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.10",
       "title": "Offsets synced with theo's dump",
       "date": "2026-09-30T18:03:21.490Z",
