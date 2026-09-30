@@ -2,6 +2,30 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.14",
+      "title": "Parry: tracking and one on-time click together",
+      "date": "2026-09-30T19:03:00.643Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Tracking and the single on-time click now work together: parry clicks again when the ball reaches the window, still one click, still not early",
+        "The window now includes the delivery delay (the click waiting for Roblox's input frame plus how far behind the server the ball we read is), which v1.2.13 left out, so its clicks arrived after the ball had already hit",
+        "Delivery is measured live from your own parries (click to reflect seen, minus ping) and starts from a small estimate until two parries are measured; no fixed 160-300 ms margin",
+        "If the lock drops just as the ball closes in, a window crossed between ticks still gets its one click",
+        "Still one click per approach, no rescue click; re-arms only after the ball leaves and comes back",
+        "Status and overlay show ARMED / HELD and the window split into ping + delivery + margin"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "22e5afa7e9e595db9c47cf08f3ff231b923118ca5b8d0ea4e5fe6b800ef65c96",
+          "sizeBytes": 2053120
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.13",
       "title": "Parry: one click per approach, no early swing",
       "date": "2026-09-30T18:50:28.147Z",
