@@ -2,6 +2,28 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.16",
+      "title": "Parry: roster check, no wasted clash clicks, walk-in",
+      "date": "2026-09-30T19:33:19.440Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Clash returns are only clicked when the ball's line reaches you before any other player in the arena, so a ball sent past you to someone else is never parried",
+        "A clash click timed through the opponent's return only fires if the ball is actually flying into that opponent; a click for a return that never comes would whiff and put parry on its 2 s cooldown",
+        "Walking into a slow or resting ball that targets you now gets its one on-time click (only within a few studs and while you close in)",
+        "Still one click per approach and per clash return, no spam, no early swing on long balls; tracking, Auto Ping and the measured window are unchanged"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "cffad57ce9e07db4e51d2486f0b4a880451d18bc9087060ca2ee339503101b13",
+          "sizeBytes": 2056704
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.15",
       "title": "Parry: one on-time click per clash return",
       "date": "2026-09-30T19:29:28.448Z",
