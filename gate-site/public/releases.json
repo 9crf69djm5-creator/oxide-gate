@@ -2,6 +2,29 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.18",
+      "title": "Parry restored to first auto-parry",
+      "date": "2026-09-30T20:16:32.409Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Blade Ball auto parry was restored to the first published auto-parry behavior (v1.2.4 style)",
+        "Clicks use predicted time-to-impact on the real physics ball, and long-range shots click only inside the lead window",
+        "Fast clashes start from the nearest opponent's distance; slow balls close to you are not clicked early",
+        "Delivery-delay learning, clash pre-fire, walk-in, roster check, rescue clicks, and the later window shrinking are not in this build",
+        "Roblox offsets, skybox, weather, Steal An Egg, AI Follow, and admin are unchanged"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "0ab8264778949c73f16c11d6d71c418a1c9f8b934b5eda5f3bd871617443c7f7",
+          "sizeBytes": 2042880
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.17",
       "title": "Exact timing, no spam, one click per arrival",
       "date": "2026-09-30T19:53:12.489Z",
