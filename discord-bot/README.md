@@ -35,6 +35,7 @@ API: https://oxide-gate-api.onrender.com
   🚫・do-not-type     ← honeypot (typing = kick)
 ━━ INFO ━━
   📢・announcements
+  🔔・updates         ← bot posts Oxide releases
   📜・rules
   🟢・status          ← bot posts API status
   🎮・roblox-versions
@@ -111,7 +112,7 @@ Publishing is one command from the repo root: `.\release.ps1 -Title "..." -Notes
 
 - The bot polls `GET /api/releases/latest` on startup and every `RELEASE_POLL_MINUTES` (default 5) and posts an embed
   (version, date, changelog bullets, Download / Changelog / Website buttons) once per version.
-- Channel: `UPDATES_CHANNEL_ID` if set, otherwise the existing **#announcements** channel.
+- Channel: `UPDATES_CHANNEL_ID` if set, otherwise **#updates** (never #announcements).
 - Idempotent: before posting it looks for its own embed with footer `OXIDE release v<version>` in the channel,
   so restarts / redeploys never re-announce.
 - It will not announce while the hosted Oxide.exe hash differs from the release (deploy still rolling out).
@@ -122,7 +123,7 @@ Publishing is one command from the repo root: `.\release.ps1 -Title "..." -Notes
 
 | Env | Default | Purpose |
 |-----|---------|---------|
-| `UPDATES_CHANNEL_ID` | _(unset → #announcements)_ | Channel for release posts |
+| `UPDATES_CHANNEL_ID` | _(unset → #updates)_ | Channel for release posts |
 | `UPDATES_PING` | _(none)_ | Text before the embed, e.g. `@everyone` or `<@&ROLE_ID>` |
 | `RELEASE_POLL_MINUTES` | `5` | How often to check the API for a new release |
 | `RELEASE_ANNOUNCE` | `true` | `false` disables auto-announcements |

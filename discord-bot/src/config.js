@@ -62,7 +62,7 @@ const config = {
   get siteUrl() {
     return optional("SITE_URL", "https://oxide-gate-site.vercel.app").replace(/\/$/, "");
   },
-  /** Optional override; default posts release announcements in #announcements. */
+  /** Optional override; default posts release announcements in #updates. */
   get updatesChannelId() {
     return optional("UPDATES_CHANNEL_ID");
   },

@@ -32,6 +32,7 @@ const CHANNELS = {
   verify: "verify",
   honeypot: "do-not-type",
   announcements: "announcements",
+  updates: "updates",
   rules: "rules",
   status: "status",
   roblox: "roblox-versions",
@@ -480,6 +481,7 @@ async function setupGuild(guild, meta = {}) {
 
   for (const [display, logical, topic] of [
     ["📢・announcements", CHANNELS.announcements, "Official OXIDE announcements"],
+    ["🔔・updates", CHANNELS.updates, "Oxide release updates"],
     ["📜・rules", CHANNELS.rules, "Server rules"],
     ["🟢・status", CHANNELS.status, "Live API / bot status"],
     ["🎮・roblox-versions", CHANNELS.roblox, "Latest Roblox Windows client version"],

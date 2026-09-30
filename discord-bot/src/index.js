@@ -49,6 +49,16 @@ async function runReleaseJob(reason) {
   }
 }
 
+function updatesChannelId() {
+  if (config.updatesChannelId) return config.updatesChannelId;
+  const guild = client.guilds.cache.get(config.guildId);
+  if (!guild) return null;
+  return (
+    findChannel(guild, CHANNELS.updates, ChannelType.GuildText) ||
+    findChannel(guild, CHANNELS.updates, ChannelType.GuildAnnouncement)
+  )?.id || null;
+}
+
 async function runRobloxJob(reason) {
   try {
     const result = await syncRobloxVersion(client, config.guildId);
@@ -414,6 +424,7 @@ if (Number.isFinite(port) && port > 0) {
           adminSecretConfigured: Boolean(config.adminSecret),
           releaseAnnouncer: config.releaseAnnounceEnabled,
           announcedVersion: lastAnnounced().version,
+          updatesChannelId: updatesChannelId(),
         })
       );
     })

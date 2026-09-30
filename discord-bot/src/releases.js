@@ -160,7 +160,7 @@ function releaseRows(release) {
 }
 
 /**
- * UPDATES_CHANNEL_ID when set, else the existing #announcements channel.
+ * UPDATES_CHANNEL_ID when set, else the #updates channel. Never falls back to #announcements.
  * @param {import('discord.js').Guild} guild
  */
 async function resolveUpdatesChannel(guild) {
@@ -173,10 +173,10 @@ async function resolveUpdatesChannel(guild) {
   }
   await guild.channels.fetch();
   const ch =
-    findChannel(guild, CHANNELS.announcements, ChannelType.GuildText) ||
-    findChannel(guild, CHANNELS.announcements, ChannelType.GuildAnnouncement);
+    findChannel(guild, CHANNELS.updates, ChannelType.GuildText) ||
+    findChannel(guild, CHANNELS.updates, ChannelType.GuildAnnouncement);
   if (!ch?.isTextBased()) {
-    throw new Error("#announcements not found — set UPDATES_CHANNEL_ID or run /setup-server");
+    throw new Error("#updates not found — set UPDATES_CHANNEL_ID or run /setup-server");
   }
   return ch;
 }
