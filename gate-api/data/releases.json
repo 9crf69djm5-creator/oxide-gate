@@ -2,6 +2,32 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.13",
+      "title": "Parry: one click per approach, no early swing",
+      "date": "2026-09-30T18:50:28.147Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "One click per approach: no follow-up or rescue click, so parry never clicks twice and misses",
+        "No early swing: the click window is now live ping + one input delay + a small speed margin (25-75 ms), nothing more",
+        "Timing comes from live ping and ball speed on every tick; a speed-up from a hit changes time-to-impact that tick",
+        "A new click is only allowed after the ball actually leaves (its own motion away from you, distance growing) and comes back",
+        "Target flicker, backing away from the ball, or a curve no longer re-arm the same approach",
+        "If the ball will reach you before Roblox's next frame plus input delay, that tick is the click",
+        "Ping uses the median of the last ~1 s in Auto and manual mode (one spike ignored, a real change applies in under a second); the 300 ms cap is gone",
+        "Overlay shows tti next to the window broken into ping + input + margin"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "5216bff5083decca70e18f8e72c5f3647db3806c4bd4dd2499c17c9e708843bc",
+          "sizeBytes": 2049536
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.12",
       "title": "Ball tracking: locked on, never behind",
       "date": "2026-09-30T18:38:53.697Z",
