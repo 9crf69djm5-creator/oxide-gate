@@ -25,12 +25,16 @@ const { syncStatusChannel } = require("./status");
 const { deliverKeyDm } = require("./deliver");
 const { announceLatestRelease, lastAnnounced } = require("./releases");
 const { brandEmbed, COLORS } = require("./brand");
+const { ensureHelpChannel, handleHelpMessage, handleAsk, helpChannel } = require("./helpchat");
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
+    ...(config.aiHelpEnabled
+      ? [GatewayIntentBits.MessageContent, GatewayIntentBits.DirectMessages]
+      : []),
   ],
   partials: [Partials.Channel, Partials.GuildMember, Partials.Message],
 });
@@ -174,6 +178,16 @@ client.once(Events.ClientReady, async (c) => {
     console.warn("Auto-setup skipped:", err.message);
   }
 
+  if (config.aiHelpEnabled) {
+    try {
+      const guild = await client.guilds.fetch(config.guildId);
+      const { channel, created } = await ensureHelpChannel(guild);
+      console.log(`[ai] help channel #${channel.name} (${channel.id})${created ? " created" : ""}`);
+    } catch (err) {
+      console.warn("[ai] help channel setup failed:", err.message);
+    }
+  }
+
   await runRobloxJob("startup");
   await runStatusJob("startup");
 
@@ -225,6 +239,12 @@ client.on(Events.MessageCreate, async (message) => {
   } catch (err) {
     console.warn("[honeypot]", err.message);
   }
+  if (!config.aiHelpEnabled) return;
+  try {
+    await handleHelpMessage(message, client);
+  } catch (err) {
+    console.warn("[ai]", err.message);
+  }
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -238,6 +258,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
       return;
     }
     if (!interaction.isChatInputCommand()) return;
+    if (interaction.commandName === "ask") {
+      await handleAsk(interaction);
+      return;
+    }
+    // Every other command is guild-only; /ask is the only one exposed in DMs.
+    if (!interaction.guildId) return;
     await handleCommand(interaction, client);
   } catch (err) {
     if (err?.code === 10062) {
@@ -425,6 +451,8 @@ if (Number.isFinite(port) && port > 0) {
           releaseAnnouncer: config.releaseAnnounceEnabled,
           announcedVersion: lastAnnounced().version,
           updatesChannelId: updatesChannelId(),
+          aiHelp: config.aiHelpEnabled,
+          helpChannelId: helpChannel(),
         })
       );
     })

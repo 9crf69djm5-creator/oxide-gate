@@ -62,6 +62,13 @@ const config = {
   get siteUrl() {
     return optional("SITE_URL", "https://oxide-gate-site.vercel.app").replace(/\/$/, "");
   },
+  /** Optional override for the channel the OXIDE AI answers in (default: #help). */
+  get helpChannelId() {
+    return optional("HELP_CHANNEL_ID");
+  },
+  get aiHelpEnabled() {
+    return String(process.env.AI_HELP || "true").toLowerCase() !== "false";
+  },
   /** Optional override; default posts release announcements in #updates. */
   get updatesChannelId() {
     return optional("UPDATES_CHANNEL_ID");

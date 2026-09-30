@@ -14,7 +14,6 @@ const releasesLib = require("./lib/releases");
 const admin = require("./lib/admin");
 
 const PORT = Number(process.env.PORT) || 8787;
-const ADMIN_SECRET = process.env.ADMIN_SECRET || "change-me-to-a-long-random-string";
 const SITE_EXE_URL = "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
 const DOWNLOAD_URL = safeDownloadUrl(process.env.DOWNLOAD_URL) || SITE_EXE_URL;
 const DISCORD_INVITE = process.env.DISCORD_INVITE || "https://discord.gg/3PXJ8r56T";
@@ -27,6 +26,18 @@ const PUBLIC_API_BASE = (
 ).replace(/\/$/, "");
 const SITE_URL = (process.env.SITE_URL || "https://oxide-gate-site.vercel.app").replace(/\/$/, "");
 const releaseCtx = { apiBase: PUBLIC_API_BASE, siteUrl: SITE_URL, downloadsDir };
+
+/**
+ * Bot / CLI / dumper routes authenticated by ADMIN_SECRET (header, Bearer or
+ * body.adminSecret). Callers without it get the generic 404.
+ */
+function legacySecretOk(req) {
+  return [
+    req.get("X-Admin-Secret"),
+    (req.get("Authorization") || "").replace(/^Bearer\s+/i, ""),
+    req.body && req.body.adminSecret,
+  ].some((s) => typeof s === "string" && s && admin.secretMatches(s));
+}
 
 /** Current release summary for health/status payloads. */
 function releaseSummary() {
@@ -382,17 +393,7 @@ app.get(["/api/offsets.txt", "/offsets.txt"], publicOffsetsCors, (_req, res) => 
  * Body: jonah dumper JSON ({ metadata, offsets }) or OXIDE namespaces shape.
  */
 app.post("/api/admin/offsets", (req, res) => {
-  const secret =
-    req.get("X-Admin-Secret") ||
-    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "") ||
-    (req.body && req.body.adminSecret);
-  if (!secret || secret !== ADMIN_SECRET) {
-    return res.status(401).json({
-      ok: false,
-      error: "unauthorized",
-      message: "Invalid admin secret.",
-    });
-  }
+  if (!legacySecretOk(req)) return admin.notFound(req, res);
 
   try {
     const body = { ...(req.body || {}) };
@@ -597,14 +598,7 @@ app.post("/api/validate", async (req, res) => {
  * Body: { plan, count, days }
  */
 app.post("/api/admin/create-keys", async (req, res) => {
-  const secret =
-    req.get("X-Admin-Secret") ||
-    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "") ||
-    (req.body && req.body.adminSecret);
-
-  if (!secret || secret !== ADMIN_SECRET) {
-    return res.status(401).json({ ok: false, error: "unauthorized", message: "Invalid admin secret." });
-  }
+  if (!legacySecretOk(req)) return admin.notFound(req, res);
 
   try {
     const { plan, count, days } = req.body || {};
@@ -630,14 +624,7 @@ app.post("/api/admin/create-keys", async (req, res) => {
  * Body: { key }
  */
 app.post("/api/admin/revoke-key", async (req, res) => {
-  const secret =
-    req.get("X-Admin-Secret") ||
-    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "") ||
-    (req.body && req.body.adminSecret);
-
-  if (!secret || secret !== ADMIN_SECRET) {
-    return res.status(401).json({ ok: false, error: "unauthorized", message: "Invalid admin secret." });
-  }
+  if (!legacySecretOk(req)) return admin.notFound(req, res);
 
   try {
     const result = keys.revokeKey({ key: req.body?.key });
@@ -658,14 +645,7 @@ app.post("/api/admin/revoke-key", async (req, res) => {
  * Body: { key }
  */
 app.post("/api/admin/reset-hwid", async (req, res) => {
-  const secret =
-    req.get("X-Admin-Secret") ||
-    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "") ||
-    (req.body && req.body.adminSecret);
-
-  if (!secret || secret !== ADMIN_SECRET) {
-    return res.status(401).json({ ok: false, error: "unauthorized", message: "Invalid admin secret." });
-  }
+  if (!legacySecretOk(req)) return admin.notFound(req, res);
 
   try {
     const result = keys.resetHwid({ key: req.body?.key });
@@ -687,13 +667,7 @@ app.post("/api/admin/reset-hwid", async (req, res) => {
  * Query or body: discordUserId
  */
 app.get("/api/admin/license-by-discord", (req, res) => {
-  const secret =
-    req.get("X-Admin-Secret") ||
-    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-
-  if (!secret || secret !== ADMIN_SECRET) {
-    return res.status(401).json({ ok: false, error: "unauthorized", message: "Invalid admin secret." });
-  }
+  if (!legacySecretOk(req)) return admin.notFound(req, res);
 
   try {
     const discordUserId =
@@ -722,14 +696,7 @@ app.get("/api/admin/license-by-discord", (req, res) => {
 });
 
 app.post("/api/admin/license-by-discord", (req, res) => {
-  const secret =
-    req.get("X-Admin-Secret") ||
-    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "") ||
-    (req.body && req.body.adminSecret);
-
-  if (!secret || secret !== ADMIN_SECRET) {
-    return res.status(401).json({ ok: false, error: "unauthorized", message: "Invalid admin secret." });
-  }
+  if (!legacySecretOk(req)) return admin.notFound(req, res);
 
   try {
     const discordUserId =
@@ -758,13 +725,7 @@ app.post("/api/admin/license-by-discord", (req, res) => {
  * Query: ?username=RobloxName
  */
 app.get("/api/admin/license-by-roblox", async (req, res) => {
-  const secret =
-    req.get("X-Admin-Secret") ||
-    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-
-  if (!secret || secret !== ADMIN_SECRET) {
-    return res.status(401).json({ ok: false, error: "unauthorized", message: "Invalid admin secret." });
-  }
+  if (!legacySecretOk(req)) return admin.notFound(req, res);
 
   try {
     const username =
@@ -788,14 +749,7 @@ app.get("/api/admin/license-by-roblox", async (req, res) => {
  * Body: { discordUserId?, robloxUsername? }
  */
 app.post("/api/admin/recover", async (req, res) => {
-  const secret =
-    req.get("X-Admin-Secret") ||
-    (req.get("Authorization") || "").replace(/^Bearer\s+/i, "") ||
-    (req.body && req.body.adminSecret);
-
-  if (!secret || secret !== ADMIN_SECRET) {
-    return res.status(401).json({ ok: false, error: "unauthorized", message: "Invalid admin secret." });
-  }
+  if (!legacySecretOk(req)) return admin.notFound(req, res);
 
   try {
     const discordUserId =
@@ -904,7 +858,7 @@ app.post("/api/admin/session/logout", admin.requireAdmin({ sessionOnly: true }),
 });
 
 /** Owner dashboard: every key with HWID, Discord, Roblox, claim and last-seen binds. */
-app.get("/api/admin/keys", admin.requireAdmin(), async (req, res) => {
+app.get("/api/admin/keys", admin.requireAdmin({ sessionOnly: true }), async (req, res) => {
   try {
     res.setHeader("Cache-Control", "no-store");
     const items = await admin.listAllKeys({ resolveNames: req.query.names !== "0" });
@@ -929,8 +883,8 @@ const ADMIN_KEY_ACTIONS = {
   reactivate: (key) => keys.reactivateKey({ key }),
 };
 
-app.post("/api/admin/keys/:action", admin.requireAdmin(), async (req, res) => {
-  const run = ADMIN_KEY_ACTIONS[req.params.action];
+app.post("/api/admin/keys/:action", admin.requireAdmin({ sessionOnly: true }), async (req, res) => {
+  const run = Object.hasOwn(ADMIN_KEY_ACTIONS, req.params.action) ? ADMIN_KEY_ACTIONS[req.params.action] : null;
   if (!run) {
     return res.status(404).json({ ok: false, error: "unknown_action", message: "Unknown admin action." });
   }

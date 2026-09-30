@@ -23,6 +23,12 @@ function shortHwid(h) {
   return h.length > 18 ? `${h.slice(0, 8)}…${h.slice(-6)}` : h;
 }
 
+function productUrl(c) {
+  return c.assetType === "GamePass"
+    ? `https://www.roblox.com/game-pass/${c.assetId}`
+    : `https://www.roblox.com/catalog/${c.assetId}`;
+}
+
 function matches(k, q) {
   if (!q) return true;
   const hay = [
@@ -35,6 +41,8 @@ function matches(k, q) {
     k.discordDisplayName,
     k.robloxUsername,
     k.robloxUserId,
+    k.discordRobloxLink?.robloxUsername,
+    ...(k.claims || []).flatMap((c) => [c.robloxUsername, c.robloxUserId, c.assetId]),
   ]
     .filter(Boolean)
     .join(" ")
@@ -75,11 +83,12 @@ export default function AdminPanel({ session, onSessionLost }) {
   }, [loadKeys]);
 
   const stats = useMemo(() => {
-    const c = { total: keys.length, active: 0, unused: 0, expired: 0, banned: 0, hwid: 0, discord: 0 };
+    const c = { total: keys.length, active: 0, unused: 0, expired: 0, banned: 0, hwid: 0, discord: 0, claims: 0 };
     for (const k of keys) {
       if (c[k.status] !== undefined) c[k.status] += 1;
       if (k.hwid) c.hwid += 1;
       if (k.discordUserId) c.discord += 1;
+      c.claims += k.claims?.length || 0;
     }
     return c;
   }, [keys]);
@@ -98,10 +107,10 @@ export default function AdminPanel({ session, onSessionLost }) {
     });
   }
 
-  async function copyKey(key) {
+  async function copyText(text, label = text) {
     try {
-      await navigator.clipboard.writeText(key);
-      setNotice({ kind: "ok", text: `Copied ${key}` });
+      await navigator.clipboard.writeText(text);
+      setNotice({ kind: "ok", text: `Copied ${label}` });
     } catch {
       setNotice({ kind: "err", text: "Clipboard blocked by the browser." });
     }
@@ -110,7 +119,9 @@ export default function AdminPanel({ session, onSessionLost }) {
   async function act(action, k) {
     const prompts = {
       "reset-hwid": () =>
-        window.confirm(`Reset HWID for ${k.key}?\n\nThe next Oxide.exe launch will bind a new machine.`),
+        window.confirm(
+          `Reset HWID for ${k.key}?\n\nCurrent HWID: ${k.hwid}\nThe next Oxide.exe launch will bind a new machine.`
+        ),
       "unlink-discord": () =>
         window.confirm(
           `Unlink Discord ${k.discordUsername ? "@" + k.discordUsername : k.discordUserId} from ${k.key}?\n\n/mykey will stop finding this key for that account.`
@@ -174,6 +185,7 @@ export default function AdminPanel({ session, onSessionLost }) {
               ["Revoked", stats.banned],
               ["HWID bound", stats.hwid],
               ["Discord linked", stats.discord],
+              ["Gamepass claims", stats.claims],
             ].map(([label, n]) => (
               <div className="admin-stat" key={label}>
                 <strong>{n}</strong>
@@ -186,7 +198,7 @@ export default function AdminPanel({ session, onSessionLost }) {
             <input
               className="offsets-search"
               type="search"
-              placeholder="Search key, Discord, Roblox, HWID…"
+              placeholder="Search key, Discord, Roblox, HWID, gamepass…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search keys"
@@ -216,6 +228,7 @@ export default function AdminPanel({ session, onSessionLost }) {
                   <th>Key</th>
                   <th>Status</th>
                   <th>Plan / expiry</th>
+                  <th>Purchase</th>
                   <th>HWID</th>
                   <th>Discord</th>
                   <th>Roblox</th>
@@ -235,7 +248,7 @@ export default function AdminPanel({ session, onSessionLost }) {
                           <button type="button" className="admin-link" onClick={() => toggleReveal(k.key)}>
                             {shown ? "Hide" : "Reveal"}
                           </button>
-                          <button type="button" className="admin-link" onClick={() => copyKey(k.key)}>
+                          <button type="button" className="admin-link" onClick={() => copyText(k.key)}>
                             Copy
                           </button>
                         </div>
@@ -252,11 +265,46 @@ export default function AdminPanel({ session, onSessionLost }) {
                         </div>
                         {k.activatedAt && <div className="admin-sub">{k.remainingLabel}</div>}
                       </td>
+                      <td data-label="Purchase">
+                        {k.claims?.length ? (
+                          k.claims.map((c) => (
+                            <div key={`${c.assetId}-${c.claimedAt}`}>
+                              <a href={productUrl(c)} target="_blank" rel="noreferrer">
+                                {c.assetType === "GamePass" ? "Gamepass" : "Roblox item"} · {c.plan}
+                              </a>
+                              <div className="admin-sub">
+                                by{" "}
+                                <a
+                                  href={`https://www.roblox.com/users/${c.robloxUserId}/profile`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  {c.robloxUsername ? `@${c.robloxUsername}` : c.robloxUserId}
+                                </a>
+                              </div>
+                              <div className="admin-sub">Claimed {fmt(c.claimedAt)}</div>
+                            </div>
+                          ))
+                        ) : (
+                          <span className="admin-sub">Manual key (no gamepass claim)</span>
+                        )}
+                      </td>
                       <td data-label="HWID">
                         {k.hwid ? (
-                          <code className="admin-mono" title={k.hwid}>
-                            {shortHwid(k.hwid)}
-                          </code>
+                          <>
+                            <code className="admin-mono" title={k.hwid}>
+                              {shortHwid(k.hwid)}
+                            </code>
+                            <div className="admin-inline-actions">
+                              <button
+                                type="button"
+                                className="admin-link"
+                                onClick={() => copyText(k.hwid, `HWID for ${k.key}`)}
+                              >
+                                Copy
+                              </button>
+                            </div>
+                          </>
                         ) : (
                           <span className="admin-sub">Not bound</span>
                         )}
@@ -297,11 +345,11 @@ export default function AdminPanel({ session, onSessionLost }) {
                                 {k.robloxUserId}
                               </a>
                             )}
-                            {k.claim && (
-                              <div className="admin-sub">
-                                Claimed {k.claim.assetType} · {fmt(k.claim.claimedAt)}
-                              </div>
-                            )}
+                          </>
+                        ) : k.discordRobloxLink ? (
+                          <>
+                            <div>@{k.discordRobloxLink.robloxUsername}</div>
+                            <div className="admin-sub">via Discord link</div>
                           </>
                         ) : (
                           <span className="admin-sub">—</span>

@@ -364,10 +364,13 @@ async function listAllKeys({ resolveNames = true } = {}) {
     .prepare("SELECT * FROM keys ORDER BY COALESCE(activated_at, created_at) DESC")
     .all();
   const claimRows = getDb()
-    .prepare("SELECT key, asset_id, asset_type, claimed_at FROM roblox_claims")
+    .prepare(
+      `SELECT key, asset_id, asset_type, plan, roblox_user_id, roblox_username, claimed_at
+       FROM roblox_claims ORDER BY claimed_at ASC`
+    )
     .all();
   const claimsByKey = {};
-  for (const c of claimRows) claimsByKey[c.key] = c;
+  for (const c of claimRows) (claimsByKey[c.key] ||= []).push(c);
   const links = getDb().prepare("SELECT * FROM discord_roblox_links").all();
   const linkByDiscord = {};
   for (const l of links) linkByDiscord[l.discord_user_id] = l;
@@ -385,7 +388,14 @@ async function listAllKeys({ resolveNames = true } = {}) {
 
   return rows.map((row) => {
     const lic = keys.formatLicense(row, { includeFullKey: true });
-    const claim = claimsByKey[row.key] || null;
+    const claims = (claimsByKey[row.key] || []).map((c) => ({
+      assetId: c.asset_id,
+      assetType: c.asset_type,
+      plan: c.plan,
+      robloxUserId: c.roblox_user_id,
+      robloxUsername: c.roblox_username || null,
+      claimedAt: c.claimed_at,
+    }));
     const link = row.discord_user_id ? linkByDiscord[row.discord_user_id] : null;
     const prof = row.discord_user_id ? profiles[row.discord_user_id] : null;
     return {
@@ -412,9 +422,9 @@ async function listAllKeys({ resolveNames = true } = {}) {
       discordRobloxLink: link
         ? { robloxUserId: link.roblox_user_id, robloxUsername: link.roblox_username, linkedAt: link.linked_at }
         : null,
-      claim: claim
-        ? { assetId: claim.asset_id, assetType: claim.asset_type, claimedAt: claim.claimed_at }
-        : null,
+      source: claims.length ? "roblox_claim" : "manual",
+      claim: claims[0] || null,
+      claims,
     };
   });
 }

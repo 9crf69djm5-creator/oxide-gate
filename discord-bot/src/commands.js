@@ -957,6 +957,7 @@ async function handleCommand(interaction, client) {
           "`/offsets` — Public offsets API and file downloads",
           "`/roblox-version` — Latest Roblox Windows client",
           "`/website` · `/site` · `/web` — Site quick links",
+          "`/ask` — Ask the OXIDE AI (in the help channel or DM the bot)",
           "`/ping` — Bot latency",
         ].join("\n"),
       }
@@ -1588,7 +1589,7 @@ async function handleCommand(interaction, client) {
           result.body?.error ||
           JSON.stringify(result.body ?? {});
         const hint =
-          result.status === 401 || result.status === 403
+          result.status === 401 || result.status === 403 || result.body?.error === "not_found"
             ? "\n\nLikely **ADMIN_SECRET mismatch** — copy the secret from Render **oxide-gate-api** → Environment into **oxide-discord-bot-fra**."
             : result.status === 0 || /abort|timeout|fetch/i.test(String(detail))
               ? `\n\nGate API may be cold/unreachable: \`${config.apiBaseUrl}\``

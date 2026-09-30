@@ -46,6 +46,8 @@ const CHANNELS = {
 };
 
 const VERIFY_BUTTON_ID = "oxide-verify";
+const HELP_TOPIC =
+  "Ask anything about OXIDE — the OXIDE AI answers here (also in DMs with the bot or /ask). Staff help too.";
 const HONEYPOT_NAMES = new Set(["do-not-type", "bot-trap", "🚫do-not-type", "🚫-do-not-type"]);
 
 /**
@@ -535,7 +537,7 @@ async function setupGuild(guild, meta = {}) {
       CHANNELS.help,
       supportCat,
       {
-        topic: "Ask for help · staff will respond",
+        topic: HELP_TOPIC,
         permissionOverwrites: communityOw,
       }
     );
@@ -784,4 +786,5 @@ module.exports = {
   CUSTOMER_PLUS,
   CHANNELS,
   VERIFY_BUTTON_ID,
+  HELP_TOPIC,
 };
