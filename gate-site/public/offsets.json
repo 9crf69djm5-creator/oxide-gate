@@ -2,8 +2,8 @@
   "ok": true,
   "source": "OXIDE",
   "robloxVersion": "version-02c37bc51a384b8f",
-  "generatedAt": "2026-09-30T17:49:24.301Z",
-  "totalOffsets": 772,
+  "generatedAt": "2026-09-30T17:53:13.706Z",
+  "totalOffsets": 766,
   "namespaces": {
     "Adornment": {
       "Adornee": {
@@ -631,22 +631,6 @@
         "decimal": 416
       }
     },
-    "LRUNode": {
-      "AssetID": {
-        "hex": "0x10",
-        "decimal": 16
-      },
-      "CachedItem": {
-        "hex": "0x38",
-        "decimal": 56
-      }
-    },
-    "LRUHolder": {
-      "MemEnforcedLRUCache": {
-        "hex": "0x20",
-        "decimal": 32
-      }
-    },
     "PlayerMouse": {
       "Icon": {
         "hex": "0xB8",
@@ -697,14 +681,6 @@
       "VerticesEnd": {
         "hex": "0x8",
         "decimal": 8
-      },
-      "AABBMax": {
-        "hex": "0x18C",
-        "decimal": 396
-      },
-      "AABBMin": {
-        "hex": "0x180",
-        "decimal": 384
       }
     },
     "Fire": {
@@ -1683,10 +1659,6 @@
       "ToMeshData": {
         "hex": "0x40",
         "decimal": 64
-      },
-      "LRUHolder": {
-        "hex": "0xC8",
-        "decimal": 200
       }
     },
     "MeshData": {
