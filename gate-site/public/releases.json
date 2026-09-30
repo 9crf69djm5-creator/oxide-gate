@@ -2,6 +2,27 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.19",
+      "title": "Parry uses click and F",
+      "date": "2026-09-30T20:32:04.997Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Parry uses left click and F, with accurate time-to-impact prediction",
+        "Time-to-impact is recomputed every tick from the live ball speed and your position, and live ping stays in the lead",
+        "Curves follow the ball's real velocity toward you. Long shots and clash returns each send one click and one F tap, only inside the lead window"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "3a9983099f0cc9876680e95671718b9f8c2a045e6feb2cd6489eea11b213764b",
+          "sizeBytes": 2041856
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.18",
       "title": "Parry restored to first auto-parry",
       "date": "2026-09-30T20:16:32.409Z",
