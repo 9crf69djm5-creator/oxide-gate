@@ -2,6 +2,26 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.22",
+      "title": "Adaptive clash and far parry",
+      "date": "2026-10-01T20:11:08.712Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Adaptive close clash spam and far one-click parry",
+        "Far timing unchanged"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "0797c72ec00cd0e8275c03f0d2e94dd32067cb121e3f2c517516d8f2ec82bd95",
+          "sizeBytes": 2050560
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.21",
       "title": "Clash spam restored",
       "date": "2026-10-01T19:49:19.283Z",
