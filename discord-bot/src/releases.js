@@ -104,6 +104,18 @@ function footerMarker(version) {
   return `${FOOTER_PREFIX}${version}`;
 }
 
+/** Negative when a is older than b. */
+function compareVersions(a, b) {
+  const pa = String(a || "").replace(/^v/i, "").split(".").map((n) => parseInt(n, 10) || 0);
+  const pb = String(b || "").replace(/^v/i, "").split(".").map((n) => parseInt(n, 10) || 0);
+  const len = Math.max(pa.length, pb.length);
+  for (let i = 0; i < len; i++) {
+    const d = (pa[i] || 0) - (pb[i] || 0);
+    if (d) return d;
+  }
+  return 0;
+}
+
 /**
  * @param {object} release from /api/releases/latest
  * @param {{ announcement?: boolean }} [opts]
@@ -222,6 +234,15 @@ async function announceLatestRelease(client, opts = {}) {
       channelId: null,
       attached: false,
     });
+    if (!opts.force && store.version && compareVersions(release.version, store.version) < 0) {
+      return {
+        ok: true,
+        announced: false,
+        version: release.version,
+        reason: "older_than_announced",
+        message: `v${release.version} is older than announced v${store.version}; not posting.`,
+      };
+    }
     if (!opts.force && store.version === release.version && store.messageId && store.attached) {
       return {
         ok: true,

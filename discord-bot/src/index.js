@@ -449,6 +449,7 @@ if (Number.isFinite(port) && port > 0) {
           user: client.user?.tag || null,
           adminSecretConfigured: Boolean(config.adminSecret),
           releaseAnnouncer: config.releaseAnnounceEnabled,
+          announcePolicy: "skip-older",
           announcedVersion: lastAnnounced().version,
           updatesChannelId: updatesChannelId(),
           aiHelp: config.aiHelpEnabled,
