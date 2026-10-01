@@ -2,6 +2,27 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.23",
+      "title": "Real ping for parry",
+      "date": "2026-10-01T21:46:43.783Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Auto ping uses the real latency (1 ms stays 1 ms, not 80)",
+        "Clash spam and long clash use that ping",
+        "Far shots stay one click"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "df6bfc3f80cf882ac758479a5b457330b7f6aa85f55005c6a7b3a835ec01f527",
+          "sizeBytes": 2050560
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.22",
       "title": "Adaptive clash and far parry",
       "date": "2026-10-01T20:11:08.712Z",
