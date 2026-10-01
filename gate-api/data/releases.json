@@ -7,7 +7,8 @@
       "date": "2026-10-01T19:49:19.283Z",
       "clientVersion": "version-02c37bc51a384b8f",
       "changes": [
-        "Far parry unchanged,Clash spam restored for close rallies"
+        "Far parry unchanged",
+        "Clash spam restored for close rallies"
       ],
       "files": {
         "Oxide.exe": {
