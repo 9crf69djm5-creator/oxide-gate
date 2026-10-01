@@ -2,6 +2,27 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.21",
+      "title": "More accurate time-to-impact",
+      "date": "2026-10-01T19:21:09.095Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "More accurate time-to-impact from the live ball and where you are",
+        "Still one left click and one F per arrival",
+        "Still not early"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "fc583b861613b59ea9c7cd21e6c38a306f8dfe8112c5ad5b9e71b185d4c3772e",
+          "sizeBytes": 2050560
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.20",
       "title": "More accurate time-to-impact",
       "date": "2026-10-01T19:20:35.692Z",
