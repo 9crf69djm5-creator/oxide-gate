@@ -2,6 +2,27 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.24",
+      "title": "Sooner ball tracking",
+      "date": "2026-10-01T23:18:29.416Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Ball is detected sooner, including long flights",
+        "The follow circle stays on the ball",
+        "Click timing unchanged from 1.2.23"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "b48764d2aa6b21ba4b3d612d75b56c7d821077b41d80c398c23acda4e84519c8",
+          "sizeBytes": 2051584
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.23",
       "title": "Real ping for parry",
       "date": "2026-10-01T21:46:43.783Z",
