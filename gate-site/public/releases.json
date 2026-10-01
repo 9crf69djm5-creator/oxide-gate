@@ -2,6 +2,27 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.26",
+      "title": "Circles follow you",
+      "date": "2026-10-01T23:42:13.119Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Both circles are bigger and follow you while you move",
+        "Far shots stay one click",
+        "Closer clashes still spam"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "e548cb38d5677538915323904744363fc0ac8edc045ade05ce7d8f2ead3f8dea",
+          "sizeBytes": 2054144
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.25",
       "title": "Closer clash spam",
       "date": "2026-10-01T23:38:26.908Z",
