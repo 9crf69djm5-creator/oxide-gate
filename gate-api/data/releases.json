@@ -2,6 +2,25 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.20",
+      "title": "More accurate time-to-impact",
+      "date": "2026-10-01T19:20:35.692Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "More accurate time-to-impact from the live ball and where you are,Still one left click and one F per arrival,Still not early"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "8497d70496849b933a2a2ee559e1558a81bc7cdd8a17e5ea6f6f572551e4d6a7",
+          "sizeBytes": 2050560
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.19",
       "title": "Parry uses click and F",
       "date": "2026-09-30T20:32:04.997Z",
