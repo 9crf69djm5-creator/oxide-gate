@@ -2,9 +2,28 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.27",
+      "title": "Movement binds",
+      "date": "2026-10-02T01:35:21.060Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Movement tab features work,Any key can be used as the bind,This is not a Blade Ball parry update"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "0258916e356e62b28d30333bfc0aafc6e2ab850031a1908c5cb0901dc4a20f72",
+          "sizeBytes": 2058752
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.0",
       "title": "Rolled back to v1.2.0",
-      "date": "2026-10-01T23:54:03.784Z",
+      "date": "2026-10-01T23:54:03.781Z",
       "clientVersion": "version-2366ba214ec740ca",
       "changes": [
         "Rolled back to v1.2.0 at the user's request.",
