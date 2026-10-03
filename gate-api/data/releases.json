@@ -2,6 +2,29 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.33",
+      "title": "MM2 aim and world toggles",
+      "date": "2026-10-03T20:08:37.758Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Auto Swing on Aim (murderer only, close range, Swing Range slider).",
+        "Crosshair label reads Oxide. Hit tracers, Hit Markers, and HitSounds are on the Aim Checks column and default off.",
+        "World: Teleport to Gun and Auto Pickup Gun, toggles, default off.",
+        "Aim toggles, default off: Teleport to Murderer, Teleport Behind, Sheriff Auto Shoot, Fly to Murderer, Knife Throw, Rage Speed.",
+        "Visible Check still blocks locks and sheriff shots through walls."
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "587fe9b9f0a6a45c7696fedf19c51bdabe39372076ed8d1dbc846cd56235b214",
+          "sizeBytes": 3439616
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.32",
       "title": "MM2 murderer aim",
       "date": "2026-10-03T17:54:21.696Z",
