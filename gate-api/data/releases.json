@@ -2,6 +2,25 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.32",
+      "title": "MM2 murderer aim",
+      "date": "2026-10-03T17:54:21.696Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "In Murder Mystery 2, aim locks onto the murderer only. Sheriff and innocents are ignored. If the murderer is not known yet, it does not lock anyone."
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "444ebbbff9c21d54bd4ed1748b30e1d1be1a98ea2a8b8a77174842adcc699c11",
+          "sizeBytes": 2051584
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.31",
       "title": "Coin Farm",
       "date": "2026-10-03T17:46:44.641Z",
