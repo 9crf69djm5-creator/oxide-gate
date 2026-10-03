@@ -2,17 +2,17 @@
   "product": "Oxide",
   "releases": [
     {
-      "version": "1.2.27",
-      "title": "Movement binds",
-      "date": "2026-10-02T01:35:21.060Z",
+      "version": "1.2.31",
+      "title": "Coin Farm",
+      "date": "2026-10-03T17:46:44.641Z",
       "clientVersion": "version-02c37bc51a384b8f",
       "changes": [
-        "Movement tab features work,Any key can be used as the bind,This is not a Blade Ball parry update"
+        "Coin Farm on the World page. While on in Murder Mystery 2, collision is off and the character flies to each coin with the camera following. Turning it off, or running out of coins, restores collision and the camera. Coin ESP and Dropped Gun ESP are unchanged."
       ],
       "files": {
         "Oxide.exe": {
-          "sha256": "0258916e356e62b28d30333bfc0aafc6e2ab850031a1908c5cb0901dc4a20f72",
-          "sizeBytes": 2058752
+          "sha256": "56c514a86160f0fcd0f123ad897e026d83ef6bdae3004f28adc807f3077bc5f5",
+          "sizeBytes": 2051072
         },
         "OxideDumper.exe": {
           "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
@@ -21,93 +21,52 @@
       }
     },
     {
-      "version": "1.2.0",
-      "title": "Rolled back to v1.2.0",
-      "date": "2026-10-01T23:54:03.781Z",
-      "clientVersion": "version-2366ba214ec740ca",
+      "version": "1.2.30",
+      "title": "MM2 ESP and player list",
+      "date": "2026-10-03T17:06:10.324Z",
+      "clientVersion": "version-02c37bc51a384b8f",
       "changes": [
-        "Rolled back to v1.2.0 at the user's request.",
-        "Blade Ball auto parry rework: high-rate ball tracking, ping-aware timing (ping compensation, timing and offset sliders), curve-aware prediction, target check and parry input options",
-        "Blade Ball clash spam: Spam On Clash with clash distance and max spam rate, plus a Visualize overlay",
-        "Sniper Duels skin changer in the GAMES tab (client-side only, your picks are saved)",
-        "Rivals skin changer in the GAMES tab (client-side only)",
-        "Custom skyboxes with presets, plus lighting tweaks: ambient, outdoor ambient, fog, time of day and hide atmosphere",
-        "Menu hover animations with a feature hint panel"
+        "Murder Mystery 2 Coin ESP draws a label, a small marker, and the distance on coins that have dropped on the ground. Dropped Gun ESP does the same for the gun lying in the world after someone dies. Both stay off until you turn them on under World.",
+        "Players List is a sidebar page that shows everyone else in the server with their name and distance. Teleport moves you a few studs beside them. Spectate follows that player. Unspectate puts the camera back on you."
       ],
       "files": {
         "Oxide.exe": {
-          "sha256": "22db41ab00835a7dc6b8d58639046268a41d5c7a3822bb60ec4f136affe06fe4",
-          "sizeBytes": 1699840
-        },
-        "OxideDumper.exe": {
-          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
-          "sizeBytes": 1006592
+          "sha256": "204c08d0fc953bbc342f236444b69b758c151fa361287ce811ff6580d01306eb",
+          "sizeBytes": 2044416
         }
       }
     },
     {
-      "version": "1.1.5",
-      "title": "Keybinding & Gameplay fixes",
-      "date": "2026-09-27T20:00:00.000Z",
-      "clientVersion": "version-2366ba214ec740ca",
+      "version": "1.2.29",
+      "title": "MM2 coin and gun ESP",
+      "date": "2026-10-03T17:01:48.035Z",
+      "clientVersion": "version-02c37bc51a384b8f",
       "changes": [
-        "Enhanced keybinding system - now supports letters (A-Z) properly",
-        "Improved key detection for better letter keybind support",
-        "Added lowercase letter support for keybinds",
-        "Better key name display for letter keys",
-        "Fixed noclip - now properly disables collision on all body parts",
-        "Fixed murderer ESP - now always shows murderers regardless of weapon state",
-        "Improved role detection with persistent caching for murderers/sheriffs",
-        "Enhanced collision disabling with double-check for reliability"
+        "Murder Mystery 2 Coin ESP draws a label, a small marker, and the distance on coins that have dropped on the ground. Dropped Gun ESP does the same for the gun lying in the world after someone dies. Both stay off until you turn them on under World.",
+        "Visible Check skips targets behind walls with a raycast. Mouse, memory, and silent aim were fixed in this build."
       ],
       "files": {
         "Oxide.exe": {
-          "sha256": "e9927e4b4f4b8fdd2e7b34be9abdbb7ee0c2fd9de6477d90943d478cecf86721",
-          "sizeBytes": 1552384
-        }
-      },
-      "downloadUrl": "https://oxide-gate-api.onrender.com/downloads/Oxide.exe?v=1.1.5",
-      "siteDownloadUrl": "https://oxide-gate-site.vercel.app/downloads/Oxide.exe?v=1.1.5",
-      "changelogUrl": "https://oxide-gate-site.vercel.app/changelog#v1.1.5"
-    },
-    {
-      "version": "1.1.0",
-      "title": "3D chams",
-      "date": "2026-09-27T16:45:20.867Z",
-      "clientVersion": "version-2366ba214ec740ca",
-      "changes": [
-        "Real D3D11 3D chams: translucent fill with bright edges and optional glow",
-        "Chams fill alpha slider, team check and accessories toggle, with automatic 2D fallback",
-        "Per-Monitor V2 DPI awareness so the overlay is sharp and correctly sized on laptops and scaled displays",
-        "Overlay now follows the Roblox window when it moves, resizes or changes monitor",
-        "Graphics adapter fallback for Intel, AMD and NVIDIA plus automatic device-lost recovery",
-        "Configs are saved to AppData (works on locked-down machines)",
-        "Cooler, steadier frame pacing (lower CPU/GPU load)",
-        "Attach fix: waits for the Roblox DataModel before starting and shows clear error messages"
-      ],
-      "files": {
-        "Oxide.exe": {
-          "sha256": "29f000ebfa815e659951dfbfd43a3665f6d8e249a31a0cc5548ef6e125aea73a",
-          "sizeBytes": 1315840
-        },
-        "OxideDumper.exe": {
-          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
-          "sizeBytes": 1006592
+          "sha256": "64bf6c5c1bd7b78470991ef63eb2d2c6eb02fe9fb82222fd6b7634de07307e8a",
+          "sizeBytes": 2031616
         }
       }
     },
     {
-      "version": "1.0.0",
-      "title": "Baseline build",
-      "date": "2026-09-26T16:21:11.000Z",
-      "clientVersion": "version-2366ba214ec740ca",
+      "version": "1.2.28",
+      "title": "Blade Ball parry",
+      "date": "2026-10-02T17:01:43.000Z",
+      "clientVersion": "version-02c37bc51a384b8f",
       "changes": [
-        "Public Oxide.exe build published before release tracking was added"
+        "Auto parry tracks the ball at a high rate and presses once when the predicted time-to-impact enters the window. Timing scales a distance-over-speed lead, Ping Offset shifts that lead in milliseconds, and Ping Compensation adds measured ping.",
+        "Curve Aware estimates the curve from velocity changes over a short horizon, then coasts. A bounce drops the curve. Target Check parries only when the ball is coming at you, using the ball's target name and the Highlight on your character.",
+        "Parry Input is F, left click, G, or a combination, held long enough for the game to see the press.",
+        "Clash spam repeats the parry input while the ball is inside Clash Distance and ping-ponging with a nearby player, capped by Max Spam Rate. Visualize draws the ball, its speed, time-to-impact, who it targets, and a clash banner and ring."
       ],
       "files": {
         "Oxide.exe": {
-          "sha256": "31d56c8a3c80fdd2bfa2e346cb4ab85d2af6a7a951e9d090eba5fa1fb404f6f5",
-          "sizeBytes": 1273344
+          "sha256": "613e907c62b570578d427300e549ed5cda9562f795640bccb5714168b2a96cb4",
+          "sizeBytes": 2003968
         }
       }
     }
