@@ -2,6 +2,29 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.35",
+      "title": "Oxide sidebar",
+      "date": "2026-10-04T23:11:43.031Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "The menu is the original Oxide sidebar again.",
+        "Memory aim keeps rewriting the camera so the lock holds.",
+        "Blade Ball parries when the ball is coming at you, including a ball with no target name. A ball named for someone else is still ignored.",
+        "Ping reads the real Data Ping value in milliseconds. The old ~2000 reading is ignored.",
+        "Steal an Egg has Return With Egg: when you take an egg it teleports you to your plot still holding it. Default off."
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "49347cf7a5762e508ba9ab8ae33a9f62472f876db5802a362e91400938cf3f19",
+          "sizeBytes": 3452416
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.34",
       "title": "Divinity menu",
       "date": "2026-10-04T00:30:22.405Z",
