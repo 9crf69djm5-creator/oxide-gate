@@ -98,9 +98,9 @@ export default function Status() {
             <p className="section-kicker">Ops</p>
             <h2>System status</h2>
             <p className="section-lead">
-              Live health for the gate API, Oxide.exe download, products, Roblox
-              version match, and Discord bot. Refreshes every minute. No secrets
-              are shown here.
+              Gate API, Oxide.exe download, products, and Discord. The Roblox line is
+              the client version this build targets. Offsets follow that build. They
+              are not a live feed.
             </p>
           </Reveal>
 

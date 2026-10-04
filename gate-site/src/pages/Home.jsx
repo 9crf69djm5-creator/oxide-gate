@@ -90,7 +90,17 @@ export default function Home() {
 
       <section className="section section-strip" id="signals">
         <div className="wrap strip-row">
-          {["Aimbot", "Silent aim", "Triggerbot", "ESP", "Chams", "Config cloud"].map(
+          {[
+            "Blade Ball auto parry",
+            "Murderer",
+            "Sheriff",
+            "Innocent",
+            "Coin Farm",
+            "Teleport to Gun",
+            "Players List",
+            "Aimbot",
+            "ESP",
+          ].map(
             (label, i) => (
               <Reveal key={label} delay={0.04 * i}>
                 <span className="strip-chip">{label}</span>
@@ -126,7 +136,7 @@ export default function Home() {
         <div className="wrap">
           <Reveal>
             <p className="section-kicker">Why external</p>
-            <h2>Why you&apos;ll choose OXIDE.</h2>
+            <h2>How it runs.</h2>
           </Reveal>
           <div className="why-grid">
             {why.map((t, i) => (
@@ -180,10 +190,10 @@ export default function Home() {
             <div className="dev-band">
               <div>
                 <p className="section-kicker">Developers</p>
-                <h2>Free offsets, every build.</h2>
+                <h2>Offsets for this build.</h2>
                 <p className="section-lead">
-                  The same dump OXIDE runs on, published as a public API. Pull JSON, a
-                  C++ header, C#, or plain text.
+                  Offsets follow the client version Oxide was built against. The page
+                  shows that version. It is not a live offset feed.
                 </p>
                 <div className="hero-ctas">
                   <Link className="btn btn-accent" to="/offsets">

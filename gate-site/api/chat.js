@@ -69,8 +69,11 @@ function systemPrompt(status) {
 
 About OXIDE
 - OXIDE is an external Roblox tool for Windows. It never loads code into the game: it reads memory and sends real input from its own process (Oxide.exe).
-- Universal features: aimbot, silent aim, triggerbot, rage, ESP boxes, skeletons, chams (3D), tracers, fly, speed, config cloud (share/apply setups from the menu), per-feature keybinds, watermark.
-- Game tabs: Da Hood (gun tracking, auto parry, anti grab, anti cuff), Fisch (auto cast/shake/reel, zone ESP), Blade Ball (auto parry, clash spam), Sniper Duels and Rivals skin changers, plus Strucid, Arsenal and more.
+- The in-app menu is Divinity (left tabs, two columns).
+- First features: Blade Ball auto parry (Target Check still parries an unknown ball coming at you, and does not parry a ball named for someone else). Murder Mystery 2 role labels are Murderer, Sheriff, and Innocent at round start. Then Coin Farm, Teleport to Gun, and the Players List (teleport, spectate, unspectate).
+- After that: aim (mouse, memory, silent), Visible Check, ESP, mesh chams, triggerbot, Crosshair labeled Oxide, hit tracers, hit markers, hitsounds.
+- MM2 toggles also include MM2 Murderer Only, Auto Swing, Teleport to Murderer, Teleport Behind, Sheriff Auto Shoot, Fly to Murderer, Knife Throw, Rage Speed, Coin ESP, Dropped Gun ESP, Auto Pickup Gun.
+- Other game tabs: Da Hood, Fisch, Strucid, Arsenal, Rivals, Sniper Duels, Steal An Egg, Custom.
 
 Plans (bought as Roblox gamepasses, see ${SITE_URL}/buy)
 - Week: $5, 7 days, Universal only (no Games tabs).

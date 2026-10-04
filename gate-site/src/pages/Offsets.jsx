@@ -209,8 +209,8 @@ export default function Offsets() {
             <p className="section-kicker">Public offsets</p>
             <h2>OXIDE offsets</h2>
             <p className="section-lead">
-              Live Roblox client offsets dumped by OXIDE and served for free use.
-              Copy hex values below, or pull JSON / headers from the public API.
+              Offsets follow this Oxide build. The version below is the client that
+              build was made for, not a live offset feed.
             </p>
           </Reveal>
 
