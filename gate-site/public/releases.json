@@ -2,6 +2,25 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.34",
+      "title": "Divinity menu",
+      "date": "2026-10-04T00:30:22.405Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Blade Ball Target Check parries an unknown ball that is coming at you and skips a ball named for someone else,The menu is Divinity,Homepage leads with Blade Ball auto parry and Murder Mystery 2 role labels"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "fb2e3b8d49e260bffb781a9e77b5127d7cd2cda5fd41ff92c774174c3d9e143a",
+          "sizeBytes": 3715584
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.33",
       "title": "MM2 aim and world toggles",
       "date": "2026-10-03T20:08:37.758Z",
