@@ -2,6 +2,28 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.36",
+      "title": "Fling, ping, and Blade Ball",
+      "date": "2026-10-05T00:21:28.444Z",
+      "clientVersion": "version-02c37bc51a384b8f",
+      "changes": [
+        "Ping shows the real Data Ping again.",
+        "Blade Ball parries when the ball is coming at you.",
+        "Fling on the Movement page, under Noclip. Off by default. Walking into another player launches them away from you.",
+        "Memory aim keeps the camera on the live target for the whole lock, including when they strafe."
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "9b6cf045a4701ccbfe7f2eb62b34b376f4688d8c12e91fe2a8e207a5781b7297",
+          "sizeBytes": 3465216
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.35",
       "title": "Oxide sidebar",
       "date": "2026-10-04T23:11:43.031Z",
