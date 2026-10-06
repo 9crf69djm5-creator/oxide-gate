@@ -7,6 +7,7 @@ import Key from "./pages/Key";
 import Account from "./pages/Account";
 import Features from "./pages/Features";
 import Status from "./pages/Status";
+import Leaderboard from "./pages/Leaderboard";
 import Offsets from "./pages/Offsets";
 import Changelog from "./pages/Changelog";
 import Admin from "./pages/Admin";
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/account" element={<Account />} />
           <Route path="/features" element={<Features />} />
           <Route path="/status" element={<Status />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/offsets" element={<Offsets />} />
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/admin" element={<Admin />} />

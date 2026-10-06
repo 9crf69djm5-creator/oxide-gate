@@ -447,13 +447,72 @@ export async function fetchSystemStatus() {
   else if (states.some((s) => s !== "online" && s !== "unknown")) overall = "degraded";
   else if (states.some((s) => s === "unknown")) overall = "degraded";
 
+  const usage = snap.usage && typeof snap.usage === "object" ? snap.usage : null;
+
   return {
     checkedAt,
     overall,
     items,
     external,
     updateNeeded: external.updateNeeded === true,
+    usage: usage
+      ? {
+          count: Number(usage.count) || 0,
+          lastActivity: usage.lastActivity || null,
+          updatedAt: usage.updatedAt || null,
+        }
+      : null,
   };
+}
+
+export function formatUsageCount(count) {
+  const n = Number(count) || 0;
+  if (n === 1) return "1 person has used Oxide";
+  return `${n} people have used Oxide`;
+}
+
+export function formatUsageTime(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleString();
+}
+
+/** Public leaderboard: unique people, newest activity first. */
+export async function fetchLeaderboard() {
+  try {
+    const res = await fetch(apiBase() + "/api/leaderboard", {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(30000),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      return {
+        ok: false,
+        message: (data && data.message) || "Could not load the leaderboard.",
+        count: 0,
+        people: [],
+        lastActivity: null,
+        updatedAt: null,
+      };
+    }
+    return {
+      ok: true,
+      count: Number(data.count) || 0,
+      lastActivity: data.lastActivity || null,
+      updatedAt: data.updatedAt || null,
+      people: Array.isArray(data.people) ? data.people : [],
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      message: err?.message || "Can't reach the API.",
+      count: 0,
+      people: [],
+      lastActivity: null,
+      updatedAt: null,
+    };
+  }
 }
 
 export async function claimRobloxKey({ username, plan }) {

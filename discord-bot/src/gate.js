@@ -313,9 +313,26 @@ async function issueAdminLogin(opts) {
   return { ok: res.ok && body.ok !== false, status: res.status, body };
 }
 
+/**
+ * Public usage leaderboard (unique people, last-seen order).
+ * @param {string} apiBaseUrl
+ */
+async function fetchLeaderboard(apiBaseUrl) {
+  const url = `${apiBaseUrl.replace(/\/$/, "")}/api/leaderboard`;
+  const started = Date.now();
+  const res = await fetch(url, {
+    headers: { Accept: "application/json", "User-Agent": "OXIDE-DiscordBot/1.0" },
+    signal: AbortSignal.timeout(45000),
+  });
+  const ms = Date.now() - started;
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok && body.ok !== false, status: res.status, ms, body, url };
+}
+
 module.exports = {
   issueAdminLogin,
   fetchHealth,
+  fetchLeaderboard,
   fetchProducts,
   probeDownload,
   createKeys,

@@ -23,6 +23,7 @@ const {
 const { syncRobloxVersion, fetchRobloxWindowsVersion, buildEmbed, readLocalClientVersion } = require("./roblox");
 const {
   fetchHealth,
+  fetchLeaderboard,
   fetchProducts,
   createKeys,
   revokeKey,
@@ -593,6 +594,9 @@ const commandData = [
     .setName("status")
     .setDescription("Live OXIDE API / downloads / products / bot health"),
   new SlashCommandBuilder()
+    .setName("leaderboard")
+    .setDescription("How many people have used Oxide, and when"),
+  new SlashCommandBuilder()
     .setName("products")
     .setDescription("List OXIDE plans and Roblox gamepass links"),
   new SlashCommandBuilder()
@@ -954,6 +958,7 @@ async function handleCommand(interaction, client) {
         value: [
           "`/update` · `/changelog` — What changed in each version",
           "`/status` — Live API, download, and bot health",
+          "`/leaderboard` — How many people have used Oxide, and when",
           "`/offsets` — Public offsets API and file downloads",
           "`/roblox-version` — Latest Roblox Windows client",
           "`/website` · `/site` · `/web` — Site quick links",
@@ -1055,6 +1060,70 @@ async function handleCommand(interaction, client) {
       } catch (err2) {
         return interaction.editReply({ embeds: [unreachableEmbed("load system status", err2)] });
       }
+    }
+  }
+
+  if (name === "leaderboard") {
+    await interaction.deferReply();
+    try {
+      const result = await fetchLeaderboard(config.apiBaseUrl);
+      if (!result.ok) {
+        return interaction.editReply({
+          embeds: [unreachableEmbed("load the leaderboard", `HTTP ${result.status}`)],
+        });
+      }
+      const body = result.body || {};
+      const count = Number(body.count) || 0;
+      const people = Array.isArray(body.people) ? body.people : [];
+      const stamp = (iso) => {
+        const t = Date.parse(iso);
+        if (!Number.isFinite(t)) return "—";
+        const sec = Math.floor(t / 1000);
+        return `<t:${sec}:F> (<t:${sec}:R>)`;
+      };
+      const recent = people.slice(0, 8);
+      const lines = recent.length
+        ? recent
+            .map((p) => {
+              const label =
+                String(p.name || p.username || "Player")
+                  .replace(/[*_`]/g, "")
+                  .slice(0, 32) || "Player";
+              return `**${label}** — last ${stamp(p.lastSeen)}`;
+            })
+            .join("\n")
+        : "No one has checked in yet.";
+      const extra =
+        people.length > recent.length ? `\n\n+${people.length - recent.length} more on the site.` : "";
+      const embed = brandEmbed({
+        title: "OXIDE leaderboard",
+        description:
+          count === 1
+            ? "**1 person** has used Oxide."
+            : `**${count} people** have used Oxide.`,
+      })
+        .setURL(`${config.siteUrl}/leaderboard`)
+        .addFields(
+          {
+            name: "Last activity",
+            value: body.lastActivity ? stamp(body.lastActivity) : "—",
+          },
+          {
+            name: "Recent",
+            value: (lines + extra).slice(0, 1024),
+          }
+        );
+      return interaction.editReply({
+        embeds: [embed],
+        components: [
+          linkRow([
+            ["Leaderboard", `${config.siteUrl}/leaderboard`],
+            ["Status", `${config.siteUrl}/status`],
+          ]),
+        ],
+      });
+    } catch (err) {
+      return interaction.editReply({ embeds: [unreachableEmbed("load the leaderboard", err)] });
     }
   }
 

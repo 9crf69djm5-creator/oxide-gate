@@ -618,6 +618,28 @@ function validate({ key: rawKey, hwid, token }) {
   };
 }
 
+/**
+ * Check an already-activated client session without binding or rotating HWID.
+ * Used by the usage check-in. Does not write.
+ */
+function sessionOk({ key: rawKey, token }) {
+  const key = normalizeKey(rawKey);
+  if (!key) return { ok: false, error: "missing_key", message: "Missing license key." };
+  const tok = String(token || "").trim();
+  if (!tok) return { ok: false, error: "missing_token", message: "Missing session token." };
+
+  const row = getKey(key);
+  if (!row) return { ok: false, error: "invalid_key", message: "Invalid license key." };
+  if (row.status === "banned")
+    return { ok: false, error: "banned", message: "This key has been banned." };
+  if (row.status !== "active")
+    return { ok: false, error: "invalid_status", message: "Key is not active." };
+  if (isExpired(row)) return { ok: false, error: "expired", message: "This key has expired." };
+  if (!row.token || row.token !== tok)
+    return { ok: false, error: "bad_token", message: "Session token does not match." };
+  return { ok: true, key };
+}
+
 /** Allow EXE first-run: unused key + hwid → activate (same as redeem with hwid) */
 function validateOrActivate({ key, hwid, token }) {
   const normalized = normalizeKey(key);
@@ -747,6 +769,7 @@ module.exports = {
   remainingFromExpires,
   maskKey,
   validate,
+  sessionOk,
   validateOrActivate,
   revokeKey,
   resetHwid,

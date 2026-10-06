@@ -12,6 +12,7 @@ const externalVersion = require("./lib/external-version");
 const offsetsLib = require("./lib/offsets");
 const releasesLib = require("./lib/releases");
 const admin = require("./lib/admin");
+const usage = require("./lib/usage");
 
 const PORT = Number(process.env.PORT) || 8787;
 const SITE_EXE_URL = "https://oxide-gate-api.onrender.com/downloads/Oxide.exe";
@@ -299,6 +300,14 @@ app.get("/api/status", async (_req, res) => {
       },
       release: releaseSummary(),
       bot,
+      usage: (() => {
+        try {
+          return usage.summary();
+        } catch (err) {
+          console.error("[status] usage", err);
+          return { count: 0, lastActivity: null, updatedAt: new Date().toISOString() };
+        }
+      })(),
     });
   } catch (err) {
     console.error("[status]", err);
@@ -575,6 +584,40 @@ app.post("/api/discord/link", async (req, res) => {
  * Body: { key, hwid, token? }
  * Unused keys are activated + bound on first successful EXE call (same machine redeem).
  */
+/**
+ * Public usage leaderboard. Names and times only — no keys or tokens.
+ */
+app.get("/api/leaderboard", (_req, res) => {
+  res.setHeader("Cache-Control", "no-cache");
+  try {
+    return res.json(usage.publicBoard());
+  } catch (err) {
+    console.error("[leaderboard]", err);
+    return res.status(500).json({
+      ok: false,
+      error: "server_error",
+      message: "Could not load leaderboard.",
+    });
+  }
+});
+
+/**
+ * Client check-in. Requires the license session already used by /api/validate.
+ * Body: { key, token, username, displayName, userId }
+ */
+app.post("/api/usage", async (req, res) => {
+  try {
+    const result = usage.ingest(req);
+    if (result.body && result.body.recorded) {
+      await dbModule.flushToPostgres().catch(() => {});
+    }
+    return res.status(result.status).json(result.body);
+  } catch (err) {
+    console.error("[usage]", err);
+    return res.status(500).json({ ok: false, error: "server_error", message: "Server error." });
+  }
+});
+
 app.post("/api/validate", async (req, res) => {
   try {
     const { key, hwid, token } = req.body || {};
@@ -1010,6 +1053,7 @@ function startKeepAlivePings() {
 async function main() {
   await dbModule.initDb();
   admin.ensureTables();
+  usage.ensureTables();
   if (!admin.secretUsable()) {
     console.warn("  ADMIN_SECRET is unset or the public placeholder — owner admin routes will not accept it.");
   }

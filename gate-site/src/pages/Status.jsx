@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { config } from "../config";
-import { fetchSystemStatus } from "../lib/api";
+import { fetchLeaderboard, fetchSystemStatus, formatUsageCount, formatUsageTime } from "../lib/api";
 import { PageMotion, Reveal } from "../components/Layout";
 
 function formatMs(ms) {
@@ -53,6 +53,7 @@ function StatusRow({ item }) {
 
 export default function Status() {
   const [data, setData] = useState(null);
+  const [usage, setUsage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -60,8 +61,10 @@ export default function Status() {
     setLoading(true);
     setError("");
     try {
-      const result = await fetchSystemStatus();
+      const [result, board] = await Promise.all([fetchSystemStatus(), fetchLeaderboard()]);
       setData(result);
+      setUsage(board.ok ? board : result?.usage || null);
+      if (!board.ok && !result) setError(board.message || "Could not load status.");
     } catch (err) {
       setError(err?.message || "Could not load status.");
       setData(null);
@@ -134,6 +137,36 @@ export default function Status() {
               {error}
             </p>
           )}
+
+          <Reveal delay={0.08}>
+            <article className="sys-status-card online" style={{ marginTop: "1.25rem" }}>
+              <div className="sys-status-head">
+                <span className="sys-status-dot online" aria-hidden="true" />
+                <div>
+                  <h3>People who have used Oxide</h3>
+                  <p className="sys-status-meta">
+                    {usage ? formatUsageCount(usage.count) : loading ? "Checking…" : "Usage unavailable"}
+                  </p>
+                </div>
+                <strong className="sys-status-badge online">{usage ? usage.count ?? 0 : "—"}</strong>
+              </div>
+              <dl className="sys-status-fields">
+                <div>
+                  <dt>Last activity</dt>
+                  <dd>{formatUsageTime(usage?.lastActivity) || "—"}</dd>
+                </div>
+                <div>
+                  <dt>Updated</dt>
+                  <dd>{formatUsageTime(usage?.updatedAt) || "—"}</dd>
+                </div>
+              </dl>
+              <p style={{ margin: "0.9rem 0 0" }}>
+                <Link to="/leaderboard" style={{ color: "var(--accent-hot)" }}>
+                  Open the leaderboard
+                </Link>
+              </p>
+            </article>
+          </Reveal>
 
           <div className="sys-status-grid">
             {(data?.items || (loading ? placeholderItems() : [])).map((item, i) => (

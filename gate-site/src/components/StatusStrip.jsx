@@ -1,27 +1,30 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchSystemStatus } from "../lib/api";
+import { fetchLeaderboard, fetchSystemStatus, formatUsageCount, formatUsageTime } from "../lib/api";
 
 /**
  * Compact home status strip — overall health + external update flag.
  */
 export function StatusStrip() {
   const [data, setData] = useState(null);
+  const [usage, setUsage] = useState(null);
 
   useEffect(() => {
     let alive = true;
-    fetchSystemStatus()
-      .then((r) => {
-        if (alive) setData(r);
-      })
-      .catch(() => {});
-    const t = setInterval(() => {
+    const pull = () => {
       fetchSystemStatus()
         .then((r) => {
           if (alive) setData(r);
         })
         .catch(() => {});
-    }, 90_000);
+      fetchLeaderboard()
+        .then((r) => {
+          if (alive && r?.ok) setUsage(r);
+        })
+        .catch(() => {});
+    };
+    pull();
+    const t = setInterval(pull, 90_000);
     return () => {
       alive = false;
       clearInterval(t);
@@ -69,6 +72,12 @@ export function StatusStrip() {
               {data?.checkedAt
                 ? `Checked ${new Date(data.checkedAt).toLocaleTimeString()}`
                 : "Loading live checks…"}
+              {usage
+                ? ` · ${formatUsageCount(usage.count)}`
+                : ""}
+              {usage?.lastActivity
+                ? ` · last activity ${formatUsageTime(usage.lastActivity)}`
+                : ""}
             </p>
           </div>
         </div>
@@ -82,6 +91,7 @@ export function StatusStrip() {
         </div>
         <div className="status-strip-links">
           <Link to="/status">Full status</Link>
+          <Link to="/leaderboard">Leaderboard</Link>
           <Link to="/offsets">Offsets</Link>
         </div>
       </div>
