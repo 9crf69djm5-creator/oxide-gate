@@ -2,6 +2,30 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.37",
+      "title": "Offsets, aim, and Blade Ball",
+      "date": "2026-10-07T17:38:06.947Z",
+      "clientVersion": "version-cec3ad5889b447cf",
+      "changes": [
+        "Offsets updated for the current Roblox version.",
+        "Mouse Lock no longer spins.",
+        "Memory aim stays locked while you hold aim and circle.",
+        "Blade Ball only parries when the ball is actually coming at you. Visualize draws a green circle and a tracer while that is true.",
+        "One parry per approach.",
+        "Leaderboard usage check-in."
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "19184fc9a0ec2cdd64a28b68410fd0037b9f5d43423e070ea4c9daa734a9bb89",
+          "sizeBytes": 3478016
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.36",
       "title": "Fling, ping, and Blade Ball",
       "date": "2026-10-05T00:21:28.444Z",

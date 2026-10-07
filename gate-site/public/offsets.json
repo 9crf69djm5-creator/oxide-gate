@@ -1,9 +1,9 @@
 {
   "ok": true,
   "source": "OXIDE",
-  "robloxVersion": "version-02c37bc51a384b8f",
-  "generatedAt": "2026-09-30T17:58:23.809Z",
-  "totalOffsets": 766,
+  "robloxVersion": "version-cec3ad5889b447cf",
+  "generatedAt": "2026-10-07T17:36:36.887Z",
+  "totalOffsets": 768,
   "namespaces": {
     "Adornment": {
       "Adornee": {
@@ -309,20 +309,20 @@
         "decimal": 200
       },
       "Viewport": {
-        "hex": "0x27C",
-        "decimal": 636
+        "hex": "0x28C",
+        "decimal": 652
       },
       "ViewportInt16": {
         "hex": "0x27C",
         "decimal": 636
       },
       "ViewportSize": {
-        "hex": "0x2BC",
-        "decimal": 700
+        "hex": "0x2CC",
+        "decimal": 716
       },
       "ImagePlaneDepth": {
-        "hex": "0x2C4",
-        "decimal": 708
+        "hex": "0x2D4",
+        "decimal": 724
       }
     },
     "CharacterMesh": {
@@ -559,8 +559,8 @@
     },
     "FakeDataModel": {
       "Pointer": {
-        "hex": "0x8B54980",
-        "decimal": 146098560
+        "hex": "0x8BCFD50",
+        "decimal": 146603344
       },
       "RealDataModel": {
         "hex": "0x1F8",
@@ -851,24 +851,24 @@
         "decimal": 1428
       },
       "Image": {
-        "hex": "0x990",
-        "decimal": 2448
+        "hex": "0x9A8",
+        "decimal": 2472
       },
       "RichText": {
-        "hex": "0xB88",
-        "decimal": 2952
+        "hex": "0xBA0",
+        "decimal": 2976
       },
       "ScreenGui_Enabled": {
         "hex": "0x4B4",
         "decimal": 1204
       },
       "Text": {
-        "hex": "0xDF0",
-        "decimal": 3568
+        "hex": "0xE08",
+        "decimal": 3592
       },
       "TextColor3": {
-        "hex": "0xEA0",
-        "decimal": 3744
+        "hex": "0xEB8",
+        "decimal": 3768
       }
     },
     "Highlight": {
@@ -985,20 +985,20 @@
         "decimal": 388
       },
       "HumanoidRootPart": {
-        "hex": "0x458",
-        "decimal": 1112
+        "hex": "0x460",
+        "decimal": 1120
       },
       "HumanoidState": {
-        "hex": "0x8A0",
-        "decimal": 2208
+        "hex": "0x8A8",
+        "decimal": 2216
       },
       "HumanoidStateID": {
         "hex": "0x20",
         "decimal": 32
       },
       "IsWalking": {
-        "hex": "0xA1F",
-        "decimal": 2591
+        "hex": "0xA27",
+        "decimal": 2599
       },
       "Jump": {
         "hex": "0x1CA",
@@ -1887,6 +1887,14 @@
       "Mouse": {
         "hex": "0x1208",
         "decimal": 4616
+      },
+      "MaximumSimulationRadius": {
+        "hex": "0x38C",
+        "decimal": 908
+      },
+      "SimulationRadius": {
+        "hex": "0x398",
+        "decimal": 920
       }
     },
     "PlayerConfigurer": {
@@ -2491,8 +2499,8 @@
         "decimal": 496
       },
       "RenderView": {
-        "hex": "0x1D8",
-        "decimal": 472
+        "hex": "0x1E0",
+        "decimal": 480
       }
     },
     "RenderQueue": {
@@ -2599,12 +2607,12 @@
     },
     "RunService": {
       "HeartbeatFPS": {
-        "hex": "0xC8",
-        "decimal": 200
+        "hex": "0xE1",
+        "decimal": 225
       },
       "HeartbeatTask": {
-        "hex": "0xE0",
-        "decimal": 224
+        "hex": "0x6338",
+        "decimal": 25400
       }
     },
     "Script": {
@@ -2747,8 +2755,8 @@
     },
     "SpawnLocation": {
       "AllowTeamChangeOnTouch": {
-        "hex": "0x3D",
-        "decimal": 61
+        "hex": "0x1E0",
+        "decimal": 480
       },
       "ForcefieldDuration": {
         "hex": "0x1D8",
@@ -2859,8 +2867,8 @@
         "decimal": 176
       },
       "Pointer": {
-        "hex": "0x8AFF2A0",
-        "decimal": 145748640
+        "hex": "0x8B79128",
+        "decimal": 146247976
       }
     },
     "Team": {
@@ -3149,8 +3157,8 @@
     },
     "StatsItem": {
       "Value": {
-        "hex": "0xC8",
-        "decimal": 200
+        "hex": "0x5E0",
+        "decimal": 1504
       }
     },
     "Value": {
@@ -3195,8 +3203,8 @@
         "decimal": 2800
       },
       "Pointer": {
-        "hex": "0x858D208",
-        "decimal": 140038664
+        "hex": "0x8656E40",
+        "decimal": 140865088
       },
       "RenderView": {
         "hex": "0xC30",
@@ -3243,8 +3251,8 @@
         "decimal": 1192
       },
       "ReadOnlyGravity": {
-        "hex": "0x9B8",
-        "decimal": 2488
+        "hex": "0x9C8",
+        "decimal": 2504
       },
       "World": {
         "hex": "0x400",
@@ -3257,28 +3265,28 @@
     },
     "World": {
       "AirProperties": {
-        "hex": "0x240",
-        "decimal": 576
+        "hex": "0x238",
+        "decimal": 568
       },
       "FallenPartsDestroyHeight": {
-        "hex": "0x220",
-        "decimal": 544
+        "hex": "0x218",
+        "decimal": 536
       },
       "Gravity": {
-        "hex": "0x22C",
-        "decimal": 556
+        "hex": "0x224",
+        "decimal": 548
       },
       "Primitives": {
-        "hex": "0x2B0",
-        "decimal": 688
+        "hex": "0x2C8",
+        "decimal": 712
       },
       "WorldSteps": {
         "hex": "0x728",
         "decimal": 1832
       },
       "worldStepsPerSec": {
-        "hex": "0x748",
-        "decimal": 1864
+        "hex": "0x740",
+        "decimal": 1856
       }
     },
     "WorldRoot": {
@@ -3291,6 +3299,5 @@
         "decimal": 128
       }
     }
-  },
-  "dumpedWith": "OXIDE dumper + imtheo RbxDumperV2 2.2.4 (version-02c37bc51a384b8f)"
+  }
 }
