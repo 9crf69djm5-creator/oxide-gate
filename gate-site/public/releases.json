@@ -2,6 +2,29 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.38",
+      "title": "ESP, binds, and fly",
+      "date": "2026-10-08T11:56:15.558Z",
+      "clientVersion": "version-cec3ad5889b447cf",
+      "changes": [
+        "ESP is the stick figure on the player again, with the name once above the head and flags beside them. No giant filled boxes.",
+        "The BINDS list can be dragged, and it stays where you put it.",
+        "Triggerbot left-clicks as soon as aim locks a valid target.",
+        "The menu overlay shows while Roblox is open.",
+        "Fly is velocity fly again: W and S move along where you look, A and D strafe, Space goes up, and Ctrl goes down."
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "2ec3b2c02a8826fb2bd55d8f5b545bcc00601a88a79699a585cc6708f524ea52",
+          "sizeBytes": 3780096
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
       "version": "1.2.37",
       "title": "Offsets, aim, and Blade Ball",
       "date": "2026-10-07T17:38:06.947Z",
