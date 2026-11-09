@@ -2,6 +2,42 @@
   "product": "Oxide",
   "releases": [
     {
+      "version": "1.2.40",
+      "title": "Fix UI cutoff",
+      "date": "2026-11-09T10:54:05.696Z",
+      "clientVersion": "version-7a0c6d10fcb34a2c",
+      "changes": [
+        "Increased menu height from 640 to 800 pixels to prevent content cutoff"
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "78f3a6f12b11c57bb732b6921cfc3ce4a02a78626c62a9b4f4d996ccf4a60a41",
+          "sizeBytes": 25658368
+        },
+        "OxideDumper.exe": {
+          "sha256": "4557871278a7c7dd42741cc590cd68ee5083e2918b2d0217e2d6b71de16210fd",
+          "sizeBytes": 1006592
+        }
+      }
+    },
+    {
+      "version": "1.2.39",
+      "title": "Signed login",
+      "date": "2026-10-25T22:30:00.000Z",
+      "changes": [
+        "The download is this build.",
+        "A login is accepted only when the license server signs it. If that server does not answer, Oxide stays closed.",
+        "Offsets are read for the Roblox version that is running.",
+        "The menu is the square left-tab menu: Universal, Games, and System."
+      ],
+      "files": {
+        "Oxide.exe": {
+          "sha256": "b364f995c99c7cad7a86f2edd91168adcd0894ff0671c6b5127b96920e3479fa",
+          "sizeBytes": 25467904
+        }
+      }
+    },
+    {
       "version": "1.2.38",
       "title": "ESP, binds, and fly",
       "date": "2026-10-08T11:56:15.558Z",
